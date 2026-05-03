@@ -1,0 +1,24 @@
+{
+  "name": "bot-framework",
+  "version": "1.0.0",
+  "description": "Reusable Discord bot framework starter.",
+  "main": "src/index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/index.js",
+    "deploy": "node src/deploy-commands.js",
+    "check": "node --check src/index.js && node --check src/deploy-commands.js",
+    "build": "node scripts/export-web-data.js"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "framework"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^14.26.2",
+    "dotenv": "^17.4.0"
+  }
+}

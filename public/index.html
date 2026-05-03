@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Liberty County Property Map</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <section class="map-panel" aria-label="Liberty County property map">
+        <div class="toolbar">
+          <label for="propertySearch">Property</label>
+          <input id="propertySearch" list="propertyOptions" type="search" placeholder="Search building name or number">
+          <datalist id="propertyOptions"></datalist>
+          <div class="zoom-controls" aria-label="Map zoom controls">
+            <button type="button" id="zoomOut" aria-label="Zoom out">-</button>
+            <input id="zoomRange" type="range" min="0.45" max="6" step="0.05" value="1">
+            <button type="button" id="zoomIn" aria-label="Zoom in">+</button>
+            <output id="zoomValue" for="zoomRange">100%</output>
+          </div>
+          <button type="button" class="edit-toggle" id="undoEdit">Undo</button>
+          <button type="button" class="edit-toggle" id="resetBoxes">Reset Boxes</button>
+        </div>
+        <div class="map-wrap" id="mapWrap">
+          <button type="button" class="lock-button" id="editModeLock" aria-label="Unlock edit mode" aria-pressed="false">Lock</button>
+          <div class="map-surface" id="mapSurface">
+            <img src="/assets/erlc-map.png" alt="Emergency Response Liberty County map" id="mapImage">
+            <div class="markers" id="markers" aria-label="Clickable property markers"></div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="status-panel" aria-live="polite">
+        <p class="eyebrow">Selected Property</p>
+        <h1 id="propertyName">Choose a property</h1>
+        <dl>
+          <div>
+            <dt>Building Type</dt>
+            <dd id="buildingType">-</dd>
+          </div>
+          <div>
+            <dt>Number</dt>
+            <dd id="propertyNumber">-</dd>
+          </div>
+          <div>
+            <dt>Owner</dt>
+            <dd id="propertyOwner">-</dd>
+          </div>
+          <div>
+            <dt>Property Price</dt>
+            <dd id="propertyPrice">-</dd>
+          </div>
+          <div>
+            <dt>Property Tax</dt>
+            <dd id="propertyTax">-</dd>
+          </div>
+        </dl>
+      </aside>
+    </main>
+    <dialog class="password-dialog" id="passwordDialog">
+      <form method="dialog" id="passwordForm">
+        <h2>Unlock Edit Mode</h2>
+        <label for="editPassword">Password</label>
+        <input id="editPassword" type="password" autocomplete="off">
+        <p class="password-error" id="passwordError" role="alert"></p>
+        <div class="dialog-actions">
+          <button type="button" id="cancelPassword">Cancel</button>
+          <button type="submit">Unlock</button>
+        </div>
+      </form>
+    </dialog>
+    <script src="/app.js"></script>
+  </body>
+</html>

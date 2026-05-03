@@ -1,0 +1,2306 @@
+[
+  {
+    "id": "starblox-cafe",
+    "name": "Starblox Cafe",
+    "number": "2063",
+    "buildingType": "Starblox Cafe",
+    "owner": "N/A",
+    "price": "$3,000,000",
+    "tax": "$25,000"
+  },
+  {
+    "id": "three-guys",
+    "name": "Three Guys",
+    "number": "2171",
+    "buildingType": "Three Guys",
+    "owner": "N/A",
+    "price": "$3,500,000",
+    "tax": "$25,000"
+  },
+  {
+    "id": "river-city-gas-station",
+    "name": "River City Gas Station",
+    "number": "2001",
+    "buildingType": "River City Gas Station",
+    "owner": "N/A",
+    "price": "$4,500,000",
+    "tax": "$30,000"
+  },
+  {
+    "id": "county-gas-station",
+    "name": "County Gas Station",
+    "number": "6021",
+    "buildingType": "County Gas Station",
+    "owner": "N/A",
+    "price": "$4,500,000",
+    "tax": "$30,000"
+  },
+  {
+    "id": "springfield-gas-station",
+    "name": "Springfield Gas Station",
+    "number": "11101",
+    "buildingType": "Springfield Gas Station",
+    "owner": "N/A",
+    "price": "$4,500,000",
+    "tax": "$30,000"
+  },
+  {
+    "id": "gas-depot",
+    "name": "Gas Depot",
+    "number": "3071",
+    "buildingType": "Gas Depot",
+    "owner": "Government",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "river-city-gun-store",
+    "name": "River City Gun Store",
+    "number": "4011",
+    "buildingType": "River City Gun Store",
+    "owner": "N/A",
+    "price": "$15,500,000",
+    "tax": "$50,000"
+  },
+  {
+    "id": "family-jewels",
+    "name": "Family Jewels",
+    "number": "4031",
+    "buildingType": "Family Jewels",
+    "owner": "N/A",
+    "price": "$6,000,000",
+    "tax": "$35,000"
+  },
+  {
+    "id": "springfield-repair-shop",
+    "name": "Springfield Repair Shop",
+    "number": "11082",
+    "buildingType": "Springfield Repair Shop",
+    "owner": "N/A",
+    "price": "$3,500,000",
+    "tax": "$25,000"
+  },
+  {
+    "id": "rick-and-johns",
+    "name": "Rick and John's",
+    "number": "11051",
+    "buildingType": "Rick and John's",
+    "owner": "N/A",
+    "price": "$2,000,000",
+    "tax": "$15,000"
+  },
+  {
+    "id": "spring-bakery",
+    "name": "Spring Bakery",
+    "number": "11051",
+    "buildingType": "Spring Bakery",
+    "owner": "N/A",
+    "price": "$2,000,000",
+    "tax": "$15,000"
+  },
+  {
+    "id": "springfield-apparel",
+    "name": "Springfield Apparel",
+    "number": "11071",
+    "buildingType": "Springfield Apparel",
+    "owner": "N/A",
+    "price": "$2,000,000",
+    "tax": "$15,000"
+  },
+  {
+    "id": "redwood-outdoor-store",
+    "name": "Redwood Outdoor Store",
+    "number": "4121",
+    "buildingType": "Redwood Outdoor Store",
+    "owner": "N/A",
+    "price": "$5,000,000",
+    "tax": "$30,000"
+  },
+  {
+    "id": "tool-store",
+    "name": "Tool Store",
+    "number": "4061",
+    "buildingType": "Tool Store",
+    "owner": "N/A",
+    "price": "$6,000,000",
+    "tax": "$40,000"
+  },
+  {
+    "id": "valley-transit",
+    "name": "Valley Transit",
+    "number": "2172",
+    "buildingType": "Valley Transit",
+    "owner": "N/A",
+    "price": "$3,500,000",
+    "tax": "$25,000"
+  },
+  {
+    "id": "county-farm",
+    "name": "County Farm",
+    "number": "N/A",
+    "buildingType": "County Farm",
+    "owner": "N/A",
+    "price": "$4,000,000",
+    "tax": "$20,000"
+  },
+  {
+    "id": "main-farm-rural-heartland",
+    "name": "Main Farm (Rural Heartland)",
+    "number": "N/A",
+    "buildingType": "Main Farm (Rural Heartland)",
+    "owner": "N/A",
+    "price": "$4,500,000",
+    "tax": "$25,000"
+  },
+  {
+    "id": "theater",
+    "name": "Theater",
+    "number": "11081",
+    "buildingType": "Theater",
+    "owner": "N/A",
+    "price": "$2,000,000",
+    "tax": "$25,000"
+  },
+  {
+    "id": "dealership",
+    "name": "Dealership",
+    "number": "2031",
+    "buildingType": "Dealership",
+    "owner": "N/A",
+    "price": "$20,000,000",
+    "tax": "$80,000"
+  },
+  {
+    "id": "bank",
+    "name": "Bank",
+    "number": "2051",
+    "buildingType": "Bank",
+    "owner": "Government",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "memorial-hospital",
+    "name": "Memorial Hospital",
+    "number": "4041",
+    "buildingType": "Memorial Hospital",
+    "owner": "Government",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "post-office",
+    "name": "Post Office",
+    "number": "3081",
+    "buildingType": "Post Office",
+    "owner": "N/A",
+    "price": "$3,000,000",
+    "tax": "$30,000"
+  },
+  {
+    "id": "waste-services",
+    "name": "Waste Services",
+    "number": "N/A",
+    "buildingType": "Waste Services",
+    "owner": "N/A",
+    "price": "$7,500,000",
+    "tax": "$40,000"
+  },
+  {
+    "id": "distribution-center",
+    "name": "Distribution Center",
+    "number": "N/A",
+    "buildingType": "Distribution Center",
+    "owner": "N/A",
+    "price": "$7,500,000",
+    "tax": "$40,000"
+  },
+  {
+    "id": "warehouse",
+    "name": "Warehouse",
+    "number": "N/A",
+    "buildingType": "Warehouse",
+    "owner": "N/A",
+    "price": "$10,000,000",
+    "tax": "$60,000"
+  },
+  {
+    "id": "springfield-guns-and-ammo",
+    "name": "Springfield Guns and Ammo",
+    "number": "11043",
+    "buildingType": "Springfield Guns and Ammo",
+    "owner": "N/A",
+    "price": "$15,500,000",
+    "tax": "$50,000"
+  },
+  {
+    "id": "news-service",
+    "name": "News Service",
+    "number": "N/A",
+    "buildingType": "News Service",
+    "owner": "N/A",
+    "price": "$1,000,000",
+    "tax": "$15,000"
+  },
+  {
+    "id": "metro-tactical",
+    "name": "Metro Tactical",
+    "number": "N/A",
+    "buildingType": "Metro Tactical",
+    "owner": "N/A",
+    "price": "$6,000,000",
+    "tax": "$30,000"
+  },
+  {
+    "id": "construction-site",
+    "name": "Construction Site",
+    "number": "4071",
+    "buildingType": "Construction Site",
+    "owner": "N/A",
+    "price": "$3,500,000",
+    "tax": "$20,000"
+  },
+  {
+    "id": "la-mesa",
+    "name": "La Mesa",
+    "number": "N/A",
+    "buildingType": "La Mesa",
+    "owner": "N/A",
+    "price": "$4,500,000",
+    "tax": "$30,000"
+  },
+  {
+    "id": "springfield-office-building-5",
+    "name": "Springfield Office Building #5",
+    "number": "5",
+    "buildingType": "Springfield Office Building #5",
+    "owner": "N/A",
+    "price": "$1,000,000",
+    "tax": "$15,000"
+  },
+  {
+    "id": "house-2011",
+    "name": "House 2011",
+    "number": "2011",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-2012",
+    "name": "House 2012",
+    "number": "2012",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-2061",
+    "name": "House 2061",
+    "number": "2061",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-2062",
+    "name": "House 2062",
+    "number": "2062",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-2063",
+    "name": "House 2063",
+    "number": "2063",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-2071",
+    "name": "House 2071",
+    "number": "2071",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-2072",
+    "name": "House 2072",
+    "number": "2072",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-2073",
+    "name": "House 2073",
+    "number": "2073",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-2074",
+    "name": "House 2074",
+    "number": "2074",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-2081",
+    "name": "House 2081",
+    "number": "2081",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-2082",
+    "name": "House 2082",
+    "number": "2082",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-2083",
+    "name": "House 2083",
+    "number": "2083",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-2084",
+    "name": "House 2084",
+    "number": "2084",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-2085",
+    "name": "House 2085",
+    "number": "2085",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-2111",
+    "name": "House 2111",
+    "number": "2111",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-2121",
+    "name": "House 2121",
+    "number": "2121",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-2131",
+    "name": "House 2131",
+    "number": "2131",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-2132",
+    "name": "House 2132",
+    "number": "2132",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-2161",
+    "name": "House 2161",
+    "number": "2161",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-2191",
+    "name": "House 2191",
+    "number": "2191",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-2201",
+    "name": "House 2201",
+    "number": "2201",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-2202",
+    "name": "House 2202",
+    "number": "2202",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-2211",
+    "name": "House 2211",
+    "number": "2211",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-2212",
+    "name": "House 2212",
+    "number": "2212",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-2213",
+    "name": "House 2213",
+    "number": "2213",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-2214",
+    "name": "House 2214",
+    "number": "2214",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-2221",
+    "name": "House 2221",
+    "number": "2221",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-2222",
+    "name": "House 2222",
+    "number": "2222",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-3001",
+    "name": "House 3001",
+    "number": "3001",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-3041",
+    "name": "House 3041",
+    "number": "3041",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-3051",
+    "name": "House 3051",
+    "number": "3051",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-3061",
+    "name": "House 3061",
+    "number": "3061",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-3091",
+    "name": "House 3091",
+    "number": "3091",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-4052",
+    "name": "House 4052",
+    "number": "4052",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-4053",
+    "name": "House 4053",
+    "number": "4053",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-4054",
+    "name": "House 4054",
+    "number": "4054",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-4055",
+    "name": "House 4055",
+    "number": "4055",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-4056",
+    "name": "House 4056",
+    "number": "4056",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-5021",
+    "name": "House 5021",
+    "number": "5021",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-5041",
+    "name": "House 5041",
+    "number": "5041",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-5042",
+    "name": "House 5042",
+    "number": "5042",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-5043",
+    "name": "House 5043",
+    "number": "5043",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-5044",
+    "name": "House 5044",
+    "number": "5044",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-5051",
+    "name": "House 5051",
+    "number": "5051",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-5052",
+    "name": "House 5052",
+    "number": "5052",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-5053",
+    "name": "House 5053",
+    "number": "5053",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-5054",
+    "name": "House 5054",
+    "number": "5054",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-5061",
+    "name": "House 5061",
+    "number": "5061",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-5062",
+    "name": "House 5062",
+    "number": "5062",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-5063",
+    "name": "House 5063",
+    "number": "5063",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-7001",
+    "name": "House 7001",
+    "number": "7001",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-7011",
+    "name": "House 7011",
+    "number": "7011",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-7012",
+    "name": "House 7012",
+    "number": "7012",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-7013",
+    "name": "House 7013",
+    "number": "7013",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-7021",
+    "name": "House 7021",
+    "number": "7021",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-7022",
+    "name": "House 7022",
+    "number": "7022",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-7023",
+    "name": "House 7023",
+    "number": "7023",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-7041",
+    "name": "House 7041",
+    "number": "7041",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-7042",
+    "name": "House 7042",
+    "number": "7042",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-7043",
+    "name": "House 7043",
+    "number": "7043",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-7044",
+    "name": "House 7044",
+    "number": "7044",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-7051",
+    "name": "House 7051",
+    "number": "7051",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-7052",
+    "name": "House 7052",
+    "number": "7052",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-7053",
+    "name": "House 7053",
+    "number": "7053",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-7054",
+    "name": "House 7054",
+    "number": "7054",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-7055",
+    "name": "House 7055",
+    "number": "7055",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-7056",
+    "name": "House 7056",
+    "number": "7056",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-7061",
+    "name": "House 7061",
+    "number": "7061",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-7062",
+    "name": "House 7062",
+    "number": "7062",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-7063",
+    "name": "House 7063",
+    "number": "7063",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-7064",
+    "name": "House 7064",
+    "number": "7064",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-7091",
+    "name": "House 7091",
+    "number": "7091",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-7092",
+    "name": "House 7092",
+    "number": "7092",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-7093",
+    "name": "House 7093",
+    "number": "7093",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-7094",
+    "name": "House 7094",
+    "number": "7094",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-7095",
+    "name": "House 7095",
+    "number": "7095",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-9041",
+    "name": "House 9041",
+    "number": "9041",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-9042",
+    "name": "House 9042",
+    "number": "9042",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-9043",
+    "name": "House 9043",
+    "number": "9043",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-9045",
+    "name": "House 9045",
+    "number": "9045",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-9061",
+    "name": "House 9061",
+    "number": "9061",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-9062",
+    "name": "House 9062",
+    "number": "9062",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-9071",
+    "name": "House 9071",
+    "number": "9071",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-9072",
+    "name": "House 9072",
+    "number": "9072",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-9073",
+    "name": "House 9073",
+    "number": "9073",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-9074",
+    "name": "House 9074",
+    "number": "9074",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-9081",
+    "name": "House 9081",
+    "number": "9081",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-9082",
+    "name": "House 9082",
+    "number": "9082",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-9101",
+    "name": "House 9101",
+    "number": "9101",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-11031",
+    "name": "House 11031",
+    "number": "11031",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-11032",
+    "name": "House 11032",
+    "number": "11032",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-11091",
+    "name": "House 11091",
+    "number": "11091",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-11092",
+    "name": "House 11092",
+    "number": "11092",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-11121",
+    "name": "House 11121",
+    "number": "11121",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-11122",
+    "name": "House 11122",
+    "number": "11122",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-11123",
+    "name": "House 11123",
+    "number": "11123",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-12021",
+    "name": "House 12021",
+    "number": "12021",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-12022",
+    "name": "House 12022",
+    "number": "12022",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-12023",
+    "name": "House 12023",
+    "number": "12023",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-12051",
+    "name": "House 12051",
+    "number": "12051",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-12052",
+    "name": "House 12052",
+    "number": "12052",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-12053",
+    "name": "House 12053",
+    "number": "12053",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-12054",
+    "name": "House 12054",
+    "number": "12054",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-12055",
+    "name": "House 12055",
+    "number": "12055",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "house-12056",
+    "name": "House 12056",
+    "number": "12056",
+    "buildingType": "House",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-200",
+    "name": "Property 200",
+    "number": "200",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-201",
+    "name": "Property 201",
+    "number": "201",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-202",
+    "name": "Property 202",
+    "number": "202",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-203",
+    "name": "Property 203",
+    "number": "203",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-204",
+    "name": "Property 204",
+    "number": "204",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-205",
+    "name": "Property 205",
+    "number": "205",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-206",
+    "name": "Property 206",
+    "number": "206",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-207",
+    "name": "Property 207",
+    "number": "207",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-208",
+    "name": "Property 208",
+    "number": "208",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-210",
+    "name": "Property 210",
+    "number": "210",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-211",
+    "name": "Property 211",
+    "number": "211",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-212",
+    "name": "Property 212",
+    "number": "212",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-213",
+    "name": "Property 213",
+    "number": "213",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-216",
+    "name": "Property 216",
+    "number": "216",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-217",
+    "name": "Property 217",
+    "number": "217",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-218",
+    "name": "Property 218",
+    "number": "218",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-219",
+    "name": "Property 219",
+    "number": "219",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-220",
+    "name": "Property 220",
+    "number": "220",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-221",
+    "name": "Property 221",
+    "number": "221",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-222",
+    "name": "Property 222",
+    "number": "222",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-223",
+    "name": "Property 223",
+    "number": "223",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-224",
+    "name": "Property 224",
+    "number": "224",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-225",
+    "name": "Property 225",
+    "number": "225",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-300",
+    "name": "Property 300",
+    "number": "300",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-301",
+    "name": "Property 301",
+    "number": "301",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-302",
+    "name": "Property 302",
+    "number": "302",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-303",
+    "name": "Property 303",
+    "number": "303",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-304",
+    "name": "Property 304",
+    "number": "304",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-305",
+    "name": "Property 305",
+    "number": "305",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-306",
+    "name": "Property 306",
+    "number": "306",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-307",
+    "name": "Property 307",
+    "number": "307",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-308",
+    "name": "Property 308",
+    "number": "308",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-309",
+    "name": "Property 309",
+    "number": "309",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-310",
+    "name": "Property 310",
+    "number": "310",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-311",
+    "name": "Property 311",
+    "number": "311",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-312",
+    "name": "Property 312",
+    "number": "312",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-313",
+    "name": "Property 313",
+    "number": "313",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-314",
+    "name": "Property 314",
+    "number": "314",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-400",
+    "name": "Property 400",
+    "number": "400",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-401",
+    "name": "Property 401",
+    "number": "401",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-402",
+    "name": "Property 402",
+    "number": "402",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-403",
+    "name": "Property 403",
+    "number": "403",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-404",
+    "name": "Property 404",
+    "number": "404",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-405",
+    "name": "Property 405",
+    "number": "405",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-406",
+    "name": "Property 406",
+    "number": "406",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-407",
+    "name": "Property 407",
+    "number": "407",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-408",
+    "name": "Property 408",
+    "number": "408",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-409",
+    "name": "Property 409",
+    "number": "409",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-410",
+    "name": "Property 410",
+    "number": "410",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-411",
+    "name": "Property 411",
+    "number": "411",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-412",
+    "name": "Property 412",
+    "number": "412",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-500",
+    "name": "Property 500",
+    "number": "500",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-501",
+    "name": "Property 501",
+    "number": "501",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-502",
+    "name": "Property 502",
+    "number": "502",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-503",
+    "name": "Property 503",
+    "number": "503",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-504",
+    "name": "Property 504",
+    "number": "504",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-505",
+    "name": "Property 505",
+    "number": "505",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-506",
+    "name": "Property 506",
+    "number": "506",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-507",
+    "name": "Property 507",
+    "number": "507",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-509",
+    "name": "Property 509",
+    "number": "509",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-510",
+    "name": "Property 510",
+    "number": "510",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-511",
+    "name": "Property 511",
+    "number": "511",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-600",
+    "name": "Property 600",
+    "number": "600",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-601",
+    "name": "Property 601",
+    "number": "601",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-602",
+    "name": "Property 602",
+    "number": "602",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-603",
+    "name": "Property 603",
+    "number": "603",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-604",
+    "name": "Property 604",
+    "number": "604",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-605",
+    "name": "Property 605",
+    "number": "605",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-700",
+    "name": "Property 700",
+    "number": "700",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-701",
+    "name": "Property 701",
+    "number": "701",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-702",
+    "name": "Property 702",
+    "number": "702",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-703",
+    "name": "Property 703",
+    "number": "703",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-704",
+    "name": "Property 704",
+    "number": "704",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-705",
+    "name": "Property 705",
+    "number": "705",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-706",
+    "name": "Property 706",
+    "number": "706",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-707",
+    "name": "Property 707",
+    "number": "707",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-708",
+    "name": "Property 708",
+    "number": "708",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-709",
+    "name": "Property 709",
+    "number": "709",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-710",
+    "name": "Property 710",
+    "number": "710",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-711",
+    "name": "Property 711",
+    "number": "711",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-800",
+    "name": "Property 800",
+    "number": "800",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-801",
+    "name": "Property 801",
+    "number": "801",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-802",
+    "name": "Property 802",
+    "number": "802",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-803",
+    "name": "Property 803",
+    "number": "803",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-804",
+    "name": "Property 804",
+    "number": "804",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-805",
+    "name": "Property 805",
+    "number": "805",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-806",
+    "name": "Property 806",
+    "number": "806",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-900",
+    "name": "Property 900",
+    "number": "900",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-901",
+    "name": "Property 901",
+    "number": "901",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-902",
+    "name": "Property 902",
+    "number": "902",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-903",
+    "name": "Property 903",
+    "number": "903",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-904",
+    "name": "Property 904",
+    "number": "904",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-905",
+    "name": "Property 905",
+    "number": "905",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-906",
+    "name": "Property 906",
+    "number": "906",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-907",
+    "name": "Property 907",
+    "number": "907",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-908",
+    "name": "Property 908",
+    "number": "908",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-909",
+    "name": "Property 909",
+    "number": "909",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-910",
+    "name": "Property 910",
+    "number": "910",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-1100",
+    "name": "Property 1100",
+    "number": "1100",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-1101",
+    "name": "Property 1101",
+    "number": "1101",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-1102",
+    "name": "Property 1102",
+    "number": "1102",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-1103",
+    "name": "Property 1103",
+    "number": "1103",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-1104",
+    "name": "Property 1104",
+    "number": "1104",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-1105",
+    "name": "Property 1105",
+    "number": "1105",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-1106",
+    "name": "Property 1106",
+    "number": "1106",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-1107",
+    "name": "Property 1107",
+    "number": "1107",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-1108",
+    "name": "Property 1108",
+    "number": "1108",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-1109",
+    "name": "Property 1109",
+    "number": "1109",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-1110",
+    "name": "Property 1110",
+    "number": "1110",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-1111",
+    "name": "Property 1111",
+    "number": "1111",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-1112",
+    "name": "Property 1112",
+    "number": "1112",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-1113",
+    "name": "Property 1113",
+    "number": "1113",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-1200",
+    "name": "Property 1200",
+    "number": "1200",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-1201",
+    "name": "Property 1201",
+    "number": "1201",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-1202",
+    "name": "Property 1202",
+    "number": "1202",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-1203",
+    "name": "Property 1203",
+    "number": "1203",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-1204",
+    "name": "Property 1204",
+    "number": "1204",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-1205",
+    "name": "Property 1205",
+    "number": "1205",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-1206",
+    "name": "Property 1206",
+    "number": "1206",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  },
+  {
+    "id": "postal-1207",
+    "name": "Property 1207",
+    "number": "1207",
+    "buildingType": "Property",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale"
+  }
+]

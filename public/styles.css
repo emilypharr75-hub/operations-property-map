@@ -1,0 +1,359 @@
+:root {
+  color-scheme: dark;
+  --bg: #101214;
+  --panel: #181c20;
+  --panel-2: #20262b;
+  --text: #f2f4f7;
+  --muted: #aeb7bf;
+  --line: #343d45;
+  --accent: #e03b3b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  min-height: 100vh;
+}
+
+.map-panel {
+  min-width: 0;
+  padding: 16px;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.toolbar label {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.toolbar input {
+  width: min(520px, 100%);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  padding: 10px 12px;
+}
+
+.zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.zoom-controls button {
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel-2);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.zoom-controls input {
+  width: 150px;
+  padding: 0;
+}
+
+.zoom-controls output {
+  min-width: 48px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.edit-toggle {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel-2);
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+  padding: 0 12px;
+}
+
+.edit-toggle[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: #3a2020;
+}
+
+.lock-button {
+  position: sticky;
+  top: 12px;
+  left: 12px;
+  z-index: 5;
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(24, 28, 32, 0.92);
+  color: transparent;
+  cursor: pointer;
+  font-size: 0;
+}
+
+.lock-button::before {
+  content: "🔒";
+  color: var(--text);
+  font-size: 20px;
+}
+
+.lock-button[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: rgba(58, 32, 32, 0.94);
+}
+
+.lock-button[aria-pressed="true"]::before {
+  content: "🔓";
+}
+
+.map-wrap {
+  position: relative;
+  overflow: auto;
+  height: calc(100vh - 76px);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #050607;
+}
+
+.map-surface {
+  position: relative;
+  width: var(--map-width, 1800px);
+  height: var(--map-width, 1800px);
+}
+
+#mapImage {
+  display: block;
+  width: 100%;
+  max-width: none;
+  height: auto;
+}
+
+.markers {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.marker {
+  position: absolute;
+  border: 2px solid var(--marker-color);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--marker-color) 8%, transparent);
+  cursor: pointer;
+  pointer-events: auto;
+  transition: background 120ms ease, box-shadow 120ms ease;
+  touch-action: none;
+}
+
+.marker:hover,
+.marker.active {
+  background: color-mix(in srgb, var(--marker-color) 26%, transparent);
+  box-shadow: 0 0 0 2px #fff;
+}
+
+.markers.editing .marker {
+  cursor: move;
+}
+
+.resize-handle {
+  display: none;
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border: 2px solid #fff;
+  border-radius: 2px;
+  background: var(--marker-color);
+}
+
+.markers.editing .resize-handle {
+  display: block;
+}
+
+.resize-handle.nw {
+  left: -7px;
+  top: -7px;
+  cursor: nwse-resize;
+}
+
+.resize-handle.ne {
+  right: -7px;
+  top: -7px;
+  cursor: nesw-resize;
+}
+
+.resize-handle.sw {
+  left: -7px;
+  bottom: -7px;
+  cursor: nesw-resize;
+}
+
+.resize-handle.se {
+  right: -7px;
+  bottom: -7px;
+  cursor: nwse-resize;
+}
+
+.status-panel {
+  border-left: 1px solid var(--line);
+  background: var(--panel);
+  padding: 22px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 0 0 20px;
+  font-size: 26px;
+  line-height: 1.15;
+}
+
+dl {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+dl div {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel-2);
+  padding: 12px;
+}
+
+dt {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+dd {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.password-dialog {
+  width: min(360px, calc(100vw - 32px));
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--text);
+  padding: 0;
+}
+
+.password-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.password-dialog form {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+}
+
+.password-dialog h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.password-dialog label {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.password-dialog input {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel-2);
+  color: var(--text);
+  font: inherit;
+  padding: 10px 12px;
+}
+
+.password-error {
+  min-height: 18px;
+  margin: 0;
+  color: #ff8e8e;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.dialog-actions button {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel-2);
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+  padding: 0 12px;
+}
+
+@media (max-width: 900px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+
+  .status-panel {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .map-wrap {
+    height: 58vh;
+  }
+
+  .zoom-controls {
+    width: 100%;
+    margin-left: 0;
+  }
+}

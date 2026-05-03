@@ -1,0 +1,9 @@
+.env
+.env.*
+node_modules/
+.vercel/
+eng.traineddata
+
+Map_of_ERLC*.png
+*_boxed.png
+*_crop.png
