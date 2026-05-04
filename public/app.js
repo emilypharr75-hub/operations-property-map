@@ -613,7 +613,7 @@ async function saveBoxesToCloud() {
 
     setPublishStatus('Published');
   } catch (error) {
-    setPublishStatus('Save failed');
+    setPublishStatus(error.message.includes('GITHUB_TOKEN') ? 'Missing token' : 'Save failed');
     console.error(error);
   } finally {
     cloudSaveInFlight = false;
