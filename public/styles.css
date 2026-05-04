@@ -105,6 +105,11 @@ body {
   background: #3a2020;
 }
 
+.edit-toggle:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
 .lock-button {
   position: sticky;
   top: 12px;
@@ -167,18 +172,19 @@ body {
 
 .marker {
   position: absolute;
-  border: 2px solid var(--marker-color);
+  border: 3px solid var(--outline-color);
   border-radius: 4px;
-  background: color-mix(in srgb, var(--marker-color) 8%, transparent);
+  background: color-mix(in srgb, var(--marker-color) 38%, transparent);
   cursor: pointer;
   pointer-events: auto;
   transition: background 120ms ease, box-shadow 120ms ease;
   touch-action: none;
+  transform-origin: center;
 }
 
 .marker:hover,
 .marker.active {
-  background: color-mix(in srgb, var(--marker-color) 26%, transparent);
+  background: color-mix(in srgb, var(--marker-color) 52%, transparent);
   box-shadow: 0 0 0 2px #fff;
 }
 
@@ -186,7 +192,8 @@ body {
   cursor: move;
 }
 
-.resize-handle {
+.resize-handle,
+.rotate-handle {
   display: none;
   position: absolute;
   width: 12px;
@@ -196,8 +203,18 @@ body {
   background: var(--marker-color);
 }
 
-.markers.editing .resize-handle {
+.markers.editing .resize-handle,
+.markers.editing .rotate-handle {
   display: block;
+}
+
+.rotate-handle {
+  left: calc(50% - 8px);
+  top: -32px;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  cursor: grab;
 }
 
 .resize-handle.nw {
@@ -272,6 +289,27 @@ dd {
   font-weight: 700;
 }
 
+.field-editor {
+  display: none;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-weight: 700;
+  padding: 8px 10px;
+}
+
+.status-panel.editing .field-editor {
+  display: block;
+  margin-top: 8px;
+}
+
+.name-editor {
+  margin-bottom: 16px;
+}
+
 .password-dialog {
   width: min(360px, calc(100vw - 32px));
   border: 1px solid var(--line);
@@ -303,13 +341,32 @@ dd {
   text-transform: uppercase;
 }
 
+.password-field {
+  display: flex;
+  gap: 8px;
+}
+
 .password-dialog input {
+  min-width: 0;
+  flex: 1;
   border: 1px solid var(--line);
   border-radius: 6px;
   background: var(--panel-2);
   color: var(--text);
   font: inherit;
   padding: 10px 12px;
+}
+
+.password-field button {
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel-2);
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+  padding: 0 12px;
 }
 
 .password-error {

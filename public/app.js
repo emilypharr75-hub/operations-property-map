@@ -2,6 +2,8 @@ const MAP_SIZE = 3120;
 const BASE_DISPLAY_SIZE = 1800;
 const DEFAULT_MARKER_COLOR = '#ff3535';
 const MARKER_STORAGE_KEY = 'erlcPropertyMarkerEdits';
+const PROPERTY_STORAGE_KEY = 'erlcPropertyEdits';
+const CUSTOM_PROPERTY_STORAGE_KEY = 'erlcCustomProperties';
 const MIN_MARKER_SIZE = 18;
 const EDIT_PASSWORD = 'BillingForTheWin';
 
@@ -15,20 +17,29 @@ const elements = {
   zoomOut: document.querySelector('#zoomOut'),
   zoomRange: document.querySelector('#zoomRange'),
   zoomValue: document.querySelector('#zoomValue'),
+  addBox: document.querySelector('#addBox'),
+  exportBoxes: document.querySelector('#exportBoxes'),
   editModeLock: document.querySelector('#editModeLock'),
   undoEdit: document.querySelector('#undoEdit'),
   resetBoxes: document.querySelector('#resetBoxes'),
   passwordDialog: document.querySelector('#passwordDialog'),
   passwordForm: document.querySelector('#passwordForm'),
   editPassword: document.querySelector('#editPassword'),
+  togglePasswordView: document.querySelector('#togglePasswordView'),
   passwordError: document.querySelector('#passwordError'),
   cancelPassword: document.querySelector('#cancelPassword'),
   propertyName: document.querySelector('#propertyName'),
+  propertyNameEdit: document.querySelector('#propertyNameEdit'),
   buildingType: document.querySelector('#buildingType'),
+  buildingTypeEdit: document.querySelector('#buildingTypeEdit'),
   propertyNumber: document.querySelector('#propertyNumber'),
+  propertyNumberEdit: document.querySelector('#propertyNumberEdit'),
   propertyOwner: document.querySelector('#propertyOwner'),
+  propertyOwnerEdit: document.querySelector('#propertyOwnerEdit'),
   propertyPrice: document.querySelector('#propertyPrice'),
-  propertyTax: document.querySelector('#propertyTax')
+  propertyPriceEdit: document.querySelector('#propertyPriceEdit'),
+  propertyTax: document.querySelector('#propertyTax'),
+  propertyTaxEdit: document.querySelector('#propertyTaxEdit')
 };
 
 let properties = [];
@@ -61,6 +72,89 @@ function isSelectableProperty(property) {
   return !property.id.startsWith('postal-');
 }
 
+function normalizeBuildingType(value) {
+  const normalized = value.toLowerCase();
+
+  if (normalized === 'office building') {
+    return 'office building';
+  }
+
+  if (normalized === 'house') {
+    return 'house';
+  }
+
+  if (normalized === 'government') {
+    return 'government';
+  }
+
+  return 'building';
+}
+
+function inferBuildingType(property) {
+  if (property.name.toLowerCase().includes('office building')) {
+    return 'office building';
+  }
+
+  return normalizeBuildingType(property.buildingType);
+}
+
+function formatBuildingType(type) {
+  const normalized = normalizeBuildingType(type);
+
+  if (normalized === 'office building') {
+    return 'Office Building';
+  }
+
+  if (normalized === 'government') {
+    return 'Government';
+  }
+
+  if (normalized === 'house') {
+    return 'House';
+  }
+
+  return 'Building';
+}
+
+function markerColorFor(property) {
+  const type = inferBuildingType(property);
+
+  if (type === 'house') {
+    return '#25a55f';
+  }
+
+  if (type === 'office building') {
+    return '#8e44ad';
+  }
+
+  if (type === 'government') {
+    return '#050505';
+  }
+
+  return '#f28c28';
+}
+
+function markerOutlineColorFor(property) {
+  const owner = property.owner.trim().toLowerCase();
+  const price = property.price.trim().toLowerCase();
+  const tax = property.tax.trim().toLowerCase();
+  const isOwned = owner && owner !== 'n/a' && owner !== 'none';
+  const isUnavailable = price === 'not for sale' ||
+    tax === 'not for sale' ||
+    price === 'n/a' ||
+    tax === 'n/a';
+
+  if (isUnavailable) {
+    return '#ff3030';
+  }
+
+  if (isOwned) {
+    return '#24d16f';
+  }
+
+  return '#ffd43b';
+}
+
 function getBuildingRect(region, property) {
   if (region.buildingRect) {
     return region.buildingRect;
@@ -68,7 +162,7 @@ function getBuildingRect(region, property) {
 
   const [left, top, right, bottom] = region.rect;
 
-  if (property.buildingType === 'House') {
+  if (property.buildingType.toLowerCase() === 'house') {
     const centerX = (left + right) / 2;
     const width = Math.min(70, Math.max(46, (right - left) * 0.68));
     const height = Math.min(58, Math.max(40, (bottom - top) * 0.72));
@@ -88,19 +182,106 @@ function getMarkerRect(region, property) {
   return getBuildingRect(region, property);
 }
 
+function getMarkerRotation(region) {
+  return Number(region.rotation || 0);
+}
+
+function normalizeDegrees(value) {
+  return Math.round((((value % 360) + 540) % 360) - 180);
+}
+
+function editablePropertyFields() {
+  return [
+    ['name', elements.propertyNameEdit],
+    ['buildingType', elements.buildingTypeEdit],
+    ['number', elements.propertyNumberEdit],
+    ['owner', elements.propertyOwnerEdit],
+    ['price', elements.propertyPriceEdit],
+    ['tax', elements.propertyTaxEdit]
+  ];
+}
+
+function setPropertyEditorsDisabled(disabled) {
+  for (const [, element] of editablePropertyFields()) {
+    element.disabled = disabled;
+  }
+}
+
+function saveCustomProperties() {
+  const customProperties = properties
+    .filter(property => property.custom)
+    .map(property => {
+      const marker = propertyMarkers.find(region => region.id === property.id);
+
+      return {
+        property: {
+          id: property.id,
+          name: property.name,
+          number: property.number,
+          buildingType: property.buildingType,
+          owner: property.owner,
+          price: property.price,
+          tax: property.tax,
+          custom: true
+        },
+        marker: marker ? {
+          id: marker.id,
+          rect: marker.rect,
+          buildingRect: marker.buildingRect,
+          removed: Boolean(marker.removed),
+          rotation: getMarkerRotation(marker),
+          color: marker.color || DEFAULT_MARKER_COLOR,
+          custom: true
+        } : null
+      };
+    });
+
+  localStorage.setItem(CUSTOM_PROPERTY_STORAGE_KEY, JSON.stringify(customProperties));
+}
+
+function applyStoredCustomProperties() {
+  const stored = JSON.parse(localStorage.getItem(CUSTOM_PROPERTY_STORAGE_KEY) || '[]');
+
+  for (const entry of stored) {
+    if (!entry?.property?.id || !entry?.marker) {
+      continue;
+    }
+
+    if (properties.some(property => property.id === entry.property.id) ||
+      propertyMarkers.some(marker => marker.id === entry.marker.id)) {
+      continue;
+    }
+
+    properties.push({
+      ...entry.property,
+      custom: true
+    });
+    propertyMarkers.push({
+      ...entry.marker,
+      custom: true
+    });
+  }
+}
+
 function saveMarkerEdits() {
   const editedMarkers = {};
 
   for (const marker of propertyMarkers) {
-    if (marker.buildingRect || marker.removed) {
+    if (marker.custom) {
+      continue;
+    }
+
+    if (marker.buildingRect || marker.removed || marker.rotation) {
       editedMarkers[marker.id] = {
         buildingRect: marker.buildingRect,
-        removed: Boolean(marker.removed)
+        removed: Boolean(marker.removed),
+        rotation: getMarkerRotation(marker)
       };
     }
   }
 
   localStorage.setItem(MARKER_STORAGE_KEY, JSON.stringify(editedMarkers));
+  saveCustomProperties();
 }
 
 function applyStoredMarkerEdits() {
@@ -117,14 +298,60 @@ function applyStoredMarkerEdits() {
     if (edit) {
       marker.buildingRect = edit.buildingRect;
       marker.removed = Boolean(edit.removed);
+      marker.rotation = Number(edit.rotation || 0);
     }
+  }
+}
+
+function savePropertyEdits() {
+  const editedProperties = {};
+
+  for (const property of properties) {
+    if (property.custom) {
+      continue;
+    }
+
+    if (property.localEdited) {
+      editedProperties[property.id] = {
+        buildingType: property.buildingType,
+        name: property.name,
+        number: property.number,
+        owner: property.owner,
+        price: property.price,
+        tax: property.tax
+      };
+    }
+  }
+
+  localStorage.setItem(PROPERTY_STORAGE_KEY, JSON.stringify(editedProperties));
+  saveCustomProperties();
+}
+
+function applyStoredPropertyEdits() {
+  const stored = JSON.parse(localStorage.getItem(PROPERTY_STORAGE_KEY) || '{}');
+
+  for (const property of properties) {
+    const edit = stored[property.id];
+
+    if (edit) {
+      property.name = edit.name || property.name;
+      property.number = edit.number || property.number;
+      property.buildingType = edit.buildingType ? normalizeBuildingType(edit.buildingType) : property.buildingType;
+      property.owner = edit.owner || property.owner;
+      property.price = edit.price || property.price;
+      property.tax = edit.tax || property.tax;
+      property.localEdited = true;
+    }
+
+    property.buildingType = inferBuildingType(property);
   }
 }
 
 function markerSnapshot(marker) {
   return {
     buildingRect: marker.buildingRect ? [...marker.buildingRect] : undefined,
-    removed: Boolean(marker.removed)
+    removed: Boolean(marker.removed),
+    rotation: getMarkerRotation(marker)
   };
 }
 
@@ -148,6 +375,7 @@ function restoreMarkerSnapshot(id, snapshot) {
 
   marker.buildingRect = snapshot.buildingRect ? [...snapshot.buildingRect] : undefined;
   marker.removed = snapshot.removed;
+  marker.rotation = snapshot.rotation || 0;
   saveMarkerEdits();
   renderMarkers();
   selectedMarkerId = id;
@@ -168,13 +396,14 @@ function undoLastEdit() {
   restoreMarkerSnapshot(entry.id, entry.before);
 }
 
-function applyMarkerElementStyle(markerElement, rect) {
+function applyMarkerElementStyle(markerElement, rect, rotation = 0) {
   const scale = getMarkerScale();
   const [left, top, right, bottom] = rect;
   markerElement.style.left = `${left * scale}px`;
   markerElement.style.top = `${top * scale}px`;
   markerElement.style.width = `${(right - left) * scale}px`;
   markerElement.style.height = `${(bottom - top) * scale}px`;
+  markerElement.style.transform = `rotate(${rotation}deg)`;
 }
 
 function updateMarkerRect(id, rect) {
@@ -188,7 +417,24 @@ function updateMarkerRect(id, rect) {
 
   const markerElement = document.querySelector(`.marker[data-id="${id}"]`);
   if (markerElement) {
-    applyMarkerElementStyle(markerElement, marker.buildingRect);
+    applyMarkerElementStyle(markerElement, marker.buildingRect, getMarkerRotation(marker));
+    markerElement.classList.add('active');
+    activeMarker = markerElement;
+  }
+}
+
+function updateMarkerRotation(id, rotation) {
+  const marker = propertyMarkers.find(region => region.id === id);
+
+  if (!marker) {
+    return;
+  }
+
+  marker.rotation = normalizeDegrees(rotation);
+
+  const markerElement = document.querySelector(`.marker[data-id="${id}"]`);
+  if (markerElement) {
+    markerElement.style.transform = `rotate(${marker.rotation}deg)`;
     markerElement.classList.add('active');
     activeMarker = markerElement;
   }
@@ -220,6 +466,10 @@ function setEditMode(enabled) {
   elements.editModeLock.setAttribute('aria-pressed', String(editMode));
   elements.editModeLock.setAttribute('aria-label', editMode ? 'Lock edit mode' : 'Unlock edit mode');
   elements.markers.classList.toggle('editing', editMode);
+  document.querySelector('.status-panel').classList.toggle('editing', editMode);
+  elements.addBox.disabled = !editMode;
+  elements.exportBoxes.disabled = !editMode;
+  setPropertyEditorsDisabled(!editMode || !selectedMarkerId);
 }
 
 function openPasswordDialog() {
@@ -237,12 +487,20 @@ function selectProperty(id) {
   }
 
   elements.propertyName.textContent = labelFor(property);
-  elements.buildingType.textContent = property.buildingType;
+  elements.propertyNameEdit.value = property.name;
+  property.buildingType = inferBuildingType(property);
+  elements.buildingType.textContent = formatBuildingType(property.buildingType);
+  elements.buildingTypeEdit.value = normalizeBuildingType(property.buildingType);
   elements.propertyNumber.textContent = property.number;
+  elements.propertyNumberEdit.value = property.number;
   elements.propertyOwner.textContent = property.owner;
+  elements.propertyOwnerEdit.value = property.owner;
   elements.propertyPrice.textContent = property.price;
+  elements.propertyPriceEdit.value = property.price;
   elements.propertyTax.textContent = property.tax;
+  elements.propertyTaxEdit.value = property.tax;
   elements.search.value = labelFor(property);
+  setPropertyEditorsDisabled(!editMode);
 
   if (activeMarker) {
     activeMarker.classList.remove('active');
@@ -255,6 +513,152 @@ function selectProperty(id) {
     activeMarker.classList.add('active');
     activeMarker.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' });
   }
+}
+
+function updateSelectedPropertyField(field, value) {
+  if (!editMode || !selectedMarkerId) {
+    return;
+  }
+
+  const property = propertiesById.get(selectedMarkerId);
+  const nextValue = value.trim();
+
+  if (!property || !nextValue) {
+    return;
+  }
+
+  property[field] = field === 'buildingType' ? normalizeBuildingType(nextValue) : nextValue;
+  property.buildingType = inferBuildingType(property);
+  property.localEdited = true;
+  elements.propertyName.textContent = labelFor(property);
+  elements.buildingType.textContent = formatBuildingType(property.buildingType);
+  elements.buildingTypeEdit.value = normalizeBuildingType(property.buildingType);
+  elements.propertyNumber.textContent = property.number;
+  elements.propertyOwner.textContent = property.owner;
+  elements.propertyPrice.textContent = property.price;
+  elements.propertyTax.textContent = property.tax;
+  elements.search.value = labelFor(property);
+  savePropertyEdits();
+  renderOptions();
+
+  if (activeMarker) {
+    activeMarker.setAttribute('aria-label', labelFor(property));
+  }
+}
+
+function updateSelectedPropertyFromInput(event) {
+  updateSelectedPropertyField(event.currentTarget.dataset.field, event.currentTarget.value);
+}
+
+function updateSelectedBuildingType() {
+  if (!editMode || !selectedMarkerId) {
+    return;
+  }
+
+  const property = propertiesById.get(selectedMarkerId);
+
+  if (!property) {
+    return;
+  }
+
+  property.buildingType = normalizeBuildingType(elements.buildingTypeEdit.value);
+  property.buildingType = inferBuildingType(property);
+  property.localEdited = true;
+  savePropertyEdits();
+  renderOptions();
+  renderMarkers();
+  selectProperty(property.id);
+}
+
+function createNewBox() {
+  if (!editMode) {
+    openPasswordDialog();
+    return;
+  }
+
+  const number = window.prompt('Postal or building number for the new box:');
+
+  if (!number?.trim()) {
+    return;
+  }
+
+  const scale = getMarkerScale();
+  const centerX = clamp((elements.mapWrap.scrollLeft + elements.mapWrap.clientWidth / 2) / scale, 0, MAP_SIZE);
+  const centerY = clamp((elements.mapWrap.scrollTop + elements.mapWrap.clientHeight / 2) / scale, 0, MAP_SIZE);
+  const width = 90;
+  const height = 70;
+  const left = clamp(centerX - width / 2, 0, MAP_SIZE - width);
+  const top = clamp(centerY - height / 2, 0, MAP_SIZE - height);
+  const id = `custom-${Date.now()}`;
+  const property = {
+    id,
+    name: `Property ${number.trim()}`,
+    number: number.trim(),
+    buildingType: 'building',
+    owner: 'N/A',
+    price: 'Not for sale',
+    tax: 'Not for sale',
+    custom: true,
+    localEdited: true
+  };
+  const marker = {
+    id,
+    rect: [left, top, left + width, top + height].map(value => Math.round(value)),
+    buildingRect: [left, top, left + width, top + height].map(value => Math.round(value)),
+    color: '#35a7ff',
+    custom: true
+  };
+
+  properties.push(property);
+  propertyMarkers.push(marker);
+  propertiesById.set(id, property);
+  saveCustomProperties();
+  renderOptions();
+  renderMarkers();
+  selectProperty(id);
+}
+
+async function exportBoxes() {
+  const exportData = {
+    properties: properties
+      .filter(isSelectableProperty)
+      .map(property => ({
+        id: property.id,
+        name: property.name,
+        number: property.number,
+        buildingType: property.buildingType,
+        owner: property.owner,
+        price: property.price,
+        tax: property.tax,
+        custom: Boolean(property.custom)
+      })),
+    markers: propertyMarkers
+      .filter(region => !isPostalOnlyMarker(region) && !region.removed)
+      .map(region => ({
+        id: region.id,
+        rect: region.rect,
+        buildingRect: region.buildingRect || region.rect,
+        rotation: getMarkerRotation(region),
+        custom: Boolean(region.custom)
+      }))
+  };
+  const json = `${JSON.stringify(exportData, null, 2)}\n`;
+  const blob = new Blob([json], { type: 'application/json' });
+  const link = document.createElement('a');
+
+  link.href = URL.createObjectURL(blob);
+  link.download = 'erlc-property-boxes-export.json';
+  link.click();
+  URL.revokeObjectURL(link.href);
+
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(json);
+  }
+
+  elements.exportBoxes.textContent = 'Exported';
+  window.setTimeout(() => {
+    elements.exportBoxes.textContent = 'Export Boxes';
+  }, 1600);
 }
 
 function renderMarkers() {
@@ -281,22 +685,20 @@ function renderMarkers() {
     marker.type = 'button';
     marker.className = 'marker';
     marker.dataset.id = region.id;
-    marker.style.setProperty('--marker-color', region.color || DEFAULT_MARKER_COLOR);
+    property.buildingType = inferBuildingType(property);
+    marker.style.setProperty('--marker-color', markerColorFor(property));
+    marker.style.setProperty('--outline-color', markerOutlineColorFor(property));
     marker.style.left = `${left * scale}px`;
     marker.style.top = `${top * scale}px`;
     marker.style.width = `${(right - left) * scale}px`;
     marker.style.height = `${(bottom - top) * scale}px`;
+    marker.style.transform = `rotate(${getMarkerRotation(region)}deg)`;
     marker.setAttribute('aria-label', labelFor(property));
     marker.addEventListener('pointerdown', event => startMarkerEdit(event, region, property));
     marker.addEventListener('click', event => {
       if (editMode) {
         event.preventDefault();
-        selectedMarkerId = region.id;
-        if (activeMarker) {
-          activeMarker.classList.remove('active');
-        }
-        marker.classList.add('active');
-        activeMarker = marker;
+        selectProperty(region.id);
         return;
       }
 
@@ -308,6 +710,10 @@ function renderMarkers() {
       handle.dataset.handle = handleName;
       marker.append(handle);
     }
+    const rotateHandle = document.createElement('span');
+    rotateHandle.className = 'rotate-handle';
+    rotateHandle.dataset.handle = 'rotate';
+    marker.append(rotateHandle);
     elements.markers.append(marker);
   }
 }
@@ -322,12 +728,20 @@ function startMarkerEdit(event, region, property) {
   const handle = event.target.dataset.handle || 'move';
   const rect = getMarkerRect(region, property);
   const scale = getMarkerScale();
-  pushUndo(region);
-  selectedMarkerId = region.id;
+  const [left, top, right, bottom] = rect;
+  const centerX = elements.markers.getBoundingClientRect().left + ((left + right) / 2) * scale;
+  const centerY = elements.markers.getBoundingClientRect().top + ((top + bottom) / 2) * scale;
+  selectProperty(region.id);
   dragState = {
     handle,
     id: region.id,
-    rect,
+    rect: [...rect],
+    before: markerSnapshot(region),
+    centerX,
+    centerY,
+    startAngle: Math.atan2(event.clientY - centerY, event.clientX - centerX) * 180 / Math.PI,
+    startRotation: getMarkerRotation(region),
+    moved: false,
     startX: event.clientX,
     startY: event.clientY,
     scale
@@ -343,7 +757,27 @@ function moveMarkerEdit(event) {
 
   const dx = (event.clientX - dragState.startX) / dragState.scale;
   const dy = (event.clientY - dragState.startY) / dragState.scale;
+
+  if (!dragState.moved && (Math.abs(dx) >= 1 || Math.abs(dy) >= 1)) {
+    undoStack.push({
+      id: dragState.id,
+      before: dragState.before
+    });
+
+    if (undoStack.length > 100) {
+      undoStack.shift();
+    }
+
+    dragState.moved = true;
+  }
+
   let [left, top, right, bottom] = dragState.rect;
+
+  if (dragState.handle === 'rotate') {
+    const angle = Math.atan2(event.clientY - dragState.centerY, event.clientX - dragState.centerX) * 180 / Math.PI;
+    updateMarkerRotation(dragState.id, dragState.startRotation + angle - dragState.startAngle);
+    return;
+  }
 
   if (dragState.handle === 'move') {
     left += dx;
@@ -392,7 +826,7 @@ function moveMarkerEdit(event) {
 }
 
 function stopMarkerEdit() {
-  if (dragState) {
+  if (dragState?.moved) {
     saveMarkerEdits();
   }
 
@@ -420,7 +854,7 @@ function removeSelectedMarker() {
 
 function handleKeyboardEdit(event) {
   const tagName = document.activeElement?.tagName?.toLowerCase();
-  const isTyping = tagName === 'input' || tagName === 'textarea';
+  const isTyping = tagName === 'input' || tagName === 'textarea' || tagName === 'select';
 
   if (isTyping) {
     return;
@@ -469,11 +903,15 @@ async function init() {
   ]);
   properties = await propertiesResponse.json();
   propertyMarkers = await markersResponse.json();
+  applyStoredCustomProperties();
+  applyStoredPropertyEdits();
   applyStoredMarkerEdits();
   propertiesById = new Map(properties.map(property => [property.id, property]));
 
   renderOptions();
   renderMarkers();
+  elements.addBox.disabled = true;
+  elements.exportBoxes.disabled = true;
   elements.search.addEventListener('change', selectFromSearch);
   elements.search.addEventListener('keydown', event => {
     if (event.key === 'Enter') {
@@ -514,11 +952,37 @@ async function init() {
   elements.cancelPassword.addEventListener('click', () => {
     elements.passwordDialog.close();
   });
+  elements.togglePasswordView.addEventListener('click', () => {
+    const isVisible = elements.editPassword.type === 'text';
+    elements.editPassword.type = isVisible ? 'password' : 'text';
+    elements.togglePasswordView.textContent = isVisible ? 'Show' : 'Hide';
+    elements.togglePasswordView.setAttribute('aria-label', isVisible ? 'Show password' : 'Hide password');
+    elements.togglePasswordView.setAttribute('aria-pressed', String(!isVisible));
+    elements.editPassword.focus();
+  });
   elements.undoEdit.addEventListener('click', undoLastEdit);
+  elements.addBox.addEventListener('click', createNewBox);
+  elements.exportBoxes.addEventListener('click', () => {
+    exportBoxes().catch(() => {
+      elements.exportBoxes.textContent = 'Download Ready';
+      window.setTimeout(() => {
+        elements.exportBoxes.textContent = 'Export Boxes';
+      }, 1600);
+    });
+  });
   elements.resetBoxes.addEventListener('click', () => {
     localStorage.removeItem(MARKER_STORAGE_KEY);
+    localStorage.removeItem(PROPERTY_STORAGE_KEY);
+    localStorage.removeItem(CUSTOM_PROPERTY_STORAGE_KEY);
     window.location.reload();
   });
+  for (const [field, element] of editablePropertyFields()) {
+    element.dataset.field = field;
+    if (field !== 'buildingType') {
+      element.addEventListener('input', updateSelectedPropertyFromInput);
+    }
+  }
+  elements.buildingTypeEdit.addEventListener('change', updateSelectedBuildingType);
   window.addEventListener('keydown', handleKeyboardEdit);
   window.addEventListener('pointermove', moveMarkerEdit);
   window.addEventListener('pointerup', stopMarkerEdit);
