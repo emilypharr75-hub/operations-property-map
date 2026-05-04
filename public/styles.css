@@ -641,8 +641,17 @@ body:not(.editing) .org-field textarea {
   display: none;
 }
 
+body:not(.editing) .logo-url-field {
+  display: none;
+}
+
 body:not(.editing) .regulation-card.no-regulations .regulation-field {
   display: none;
+}
+
+.org-display a {
+  color: #7cc7ff;
+  overflow-wrap: anywhere;
 }
 
 body:not(.editing) .directory-add,

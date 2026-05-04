@@ -379,11 +379,12 @@ function createDirectoryCard(key, record) {
 
 function directoryFieldHtml(label, field, value) {
   const escapedValue = escapeHtml(value || '');
+  const displayValue = field === 'server' ? linkifyText(value || '') : escapedValue;
 
   return `
-    <div class="org-field">
+    <div class="org-field${field === 'logo' ? ' logo-url-field' : ''}">
       <label>${label}</label>
-      <span class="org-display">${escapedValue || '-'}</span>
+      <span class="org-display">${displayValue || '-'}</span>
       <input data-field="${field}" value="${escapedValue}">
     </div>
   `;
