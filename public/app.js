@@ -91,6 +91,11 @@ function setActiveView(view) {
   }
 }
 
+function unlockEditMode() {
+  editSessionPassword = EDIT_PASSWORD;
+  setEditMode(true);
+}
+
 function clearStoredEditorState() {
   localStorage.removeItem(MARKER_STORAGE_KEY);
   localStorage.removeItem(PROPERTY_STORAGE_KEY);
@@ -395,7 +400,7 @@ function escapeHtml(value) {
 function linkifyText(value) {
   const urlPattern = /(https?:\/\/[^\s<>"']+)/g;
 
-  return escapeHtml(value || 'No regulations listed.').replace(urlPattern, url => {
+  return escapeHtml(value || '').replace(urlPattern, url => {
     return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
   });
 }
@@ -1531,8 +1536,12 @@ async function init() {
   }, { passive: false });
   elements.editModeLock.addEventListener('click', () => {
     if (editMode) {
-      editSessionPassword = '';
       setEditMode(false);
+      return;
+    }
+
+    if (editSessionPassword) {
+      setEditMode(true);
       return;
     }
 
@@ -1542,9 +1551,8 @@ async function init() {
     event.preventDefault();
 
     if (elements.editPassword.value === EDIT_PASSWORD) {
-      editSessionPassword = elements.editPassword.value;
       elements.passwordDialog.close();
-      setEditMode(true);
+      unlockEditMode();
       return;
     }
 
