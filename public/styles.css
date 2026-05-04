@@ -110,6 +110,14 @@ body {
   opacity: 0.45;
 }
 
+.publish-status {
+  min-width: 126px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
 .lock-button {
   position: sticky;
   top: 12px;

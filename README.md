@@ -20,6 +20,13 @@ Vercel settings:
 - Build command: `npm run build`
 - Output directory: `public`
 
+Live box saving uses the `/api/save-boxes` Vercel function. Add these Vercel environment variables for automatic GitHub commits:
+
+- `GITHUB_TOKEN`: GitHub token with contents read/write access to this repository.
+- `EDIT_PASSWORD`: the edit-mode password.
+- `GITHUB_REPO`: optional, defaults to `emilypharr75-hub/operations-property-map`.
+- `GITHUB_BRANCH`: optional, defaults to `main`.
+
 ## Setup
 
 1. Run `npm install`.

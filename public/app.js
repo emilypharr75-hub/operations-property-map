@@ -21,6 +21,7 @@ const elements = {
   zoomValue: document.querySelector('#zoomValue'),
   addBox: document.querySelector('#addBox'),
   exportBoxes: document.querySelector('#exportBoxes'),
+  publishStatus: document.querySelector('#publishStatus'),
   editModeLock: document.querySelector('#editModeLock'),
   undoEdit: document.querySelector('#undoEdit'),
   resetBoxes: document.querySelector('#resetBoxes'),
@@ -53,11 +54,99 @@ let zoom = 1;
 let editMode = false;
 let dragState = null;
 let undoStack = [];
+let editSessionPassword = '';
+let cloudSaveTimeout = null;
+let cloudSaveInFlight = false;
+let cloudSaveQueued = false;
 
 function clearStoredEditorState() {
   localStorage.removeItem(MARKER_STORAGE_KEY);
   localStorage.removeItem(PROPERTY_STORAGE_KEY);
   localStorage.removeItem(CUSTOM_PROPERTY_STORAGE_KEY);
+}
+
+function buildExportData() {
+  return {
+    properties: properties
+      .filter(isSelectableProperty)
+      .map(property => ({
+        id: property.id,
+        name: property.name,
+        number: property.number,
+        buildingType: property.buildingType,
+        owner: property.owner,
+        price: property.price,
+        tax: property.tax,
+        custom: Boolean(property.custom)
+      })),
+    markers: propertyMarkers
+      .filter(region => !isPostalOnlyMarker(region) && !region.removed)
+      .map(region => ({
+        id: region.id,
+        rect: region.rect,
+        buildingRect: region.buildingRect || region.rect,
+        rotation: getMarkerRotation(region),
+        custom: Boolean(region.custom)
+      }))
+  };
+}
+
+function setPublishStatus(message) {
+  elements.publishStatus.textContent = message;
+}
+
+function scheduleCloudSave() {
+  if (!editMode || !editSessionPassword) {
+    return;
+  }
+
+  window.clearTimeout(cloudSaveTimeout);
+  setPublishStatus('Saving soon');
+  cloudSaveTimeout = window.setTimeout(saveBoxesToCloud, 1800);
+}
+
+async function saveBoxesToCloud() {
+  if (!editSessionPassword) {
+    return;
+  }
+
+  if (cloudSaveInFlight) {
+    cloudSaveQueued = true;
+    return;
+  }
+
+  cloudSaveInFlight = true;
+  cloudSaveQueued = false;
+  setPublishStatus('Publishing');
+
+  try {
+    const response = await fetch('/api/save-boxes', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        ...buildExportData(),
+        password: editSessionPassword
+      })
+    });
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || 'Live save failed.');
+    }
+
+    setPublishStatus('Published');
+  } catch (error) {
+    setPublishStatus('Save failed');
+    console.error(error);
+  } finally {
+    cloudSaveInFlight = false;
+
+    if (cloudSaveQueued) {
+      scheduleCloudSave();
+    }
+  }
 }
 
 function resetStoredEditorStateForImportedData() {
@@ -254,6 +343,7 @@ function saveCustomProperties() {
     });
 
   localStorage.setItem(CUSTOM_PROPERTY_STORAGE_KEY, JSON.stringify(customProperties));
+  scheduleCloudSave();
 }
 
 function applyStoredCustomProperties() {
@@ -299,6 +389,7 @@ function saveMarkerEdits() {
 
   localStorage.setItem(MARKER_STORAGE_KEY, JSON.stringify(editedMarkers));
   saveCustomProperties();
+  scheduleCloudSave();
 }
 
 function applyStoredMarkerEdits() {
@@ -342,6 +433,7 @@ function savePropertyEdits() {
 
   localStorage.setItem(PROPERTY_STORAGE_KEY, JSON.stringify(editedProperties));
   saveCustomProperties();
+  scheduleCloudSave();
 }
 
 function applyStoredPropertyEdits() {
@@ -488,6 +580,7 @@ function setEditMode(enabled) {
   elements.exportBoxes.disabled = !editMode;
   elements.undoEdit.disabled = !editMode;
   elements.resetBoxes.disabled = !editMode;
+  setPublishStatus(editMode ? 'Live save ready' : 'Live save locked');
   setPropertyEditorsDisabled(!editMode || !selectedMarkerId);
 }
 
@@ -638,29 +731,7 @@ function createNewBox() {
 }
 
 async function exportBoxes() {
-  const exportData = {
-    properties: properties
-      .filter(isSelectableProperty)
-      .map(property => ({
-        id: property.id,
-        name: property.name,
-        number: property.number,
-        buildingType: property.buildingType,
-        owner: property.owner,
-        price: property.price,
-        tax: property.tax,
-        custom: Boolean(property.custom)
-      })),
-    markers: propertyMarkers
-      .filter(region => !isPostalOnlyMarker(region) && !region.removed)
-      .map(region => ({
-        id: region.id,
-        rect: region.rect,
-        buildingRect: region.buildingRect || region.rect,
-        rotation: getMarkerRotation(region),
-        custom: Boolean(region.custom)
-      }))
-  };
+  const exportData = buildExportData();
   const json = `${JSON.stringify(exportData, null, 2)}\n`;
   const blob = new Blob([json], { type: 'application/json' });
   const link = document.createElement('a');
@@ -954,6 +1025,7 @@ async function init() {
   }, { passive: false });
   elements.editModeLock.addEventListener('click', () => {
     if (editMode) {
+      editSessionPassword = '';
       setEditMode(false);
       return;
     }
@@ -964,6 +1036,7 @@ async function init() {
     event.preventDefault();
 
     if (elements.editPassword.value === EDIT_PASSWORD) {
+      editSessionPassword = elements.editPassword.value;
       elements.passwordDialog.close();
       setEditMode(true);
       return;
