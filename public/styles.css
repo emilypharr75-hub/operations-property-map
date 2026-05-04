@@ -641,6 +641,10 @@ body:not(.editing) .org-field textarea {
   display: none;
 }
 
+body:not(.editing) .regulation-card.no-regulations .regulation-field {
+  display: none;
+}
+
 body:not(.editing) .directory-add,
 body:not(.editing) .regulation-add {
   display: none;

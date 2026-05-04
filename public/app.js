@@ -512,7 +512,7 @@ function removeRegulationPdf(key, id) {
 
 function createRegulationCard(key, record) {
   const card = document.createElement('article');
-  card.className = 'regulation-card';
+  card.className = `regulation-card${record.regulations ? '' : ' no-regulations'}`;
   const pdfLink = record.pdfData
     ? `<a href="${record.pdfData}" target="_blank" rel="noopener noreferrer">${escapeHtml(record.pdfName || 'Open PDF')}</a>`
     : '-';
@@ -523,7 +523,7 @@ function createRegulationCard(key, record) {
       <span class="org-display">${escapeHtml(record.name || '-')}</span>
       <input data-field="name" value="${escapeHtml(record.name || '')}">
     </div>
-    <div class="org-field">
+    <div class="org-field regulation-field">
       <label>Regulations</label>
       <p class="regulation-text">${linkifyText(record.regulations)}</p>
       <textarea data-field="regulations">${escapeHtml(record.regulations || '')}</textarea>
