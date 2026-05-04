@@ -390,6 +390,14 @@ function escapeHtml(value) {
     .replaceAll('"', '&quot;');
 }
 
+function linkifyText(value) {
+  const urlPattern = /(https?:\/\/[^\s<>"']+)/g;
+
+  return escapeHtml(value || 'No regulations listed.').replace(urlPattern, url => {
+    return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
+  });
+}
+
 function renderDirectoryList(key) {
   const config = directoryConfig(key);
   config.list.textContent = '';
@@ -468,7 +476,7 @@ function createRegulationCard(key, record) {
     </div>
     <div class="org-field">
       <label>Regulations</label>
-      <p class="regulation-text">${escapeHtml(record.regulations || 'No regulations listed.')}</p>
+      <p class="regulation-text">${linkifyText(record.regulations)}</p>
       <textarea data-field="regulations">${escapeHtml(record.regulations || '')}</textarea>
     </div>
     <div class="org-card-actions">

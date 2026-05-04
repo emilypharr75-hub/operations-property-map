@@ -526,6 +526,11 @@ dd {
   white-space: pre-wrap;
 }
 
+.regulation-text a {
+  color: #7cc7ff;
+  overflow-wrap: anywhere;
+}
+
 .regulation-card textarea {
   min-height: 180px;
   resize: vertical;
