@@ -83,7 +83,9 @@ function normalizeRegulationRecord(record) {
   return {
     id: String(record.id),
     name: String(record.name || ''),
-    regulations: String(record.regulations || '')
+    regulations: String(record.regulations || ''),
+    pdfName: String(record.pdfName || ''),
+    pdfData: String(record.pdfData || '')
   };
 }
 

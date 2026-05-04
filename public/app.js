@@ -234,7 +234,9 @@ function normalizeRegulationRecord(record) {
   return {
     id: String(record.id),
     name: String(record.name || ''),
-    regulations: String(record.regulations || '')
+    regulations: String(record.regulations || ''),
+    pdfName: String(record.pdfName || ''),
+    pdfData: String(record.pdfData || '')
   };
 }
 
@@ -432,7 +434,9 @@ function addRegulationRecord(key) {
   config.records.push({
     id: `${key}-${Date.now()}`,
     name: `New ${config.title}`,
-    regulations: ''
+    regulations: '',
+    pdfName: '',
+    pdfData: ''
   });
   saveDirectoryRecords();
   renderDirectoryLists();
@@ -464,9 +468,49 @@ function removeRegulationRecord(key, id) {
   renderDirectoryLists();
 }
 
+function updateRegulationPdf(key, id, file) {
+  const config = regulationConfig(key);
+  const record = config.records.find(item => item.id === id);
+
+  if (!record || !file) {
+    return;
+  }
+
+  if (file.type !== 'application/pdf') {
+    window.alert('Please upload a PDF file.');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.addEventListener('load', () => {
+    record.pdfName = file.name;
+    record.pdfData = String(reader.result || '');
+    saveDirectoryRecords();
+    renderDirectoryLists();
+  });
+  reader.readAsDataURL(file);
+}
+
+function removeRegulationPdf(key, id) {
+  const config = regulationConfig(key);
+  const record = config.records.find(item => item.id === id);
+
+  if (!record) {
+    return;
+  }
+
+  record.pdfName = '';
+  record.pdfData = '';
+  saveDirectoryRecords();
+  renderDirectoryLists();
+}
+
 function createRegulationCard(key, record) {
   const card = document.createElement('article');
   card.className = 'regulation-card';
+  const pdfLink = record.pdfData
+    ? `<a href="${record.pdfData}" target="_blank" rel="noopener noreferrer">${escapeHtml(record.pdfName || 'Open PDF')}</a>`
+    : '-';
   card.innerHTML = `
     <h2>${escapeHtml(record.name || 'Unnamed')}</h2>
     <div class="org-field">
@@ -479,7 +523,13 @@ function createRegulationCard(key, record) {
       <p class="regulation-text">${linkifyText(record.regulations)}</p>
       <textarea data-field="regulations">${escapeHtml(record.regulations || '')}</textarea>
     </div>
+    <div class="org-field">
+      <label>PDF</label>
+      <span class="org-display regulation-pdf-link">${pdfLink}</span>
+      <input data-pdf-upload type="file" accept="application/pdf">
+    </div>
     <div class="org-card-actions">
+      <button type="button" class="edit-toggle" data-remove-pdf>Remove PDF</button>
       <button type="button" class="edit-toggle" data-remove-regulation>Remove</button>
     </div>
   `;
@@ -488,6 +538,10 @@ function createRegulationCard(key, record) {
     field.addEventListener('change', () => updateRegulationRecord(key, record.id, field.dataset.field, field.value));
   }
 
+  card.querySelector('[data-pdf-upload]').addEventListener('change', event => {
+    updateRegulationPdf(key, record.id, event.currentTarget.files?.[0]);
+  });
+  card.querySelector('[data-remove-pdf]').addEventListener('click', () => removeRegulationPdf(key, record.id));
   card.querySelector('[data-remove-regulation]').addEventListener('click', () => removeRegulationRecord(key, record.id));
 
   return card;

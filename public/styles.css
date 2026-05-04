@@ -531,6 +531,11 @@ dd {
   overflow-wrap: anywhere;
 }
 
+.regulation-pdf-link a {
+  color: #7cc7ff;
+  overflow-wrap: anywhere;
+}
+
 .regulation-card textarea {
   min-height: 180px;
   resize: vertical;
