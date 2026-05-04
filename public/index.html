@@ -8,79 +8,143 @@
   </head>
   <body>
     <main class="shell">
-      <section class="map-panel" aria-label="Liberty County property map">
-        <div class="toolbar">
-          <label for="propertySearch">Property</label>
-          <input id="propertySearch" list="propertyOptions" type="search" placeholder="Search building name or number">
-          <datalist id="propertyOptions"></datalist>
-          <div class="zoom-controls" aria-label="Map zoom controls">
-            <button type="button" id="zoomOut" aria-label="Zoom out">-</button>
-            <input id="zoomRange" type="range" min="0.45" max="6" step="0.05" value="1">
-            <button type="button" id="zoomIn" aria-label="Zoom in">+</button>
-            <output id="zoomValue" for="zoomRange">100%</output>
-          </div>
-          <button type="button" class="edit-toggle" id="addBox">Add Box</button>
-          <button type="button" class="edit-toggle" id="exportBoxes">Export Boxes</button>
-          <button type="button" class="edit-toggle" id="undoEdit">Undo</button>
-          <button type="button" class="edit-toggle" id="resetBoxes">Reset Boxes</button>
-          <span class="publish-status" id="publishStatus" aria-live="polite">Live save locked</span>
+      <aside class="app-sidebar" aria-label="Main navigation">
+        <p class="sidebar-title">Florida State Civilian Operations</p>
+        <button type="button" class="lock-button" id="editModeLock" aria-label="Unlock edit mode" aria-pressed="false">Lock</button>
+        <nav class="sidebar-nav">
+          <button type="button" class="nav-link active" data-view="propertyMap">Property Map</button>
+          <button type="button" class="nav-link" data-view="currentBusinesses">Current Businesses</button>
+          <button type="button" class="nav-link" data-view="currentMafias">Current Mafias</button>
+        </nav>
+        <div class="sidebar-section">
+          <p class="sidebar-section-title">Regulations</p>
+          <nav class="sidebar-nav">
+            <button type="button" class="nav-link" data-view="businessRegulations">Business Regulations</button>
+            <button type="button" class="nav-link" data-view="mafiaRegulations">Mafia Regulations</button>
+          </nav>
         </div>
-        <div class="map-wrap" id="mapWrap">
-          <button type="button" class="lock-button" id="editModeLock" aria-label="Unlock edit mode" aria-pressed="false">Lock</button>
-          <div class="map-surface" id="mapSurface">
-            <img src="/assets/erlc-map.png" alt="Emergency Response Liberty County map" id="mapImage">
-            <div class="markers" id="markers" aria-label="Clickable property markers"></div>
-          </div>
-        </div>
-      </section>
-
-      <aside class="status-panel" aria-live="polite">
-        <p class="eyebrow">Selected Property</p>
-        <h1 id="propertyName">Choose a property</h1>
-        <input id="propertyNameEdit" class="field-editor name-editor" type="text" aria-label="Edit property name" disabled>
-        <dl>
-          <div>
-            <dt>Building Type</dt>
-            <dd>
-              <span id="buildingType">-</span>
-              <select id="buildingTypeEdit" class="field-editor" aria-label="Edit building type" disabled>
-                <option value="building">Building</option>
-                <option value="government">Government</option>
-                <option value="house">House</option>
-                <option value="office building">Office Building</option>
-              </select>
-            </dd>
-          </div>
-          <div>
-            <dt>Number</dt>
-            <dd>
-              <span id="propertyNumber">-</span>
-              <input id="propertyNumberEdit" class="field-editor" type="text" aria-label="Edit property number" disabled>
-            </dd>
-          </div>
-          <div>
-            <dt>Owner</dt>
-            <dd>
-              <span id="propertyOwner">-</span>
-              <input id="propertyOwnerEdit" class="field-editor" type="text" aria-label="Edit property owner" disabled>
-            </dd>
-          </div>
-          <div>
-            <dt>Property Price</dt>
-            <dd>
-              <span id="propertyPrice">-</span>
-              <input id="propertyPriceEdit" class="field-editor" type="text" aria-label="Edit property price" disabled>
-            </dd>
-          </div>
-          <div>
-            <dt>Property Tax</dt>
-            <dd>
-              <span id="propertyTax">-</span>
-              <input id="propertyTaxEdit" class="field-editor" type="text" aria-label="Edit property tax" disabled>
-            </dd>
-          </div>
-        </dl>
       </aside>
+
+      <section class="content-area">
+        <section class="app-view active" id="propertyMapView" data-view-panel="propertyMap">
+          <section class="map-panel" aria-label="Liberty County property map">
+            <div class="toolbar">
+              <label for="propertySearch">Property</label>
+              <input id="propertySearch" list="propertyOptions" type="search" placeholder="Search building name or number">
+              <datalist id="propertyOptions"></datalist>
+              <div class="zoom-controls" aria-label="Map zoom controls">
+                <button type="button" id="zoomOut" aria-label="Zoom out">-</button>
+                <input id="zoomRange" type="range" min="0.45" max="6" step="0.05" value="1">
+                <button type="button" id="zoomIn" aria-label="Zoom in">+</button>
+                <output id="zoomValue" for="zoomRange">100%</output>
+              </div>
+              <button type="button" class="edit-toggle" id="addBox">Add Box</button>
+              <button type="button" class="edit-toggle" id="exportBoxes">Export Boxes</button>
+              <button type="button" class="edit-toggle" id="undoEdit">Undo</button>
+              <button type="button" class="edit-toggle" id="resetBoxes">Reset Boxes</button>
+              <span class="publish-status" id="publishStatus" aria-live="polite">Live save locked</span>
+            </div>
+            <div class="map-wrap" id="mapWrap">
+              <div class="map-surface" id="mapSurface">
+                <img src="/assets/erlc-map.png" alt="Emergency Response Liberty County map" id="mapImage">
+                <div class="markers" id="markers" aria-label="Clickable property markers"></div>
+              </div>
+            </div>
+          </section>
+
+          <aside class="status-panel" aria-live="polite">
+            <p class="eyebrow">Selected Property</p>
+            <h1 id="propertyName">Choose a property</h1>
+            <input id="propertyNameEdit" class="field-editor name-editor" type="text" aria-label="Edit property name" disabled>
+            <dl>
+              <div>
+                <dt>Building Type</dt>
+                <dd>
+                  <span id="buildingType">-</span>
+                  <select id="buildingTypeEdit" class="field-editor" aria-label="Edit building type" disabled>
+                    <option value="building">Building</option>
+                    <option value="government">Government</option>
+                    <option value="house">House</option>
+                    <option value="office building">Office Building</option>
+                  </select>
+                </dd>
+              </div>
+              <div>
+                <dt>Number</dt>
+                <dd>
+                  <span id="propertyNumber">-</span>
+                  <input id="propertyNumberEdit" class="field-editor" type="text" aria-label="Edit property number" disabled>
+                </dd>
+              </div>
+              <div>
+                <dt>Owner</dt>
+                <dd>
+                  <span id="propertyOwner">-</span>
+                  <input id="propertyOwnerEdit" class="field-editor" type="text" aria-label="Edit property owner" disabled>
+                </dd>
+              </div>
+              <div>
+                <dt>Property Price</dt>
+                <dd>
+                  <span id="propertyPrice">-</span>
+                  <input id="propertyPriceEdit" class="field-editor" type="text" aria-label="Edit property price" disabled>
+                </dd>
+              </div>
+              <div>
+                <dt>Property Tax</dt>
+                <dd>
+                  <span id="propertyTax">-</span>
+                  <input id="propertyTaxEdit" class="field-editor" type="text" aria-label="Edit property tax" disabled>
+                </dd>
+              </div>
+            </dl>
+          </aside>
+        </section>
+
+        <section class="app-view directory-view" id="currentBusinessesView" data-view-panel="currentBusinesses">
+          <div class="directory-header">
+            <div>
+              <p class="eyebrow">Directory</p>
+              <h1>Current Businesses</h1>
+            </div>
+            <button type="button" class="edit-toggle directory-add" data-directory-add="businesses" disabled>Add Business</button>
+          </div>
+          <div class="directory-grid" id="businessList"></div>
+        </section>
+
+        <section class="app-view directory-view" id="currentMafiasView" data-view-panel="currentMafias">
+          <div class="directory-header">
+            <div>
+              <p class="eyebrow">Directory</p>
+              <h1>Current Mafias</h1>
+            </div>
+            <button type="button" class="edit-toggle directory-add" data-directory-add="mafias" disabled>Add Mafia</button>
+          </div>
+          <div class="directory-grid" id="mafiaList"></div>
+        </section>
+
+        <section class="app-view directory-view" id="businessRegulationsView" data-view-panel="businessRegulations">
+          <div class="directory-header">
+            <div>
+              <p class="eyebrow">Regulations</p>
+              <h1>Business Regulations</h1>
+            </div>
+            <button type="button" class="edit-toggle regulation-add" data-regulation-add="businessRegulations" disabled>Add Regulation</button>
+          </div>
+          <div class="regulation-list" id="businessRegulationList"></div>
+        </section>
+
+        <section class="app-view directory-view" id="mafiaRegulationsView" data-view-panel="mafiaRegulations">
+          <div class="directory-header">
+            <div>
+              <p class="eyebrow">Regulations</p>
+              <h1>Mafia Regulations</h1>
+            </div>
+            <button type="button" class="edit-toggle regulation-add" data-regulation-add="mafiaRegulations" disabled>Add Regulation</button>
+          </div>
+          <div class="regulation-list" id="mafiaRegulationList"></div>
+        </section>
+      </section>
     </main>
     <dialog class="password-dialog" id="passwordDialog">
       <form method="dialog" id="passwordForm">

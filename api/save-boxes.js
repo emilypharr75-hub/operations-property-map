@@ -59,6 +59,34 @@ function normalizeProperty(property) {
   };
 }
 
+function normalizeDirectoryRecord(record) {
+  return {
+    id: String(record.id),
+    name: String(record.name || ''),
+    owner: String(record.owner || ''),
+    type: String(record.type || ''),
+    server: String(record.server || ''),
+    logo: String(record.logo || '')
+  };
+}
+
+function normalizeDirectories(orgs) {
+  return {
+    businesses: Array.isArray(orgs?.businesses) ? orgs.businesses.map(normalizeDirectoryRecord) : [],
+    mafias: Array.isArray(orgs?.mafias) ? orgs.mafias.map(normalizeDirectoryRecord) : [],
+    businessRegulations: Array.isArray(orgs?.businessRegulations) ? orgs.businessRegulations.map(normalizeRegulationRecord) : [],
+    mafiaRegulations: Array.isArray(orgs?.mafiaRegulations) ? orgs.mafiaRegulations.map(normalizeRegulationRecord) : []
+  };
+}
+
+function normalizeRegulationRecord(record) {
+  return {
+    id: String(record.id),
+    name: String(record.name || ''),
+    regulations: String(record.regulations || '')
+  };
+}
+
 module.exports = async function handler(request, response) {
   if (request.method !== 'POST') {
     jsonResponse(response, 405, { error: 'Method not allowed' });
@@ -87,11 +115,14 @@ module.exports = async function handler(request, response) {
 
     const properties = body.properties.map(normalizeProperty);
     const markers = body.markers.map(normalizeMarker);
+    const orgs = normalizeDirectories(body.orgs);
     const files = {
       'data/web-properties.json': `${JSON.stringify(properties, null, 2)}\n`,
       'data/property-markers.json': `${JSON.stringify(markers, null, 2)}\n`,
+      'data/orgs.json': `${JSON.stringify(orgs, null, 2)}\n`,
       'public/properties.json': `${JSON.stringify(properties, null, 2)}\n`,
-      'public/property-markers.json': `${JSON.stringify(markers, null, 2)}\n`
+      'public/property-markers.json': `${JSON.stringify(markers, null, 2)}\n`,
+      'public/orgs.json': `${JSON.stringify(orgs, null, 2)}\n`
     };
 
     const ref = await githubRequest(`/git/ref/heads/${BRANCH}`);

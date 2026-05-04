@@ -6,10 +6,21 @@ const DATA_VERSION_STORAGE_KEY = 'erlcPropertyMapDataVersion';
 const MARKER_STORAGE_KEY = 'erlcPropertyMarkerEdits';
 const PROPERTY_STORAGE_KEY = 'erlcPropertyEdits';
 const CUSTOM_PROPERTY_STORAGE_KEY = 'erlcCustomProperties';
+const ORG_STORAGE_KEY = 'erlcDirectoryRecords';
+const REMOTE_DATA_BASE = 'https://raw.githubusercontent.com/emilypharr75-hub/operations-property-map/main/public';
+const REMOTE_SYNC_INTERVAL = 20000;
 const MIN_MARKER_SIZE = 18;
 const EDIT_PASSWORD = 'BillingForTheWin';
 
 const elements = {
+  navLinks: document.querySelectorAll('.nav-link'),
+  viewPanels: document.querySelectorAll('[data-view-panel]'),
+  directoryAddButtons: document.querySelectorAll('[data-directory-add]'),
+  regulationAddButtons: document.querySelectorAll('[data-regulation-add]'),
+  businessList: document.querySelector('#businessList'),
+  mafiaList: document.querySelector('#mafiaList'),
+  businessRegulationList: document.querySelector('#businessRegulationList'),
+  mafiaRegulationList: document.querySelector('#mafiaRegulationList'),
   datalist: document.querySelector('#propertyOptions'),
   mapSurface: document.querySelector('#mapSurface'),
   mapWrap: document.querySelector('#mapWrap'),
@@ -48,6 +59,12 @@ const elements = {
 let properties = [];
 let propertiesById = new Map();
 let propertyMarkers = [];
+let directoryRecords = {
+  businesses: [],
+  mafias: [],
+  businessRegulations: [],
+  mafiaRegulations: []
+};
 let activeMarker = null;
 let selectedMarkerId = null;
 let zoom = 1;
@@ -58,11 +75,27 @@ let editSessionPassword = '';
 let cloudSaveTimeout = null;
 let cloudSaveInFlight = false;
 let cloudSaveQueued = false;
+let remoteDataSignature = '';
+
+function setActiveView(view) {
+  for (const link of elements.navLinks) {
+    link.classList.toggle('active', link.dataset.view === view);
+  }
+
+  for (const panel of elements.viewPanels) {
+    panel.classList.toggle('active', panel.dataset.viewPanel === view);
+  }
+
+  if (view === 'propertyMap') {
+    renderMarkers();
+  }
+}
 
 function clearStoredEditorState() {
   localStorage.removeItem(MARKER_STORAGE_KEY);
   localStorage.removeItem(PROPERTY_STORAGE_KEY);
   localStorage.removeItem(CUSTOM_PROPERTY_STORAGE_KEY);
+  localStorage.removeItem(ORG_STORAGE_KEY);
 }
 
 function buildExportData() {
@@ -88,11 +121,385 @@ function buildExportData() {
         rotation: getMarkerRotation(region),
         custom: Boolean(region.custom)
       }))
+    ,
+    orgs: getDirectoryExportData()
   };
 }
 
 function setPublishStatus(message) {
   elements.publishStatus.textContent = message;
+}
+
+function isLocalHostPreview() {
+  return ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname);
+}
+
+function currentDataSignature() {
+  return JSON.stringify({
+    properties: buildExportData().properties,
+    markers: buildExportData().markers,
+    orgs: getDirectoryExportData()
+  });
+}
+
+async function fetchJson(url) {
+  const response = await fetch(`${url}?t=${Date.now()}`, {
+    cache: 'no-store'
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch ${url}`);
+  }
+
+  return response.json();
+}
+
+async function syncLocalPreviewFromLiveData() {
+  if (!isLocalHostPreview() || editMode) {
+    return;
+  }
+
+  try {
+    const [nextProperties, nextMarkers, nextOrgs] = await Promise.all([
+      fetchJson(`${REMOTE_DATA_BASE}/properties.json`),
+      fetchJson(`${REMOTE_DATA_BASE}/property-markers.json`),
+      fetchJson(`${REMOTE_DATA_BASE}/orgs.json`)
+    ]);
+    const nextSignature = JSON.stringify({
+      properties: nextProperties,
+      markers: nextMarkers,
+      orgs: nextOrgs
+    });
+
+    if (nextSignature === remoteDataSignature || nextSignature === currentDataSignature()) {
+      remoteDataSignature = nextSignature;
+      return;
+    }
+
+    properties = nextProperties;
+    propertyMarkers = nextMarkers;
+    directoryRecords = {
+      businesses: Array.isArray(nextOrgs.businesses) ? nextOrgs.businesses.map(normalizeDirectoryRecord) : [],
+      mafias: Array.isArray(nextOrgs.mafias) ? nextOrgs.mafias.map(normalizeDirectoryRecord) : [],
+      businessRegulations: Array.isArray(nextOrgs.businessRegulations) ? nextOrgs.businessRegulations.map(normalizeRegulationRecord) : [],
+      mafiaRegulations: Array.isArray(nextOrgs.mafiaRegulations) ? nextOrgs.mafiaRegulations.map(normalizeRegulationRecord) : []
+    };
+    propertiesById = new Map(properties.map(property => [property.id, property]));
+    remoteDataSignature = nextSignature;
+    clearStoredEditorState();
+    renderOptions();
+    renderMarkers();
+    renderDirectoryLists();
+
+    if (selectedMarkerId && propertiesById.has(selectedMarkerId)) {
+      selectProperty(selectedMarkerId);
+    }
+
+    setPublishStatus('Synced live');
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+function startLocalPreviewSync() {
+  if (!isLocalHostPreview()) {
+    return;
+  }
+
+  remoteDataSignature = currentDataSignature();
+  window.setInterval(syncLocalPreviewFromLiveData, REMOTE_SYNC_INTERVAL);
+}
+
+function getDirectoryExportData() {
+  return {
+    businesses: directoryRecords.businesses.map(normalizeDirectoryRecord),
+    mafias: directoryRecords.mafias.map(normalizeDirectoryRecord),
+    businessRegulations: directoryRecords.businessRegulations.map(normalizeRegulationRecord),
+    mafiaRegulations: directoryRecords.mafiaRegulations.map(normalizeRegulationRecord)
+  };
+}
+
+function normalizeDirectoryRecord(record) {
+  return {
+    id: String(record.id),
+    name: String(record.name || ''),
+    owner: String(record.owner || ''),
+    type: String(record.type || ''),
+    server: String(record.server || ''),
+    logo: String(record.logo || '')
+  };
+}
+
+function normalizeRegulationRecord(record) {
+  return {
+    id: String(record.id),
+    name: String(record.name || ''),
+    regulations: String(record.regulations || '')
+  };
+}
+
+function saveDirectoryRecords() {
+  localStorage.setItem(ORG_STORAGE_KEY, JSON.stringify(getDirectoryExportData()));
+  scheduleCloudSave();
+}
+
+function applyStoredDirectoryRecords() {
+  const stored = JSON.parse(localStorage.getItem(ORG_STORAGE_KEY) || 'null');
+
+  if (!stored) {
+    return;
+  }
+
+  directoryRecords = {
+    businesses: Array.isArray(stored.businesses) ? stored.businesses.map(normalizeDirectoryRecord) : [],
+    mafias: Array.isArray(stored.mafias) ? stored.mafias.map(normalizeDirectoryRecord) : [],
+    businessRegulations: Array.isArray(stored.businessRegulations) ? stored.businessRegulations.map(normalizeRegulationRecord) : [],
+    mafiaRegulations: Array.isArray(stored.mafiaRegulations) ? stored.mafiaRegulations.map(normalizeRegulationRecord) : []
+  };
+}
+
+function directoryConfig(key) {
+  return key === 'mafias'
+    ? {
+      title: 'mafia',
+      list: elements.mafiaList,
+      records: directoryRecords.mafias
+    }
+    : {
+      title: 'business',
+      list: elements.businessList,
+      records: directoryRecords.businesses
+    };
+}
+
+function regulationConfig(key) {
+  return key === 'mafiaRegulations'
+    ? {
+      title: 'mafia regulation',
+      list: elements.mafiaRegulationList,
+      records: directoryRecords.mafiaRegulations
+    }
+    : {
+      title: 'business regulation',
+      list: elements.businessRegulationList,
+      records: directoryRecords.businessRegulations
+    };
+}
+
+function addDirectoryRecord(key) {
+  if (!editMode) {
+    openPasswordDialog();
+    return;
+  }
+
+  const config = directoryConfig(key);
+  const record = {
+    id: `${key}-${Date.now()}`,
+    name: `New ${config.title}`,
+    owner: 'N/A',
+    type: config.title === 'mafia' ? 'Mafia' : 'Business',
+    server: '',
+    logo: ''
+  };
+
+  config.records.push(record);
+  saveDirectoryRecords();
+  renderDirectoryLists();
+}
+
+function updateDirectoryRecord(key, id, field, value) {
+  const config = directoryConfig(key);
+  const record = config.records.find(item => item.id === id);
+
+  if (!record) {
+    return;
+  }
+
+  record[field] = value;
+  saveDirectoryRecords();
+  renderDirectoryLists();
+}
+
+function removeDirectoryRecord(key, id) {
+  const config = directoryConfig(key);
+  const index = config.records.findIndex(item => item.id === id);
+
+  if (index === -1) {
+    return;
+  }
+
+  config.records.splice(index, 1);
+  saveDirectoryRecords();
+  renderDirectoryLists();
+}
+
+function createDirectoryCard(key, record) {
+  const card = document.createElement('article');
+  card.className = 'org-card';
+
+  const logo = record.logo
+    ? `<img src="${escapeHtml(record.logo)}" alt="">`
+    : record.name.trim().slice(0, 1).toUpperCase() || '?';
+
+  card.innerHTML = `
+    <div class="org-card-header">
+      <div class="org-logo">${logo}</div>
+      <div class="org-title">
+        <h2>${record.name || 'Unnamed'}</h2>
+        <p>${record.type || '-'}</p>
+      </div>
+    </div>
+    <div class="org-fields">
+      ${directoryFieldHtml('Name', 'name', record.name)}
+      ${directoryFieldHtml('Owner', 'owner', record.owner)}
+      ${directoryFieldHtml('Type', 'type', record.type)}
+      ${directoryFieldHtml('Discord Server', 'server', record.server)}
+      ${directoryFieldHtml('Logo URL', 'logo', record.logo)}
+    </div>
+    <div class="org-card-actions">
+      <button type="button" class="edit-toggle" data-remove-record>Remove</button>
+    </div>
+  `;
+
+  for (const input of card.querySelectorAll('input[data-field]')) {
+    input.addEventListener('change', () => updateDirectoryRecord(key, record.id, input.dataset.field, input.value));
+  }
+
+  card.querySelector('[data-remove-record]').addEventListener('click', () => removeDirectoryRecord(key, record.id));
+
+  return card;
+}
+
+function directoryFieldHtml(label, field, value) {
+  const escapedValue = escapeHtml(value || '');
+
+  return `
+    <div class="org-field">
+      <label>${label}</label>
+      <span class="org-display">${escapedValue || '-'}</span>
+      <input data-field="${field}" value="${escapedValue}">
+    </div>
+  `;
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
+}
+
+function renderDirectoryList(key) {
+  const config = directoryConfig(key);
+  config.list.textContent = '';
+
+  if (!config.records.length) {
+    const emptyState = document.createElement('div');
+    emptyState.className = 'empty-state';
+    emptyState.innerHTML = `<h2>No ${config.title === 'mafia' ? 'mafias' : 'businesses'} listed yet</h2><p>Unlock edit mode to add one.</p>`;
+    config.list.append(emptyState);
+    return;
+  }
+
+  for (const record of config.records) {
+    config.list.append(createDirectoryCard(key, record));
+  }
+}
+
+function renderDirectoryLists() {
+  renderDirectoryList('businesses');
+  renderDirectoryList('mafias');
+  renderRegulationList('businessRegulations');
+  renderRegulationList('mafiaRegulations');
+}
+
+function addRegulationRecord(key) {
+  if (!editMode) {
+    openPasswordDialog();
+    return;
+  }
+
+  const config = regulationConfig(key);
+  config.records.push({
+    id: `${key}-${Date.now()}`,
+    name: `New ${config.title}`,
+    regulations: ''
+  });
+  saveDirectoryRecords();
+  renderDirectoryLists();
+}
+
+function updateRegulationRecord(key, id, field, value) {
+  const config = regulationConfig(key);
+  const record = config.records.find(item => item.id === id);
+
+  if (!record) {
+    return;
+  }
+
+  record[field] = value;
+  saveDirectoryRecords();
+  renderDirectoryLists();
+}
+
+function removeRegulationRecord(key, id) {
+  const config = regulationConfig(key);
+  const index = config.records.findIndex(item => item.id === id);
+
+  if (index === -1) {
+    return;
+  }
+
+  config.records.splice(index, 1);
+  saveDirectoryRecords();
+  renderDirectoryLists();
+}
+
+function createRegulationCard(key, record) {
+  const card = document.createElement('article');
+  card.className = 'regulation-card';
+  card.innerHTML = `
+    <h2>${escapeHtml(record.name || 'Unnamed')}</h2>
+    <div class="org-field">
+      <label>Name</label>
+      <span class="org-display">${escapeHtml(record.name || '-')}</span>
+      <input data-field="name" value="${escapeHtml(record.name || '')}">
+    </div>
+    <div class="org-field">
+      <label>Regulations</label>
+      <p class="regulation-text">${escapeHtml(record.regulations || 'No regulations listed.')}</p>
+      <textarea data-field="regulations">${escapeHtml(record.regulations || '')}</textarea>
+    </div>
+    <div class="org-card-actions">
+      <button type="button" class="edit-toggle" data-remove-regulation>Remove</button>
+    </div>
+  `;
+
+  for (const field of card.querySelectorAll('[data-field]')) {
+    field.addEventListener('change', () => updateRegulationRecord(key, record.id, field.dataset.field, field.value));
+  }
+
+  card.querySelector('[data-remove-regulation]').addEventListener('click', () => removeRegulationRecord(key, record.id));
+
+  return card;
+}
+
+function renderRegulationList(key) {
+  const config = regulationConfig(key);
+  config.list.textContent = '';
+
+  if (!config.records.length) {
+    const emptyState = document.createElement('div');
+    emptyState.className = 'empty-state';
+    emptyState.innerHTML = `<h2>No ${config.title}s listed yet</h2><p>Unlock edit mode to add one.</p>`;
+    config.list.append(emptyState);
+    return;
+  }
+
+  for (const record of config.records) {
+    config.list.append(createRegulationCard(key, record));
+  }
 }
 
 function scheduleCloudSave() {
@@ -576,10 +983,17 @@ function setEditMode(enabled) {
   elements.editModeLock.setAttribute('aria-label', editMode ? 'Lock edit mode' : 'Unlock edit mode');
   elements.markers.classList.toggle('editing', editMode);
   document.querySelector('.status-panel').classList.toggle('editing', editMode);
+  document.body.classList.toggle('editing', editMode);
   elements.addBox.disabled = !editMode;
   elements.exportBoxes.disabled = !editMode;
   elements.undoEdit.disabled = !editMode;
   elements.resetBoxes.disabled = !editMode;
+  for (const button of elements.directoryAddButtons) {
+    button.disabled = !editMode;
+  }
+  for (const button of elements.regulationAddButtons) {
+    button.disabled = !editMode;
+  }
   setPublishStatus(editMode ? 'Live save ready' : 'Live save locked');
   setPropertyEditorsDisabled(!editMode || !selectedMarkerId);
 }
@@ -652,8 +1066,14 @@ function updateSelectedPropertyField(field, value) {
   elements.search.value = labelFor(property);
   savePropertyEdits();
   renderOptions();
+  renderMarkers();
 
   if (activeMarker) {
+    activeMarker = document.querySelector(`.marker[data-id="${property.id}"]`);
+  }
+
+  if (activeMarker) {
+    activeMarker.classList.add('active');
     activeMarker.setAttribute('aria-label', labelFor(property));
   }
 }
@@ -995,6 +1415,18 @@ async function init() {
   ]);
   properties = await propertiesResponse.json();
   propertyMarkers = await markersResponse.json();
+  try {
+    const orgsResponse = await fetch('/orgs.json');
+    directoryRecords = await orgsResponse.json();
+  } catch {
+    directoryRecords = {
+      businesses: [],
+      mafias: [],
+      businessRegulations: [],
+      mafiaRegulations: []
+    };
+  }
+  applyStoredDirectoryRecords();
   applyStoredCustomProperties();
   applyStoredPropertyEdits();
   applyStoredMarkerEdits();
@@ -1002,10 +1434,22 @@ async function init() {
 
   renderOptions();
   renderMarkers();
+  renderDirectoryLists();
   elements.addBox.disabled = true;
   elements.exportBoxes.disabled = true;
   elements.undoEdit.disabled = true;
   elements.resetBoxes.disabled = true;
+  for (const button of elements.directoryAddButtons) {
+    button.disabled = true;
+    button.addEventListener('click', () => addDirectoryRecord(button.dataset.directoryAdd));
+  }
+  for (const button of elements.regulationAddButtons) {
+    button.disabled = true;
+    button.addEventListener('click', () => addRegulationRecord(button.dataset.regulationAdd));
+  }
+  for (const link of elements.navLinks) {
+    link.addEventListener('click', () => setActiveView(link.dataset.view));
+  }
   elements.search.addEventListener('change', selectFromSearch);
   elements.search.addEventListener('keydown', event => {
     if (event.key === 'Enter') {
@@ -1081,6 +1525,7 @@ async function init() {
   window.addEventListener('pointermove', moveMarkerEdit);
   window.addEventListener('pointerup', stopMarkerEdit);
   setZoom(1, false);
+  startLocalPreviewSync();
 }
 
 window.addEventListener('resize', renderMarkers);
