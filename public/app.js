@@ -486,6 +486,8 @@ function setEditMode(enabled) {
   document.querySelector('.status-panel').classList.toggle('editing', editMode);
   elements.addBox.disabled = !editMode;
   elements.exportBoxes.disabled = !editMode;
+  elements.undoEdit.disabled = !editMode;
+  elements.resetBoxes.disabled = !editMode;
   setPropertyEditorsDisabled(!editMode || !selectedMarkerId);
 }
 
@@ -931,6 +933,8 @@ async function init() {
   renderMarkers();
   elements.addBox.disabled = true;
   elements.exportBoxes.disabled = true;
+  elements.undoEdit.disabled = true;
+  elements.resetBoxes.disabled = true;
   elements.search.addEventListener('change', selectFromSearch);
   elements.search.addEventListener('keydown', event => {
     if (event.key === 'Enter') {
