@@ -1,6 +1,8 @@
 const MAP_SIZE = 3120;
 const BASE_DISPLAY_SIZE = 1800;
 const DEFAULT_MARKER_COLOR = '#ff3535';
+const DATA_VERSION = 'imported-boxes-2026-05-03-clean';
+const DATA_VERSION_STORAGE_KEY = 'erlcPropertyMapDataVersion';
 const MARKER_STORAGE_KEY = 'erlcPropertyMarkerEdits';
 const PROPERTY_STORAGE_KEY = 'erlcPropertyEdits';
 const CUSTOM_PROPERTY_STORAGE_KEY = 'erlcCustomProperties';
@@ -51,6 +53,21 @@ let zoom = 1;
 let editMode = false;
 let dragState = null;
 let undoStack = [];
+
+function clearStoredEditorState() {
+  localStorage.removeItem(MARKER_STORAGE_KEY);
+  localStorage.removeItem(PROPERTY_STORAGE_KEY);
+  localStorage.removeItem(CUSTOM_PROPERTY_STORAGE_KEY);
+}
+
+function resetStoredEditorStateForImportedData() {
+  if (localStorage.getItem(DATA_VERSION_STORAGE_KEY) === DATA_VERSION) {
+    return;
+  }
+
+  clearStoredEditorState();
+  localStorage.setItem(DATA_VERSION_STORAGE_KEY, DATA_VERSION);
+}
 
 function getMarkerScale() {
   return elements.markers.getBoundingClientRect().width / MAP_SIZE;
@@ -897,6 +914,8 @@ function selectFromSearch() {
 }
 
 async function init() {
+  resetStoredEditorStateForImportedData();
+
   const [propertiesResponse, markersResponse] = await Promise.all([
     fetch('/properties.json'),
     fetch('/property-markers.json')
@@ -971,9 +990,7 @@ async function init() {
     });
   });
   elements.resetBoxes.addEventListener('click', () => {
-    localStorage.removeItem(MARKER_STORAGE_KEY);
-    localStorage.removeItem(PROPERTY_STORAGE_KEY);
-    localStorage.removeItem(CUSTOM_PROPERTY_STORAGE_KEY);
+    clearStoredEditorState();
     window.location.reload();
   });
   for (const [field, element] of editablePropertyFields()) {
