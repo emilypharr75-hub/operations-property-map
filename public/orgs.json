@@ -1,5 +1,14 @@
 {
-  "businesses": [],
+  "businesses": [
+    {
+      "id": "save-test-business",
+      "name": "Save Test Business",
+      "owner": "Codex",
+      "type": "Test",
+      "server": "https://discord.com",
+      "logo": ""
+    }
+  ],
   "mafias": [],
   "businessRegulations": [],
   "mafiaRegulations": []
