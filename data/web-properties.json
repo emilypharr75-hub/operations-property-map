@@ -445,8 +445,8 @@
     "number": "2085",
     "buildingType": "office building",
     "owner": "N/A",
-    "price": "Not for sale",
-    "tax": "Not for sale",
+    "price": "$200,000",
+    "tax": "$15,000",
     "custom": false
   },
   {
