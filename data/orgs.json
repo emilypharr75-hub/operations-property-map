@@ -47,6 +47,14 @@
       "type": "General",
       "server": "https://discord.gg/zEU8uhgghk",
       "logo": "https://cdn.discordapp.com/icons/1287845801862889594/2755eb67daec2a7321fdc4f593db830e.webp?size=1280"
+    },
+    {
+      "id": "businesses-1778035392848",
+      "name": "New business",
+      "owner": "N/A",
+      "type": "Business",
+      "server": "",
+      "logo": ""
     }
   ],
   "mafias": [],
