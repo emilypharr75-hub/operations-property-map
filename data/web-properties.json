@@ -1316,7 +1316,7 @@
     "buildingType": "house",
     "owner": "N/A",
     "price": "$800,000",
-    "tax": "Not for sale",
+    "tax": "$17,500",
     "custom": false
   },
   {
@@ -1326,7 +1326,7 @@
     "buildingType": "house",
     "owner": "N/A",
     "price": "$800,000",
-    "tax": "Not for sale",
+    "tax": "$17,500",
     "custom": false
   },
   {
@@ -1336,7 +1336,7 @@
     "buildingType": "house",
     "owner": "N/A",
     "price": "$800,000",
-    "tax": "Not for sale",
+    "tax": "$17,500",
     "custom": false
   },
   {
