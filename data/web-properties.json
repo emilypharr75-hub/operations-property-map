@@ -934,7 +934,7 @@
     "name": "House 7052",
     "number": "7052",
     "buildingType": "house",
-    "owner": "N/A",
+    "owner": "N/",
     "price": "Not for sale",
     "tax": "Not for sale",
     "custom": false
