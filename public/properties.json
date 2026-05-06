@@ -1608,5 +1608,15 @@
     "price": "Not for sale",
     "tax": "Not for sale",
     "custom": true
+  },
+  {
+    "id": "custom-1778040782834",
+    "name": "Property 2201",
+    "number": "2201",
+    "buildingType": "building",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale",
+    "custom": true
   }
 ]

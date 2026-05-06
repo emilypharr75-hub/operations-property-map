@@ -2592,10 +2592,27 @@
       2618
     ],
     "buildingRect": [
-      742,
+      740,
       2572,
       765,
-      2593
+      2594
+    ],
+    "rotation": 0,
+    "custom": true
+  },
+  {
+    "id": "custom-1778040782834",
+    "rect": [
+      707,
+      2548,
+      797,
+      2618
+    ],
+    "buildingRect": [
+      648,
+      2527,
+      738,
+      2597
     ],
     "rotation": 0,
     "custom": true
