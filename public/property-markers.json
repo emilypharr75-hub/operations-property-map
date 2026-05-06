@@ -663,23 +663,6 @@
     "custom": false
   },
   {
-    "id": "house-2084",
-    "rect": [
-      900,
-      2330,
-      970,
-      2400
-    ],
-    "buildingRect": [
-      931,
-      2333,
-      961,
-      2373
-    ],
-    "rotation": 0,
-    "custom": false
-  },
-  {
     "id": "house-2085",
     "rect": [
       940,
