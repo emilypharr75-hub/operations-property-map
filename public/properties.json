@@ -1554,7 +1554,7 @@
     "name": "Barnhouse",
     "number": "6001",
     "buildingType": "building",
-    "owner": "N/A",
+    "owner": "Golden Harvest Farms",
     "price": "$1,050,000",
     "tax": "$27,500",
     "custom": true
@@ -1584,7 +1584,7 @@
     "name": "Property Farm Field #4",
     "number": "Farm Field #4",
     "buildingType": "building",
-    "owner": "N/A",
+    "owner": "Golden Harvest Farms",
     "price": "$600,000",
     "tax": "$12,500",
     "custom": true
