@@ -7,6 +7,7 @@ const MARKER_STORAGE_KEY = 'erlcPropertyMarkerEdits';
 const PROPERTY_STORAGE_KEY = 'erlcPropertyEdits';
 const CUSTOM_PROPERTY_STORAGE_KEY = 'erlcCustomProperties';
 const ORG_STORAGE_KEY = 'erlcDirectoryRecords';
+const CLIENT_ID_STORAGE_KEY = 'erlcPropertyMapClientId';
 const LIVE_DATA_URL = 'https://floridaoperationshub.vercel.app/api/live-data';
 const LIVE_SYNC_INTERVAL = 2000;
 const MIN_MARKER_SIZE = 18;
@@ -76,6 +77,20 @@ let cloudSaveTimeout = null;
 let cloudSaveInFlight = false;
 let cloudSaveQueued = false;
 let remoteDataSignature = '';
+let lastLocalSaveSignature = '';
+const clientId = getClientId();
+
+function getClientId() {
+  const existing = sessionStorage.getItem(CLIENT_ID_STORAGE_KEY);
+
+  if (existing) {
+    return existing;
+  }
+
+  const value = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  sessionStorage.setItem(CLIENT_ID_STORAGE_KEY, value);
+  return value;
+}
 
 function setActiveView(view) {
   for (const link of elements.navLinks) {
@@ -176,6 +191,16 @@ function applyLiveDataset(liveData, statusMessage = 'Synced live') {
     markers: nextMarkers,
     orgs: nextOrgs
   });
+
+  if (liveData.updatedBy === clientId) {
+    remoteDataSignature = nextSignature;
+    return false;
+  }
+
+  if (nextSignature === lastLocalSaveSignature) {
+    remoteDataSignature = nextSignature;
+    return false;
+  }
 
   if (nextSignature === remoteDataSignature || nextSignature === currentDataSignature()) {
     remoteDataSignature = nextSignature;
@@ -603,6 +628,7 @@ async function saveBoxesToCloud() {
   setPublishStatus('Publishing');
 
   try {
+    lastLocalSaveSignature = currentDataSignature();
     const response = await fetch(getSaveBoxesUrl(), {
       method: 'POST',
       headers: {
@@ -610,7 +636,8 @@ async function saveBoxesToCloud() {
       },
       body: JSON.stringify({
         ...buildExportData(),
-        password: editSessionPassword
+        password: editSessionPassword,
+        clientId
       })
     });
     const result = await response.json();
@@ -619,7 +646,7 @@ async function saveBoxesToCloud() {
       throw new Error(result.error || 'Live save failed.');
     }
 
-    applyLiveDataset(result, result.live ? 'Live saved' : 'Published');
+    remoteDataSignature = lastLocalSaveSignature;
     setPublishStatus(result.live ? 'Live saved' : 'Published');
   } catch (error) {
     setPublishStatus(error.message.includes('GITHUB_TOKEN') ? 'Missing token' : 'Save failed');
@@ -990,12 +1017,11 @@ function undoLastEdit() {
 }
 
 function applyMarkerElementStyle(markerElement, rect, rotation = 0) {
-  const scale = getMarkerScale();
   const [left, top, right, bottom] = rect;
-  markerElement.style.left = `${left * scale}px`;
-  markerElement.style.top = `${top * scale}px`;
-  markerElement.style.width = `${(right - left) * scale}px`;
-  markerElement.style.height = `${(bottom - top) * scale}px`;
+  markerElement.style.left = `${(left / MAP_SIZE) * 100}%`;
+  markerElement.style.top = `${(top / MAP_SIZE) * 100}%`;
+  markerElement.style.width = `${((right - left) / MAP_SIZE) * 100}%`;
+  markerElement.style.height = `${((bottom - top) / MAP_SIZE) * 100}%`;
   markerElement.style.transform = `rotate(${rotation}deg)`;
 }
 
@@ -1045,7 +1071,6 @@ function setZoom(nextZoom, keepCenter = true) {
   elements.mapSurface.style.setProperty('--map-width', `${displaySize}px`);
   elements.zoomRange.value = String(zoom);
   elements.zoomValue.textContent = `${Math.round(zoom * 100)}%`;
-  renderMarkers();
 
   if (keepCenter) {
     const nextScale = getMarkerScale();
@@ -1250,7 +1275,6 @@ async function exportBoxes() {
 
 function renderMarkers() {
   elements.markers.textContent = '';
-  const scale = getMarkerScale();
 
   for (const region of propertyMarkers) {
     if (isPostalOnlyMarker(region)) {
@@ -1275,11 +1299,7 @@ function renderMarkers() {
     property.buildingType = inferBuildingType(property);
     marker.style.setProperty('--marker-color', markerColorFor(property));
     marker.style.setProperty('--outline-color', markerOutlineColorFor(property));
-    marker.style.left = `${left * scale}px`;
-    marker.style.top = `${top * scale}px`;
-    marker.style.width = `${(right - left) * scale}px`;
-    marker.style.height = `${(bottom - top) * scale}px`;
-    marker.style.transform = `rotate(${getMarkerRotation(region)}deg)`;
+    applyMarkerElementStyle(marker, [left, top, right, bottom], getMarkerRotation(region));
     marker.setAttribute('aria-label', labelFor(property));
     marker.addEventListener('pointerdown', event => startMarkerEdit(event, region, property));
     marker.addEventListener('click', event => {
@@ -1623,5 +1643,4 @@ async function init() {
   startLiveDataSync();
 }
 
-window.addEventListener('resize', renderMarkers);
 init();

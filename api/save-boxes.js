@@ -124,6 +124,7 @@ module.exports = async function handler(request, response) {
       return;
     }
 
+    const clientId = typeof body.clientId === 'string' ? body.clientId.slice(0, 120) : '';
     const properties = body.properties.map(normalizeProperty);
     const markers = body.markers.map(normalizeMarker);
     const orgs = normalizeDirectories(body.orgs);
@@ -133,7 +134,8 @@ module.exports = async function handler(request, response) {
       liveData = await writeLiveData({
         properties,
         markers,
-        orgs
+        orgs,
+        updatedBy: clientId
       });
     }
 
@@ -196,6 +198,7 @@ module.exports = async function handler(request, response) {
       commit: newCommit.sha,
       live: Boolean(liveData),
       updatedAt: liveData?.updatedAt || new Date().toISOString(),
+      updatedBy: clientId,
       properties,
       markers,
       orgs
