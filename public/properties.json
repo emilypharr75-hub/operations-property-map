@@ -936,7 +936,7 @@
     "buildingType": "house",
     "owner": "Dingle",
     "price": "$900,000",
-    "tax": "Not for sale",
+    "tax": "$25,000",
     "custom": false
   },
   {
