@@ -184,7 +184,7 @@
     "name": "Dealership",
     "number": "2031",
     "buildingType": "building",
-    "owner": "N/A",
+    "owner": "BM Industries",
     "price": "$3,000,000",
     "tax": "$70,000",
     "custom": false
