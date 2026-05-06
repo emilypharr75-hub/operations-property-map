@@ -54,7 +54,7 @@
     "name": "Gas Depot",
     "number": "3071",
     "buildingType": "building",
-    "owner": "Government",
+    "owner": "N/A",
     "price": "$800,000",
     "tax": "$42,500",
     "custom": false
