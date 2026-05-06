@@ -263,7 +263,7 @@
     "id": "news-service",
     "name": "News Service",
     "number": "N/A",
-    "buildingType": "building",
+    "buildingType": "office building",
     "owner": "N/A",
     "price": "$450,000",
     "tax": "$15,000",
