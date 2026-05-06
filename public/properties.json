@@ -745,7 +745,7 @@
     "number": "5051",
     "buildingType": "house",
     "owner": "N/A",
-    "price": "Not for sale",
+    "price": "$800,000",
     "tax": "Not for sale",
     "custom": false
   },
@@ -765,7 +765,7 @@
     "number": "5053",
     "buildingType": "house",
     "owner": "N/A",
-    "price": "Not for sale",
+    "price": "$800,000",
     "tax": "Not for sale",
     "custom": false
   },
