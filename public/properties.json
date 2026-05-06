@@ -1365,8 +1365,8 @@
     "number": "2173",
     "buildingType": "building",
     "owner": "N/A",
-    "price": "$725,000",
-    "tax": "Not for sale",
+    "price": "$625,000",
+    "tax": "$20,000",
     "custom": true
   },
   {
