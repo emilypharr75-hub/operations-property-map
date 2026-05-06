@@ -1546,7 +1546,7 @@
     "buildingType": "office building",
     "owner": "N/A",
     "price": "$250,000",
-    "tax": "Not for sale",
+    "tax": "$30,000",
     "custom": true
   },
   {
