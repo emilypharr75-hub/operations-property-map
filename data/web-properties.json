@@ -1056,7 +1056,7 @@
     "buildingType": "house",
     "owner": "Chuck",
     "price": "$1,500,000",
-    "tax": "Not for sale",
+    "tax": "$45,000",
     "custom": false
   },
   {
