@@ -77,6 +77,7 @@ let cloudSaveTimeout = null;
 let cloudSaveInFlight = false;
 let cloudSaveQueued = false;
 let remoteDataSignature = '';
+let remoteDataVersion = '';
 let lastLocalSaveSignature = '';
 let liveSyncTimer = null;
 const clientId = getClientId();
@@ -172,7 +173,9 @@ function currentDataSignature() {
 }
 
 async function fetchJson(url) {
-  const response = await fetch(`${url}?t=${Date.now()}`, {
+  const requestUrl = new URL(url, window.location.origin);
+  requestUrl.searchParams.set('t', String(Date.now()));
+  const response = await fetch(requestUrl.toString(), {
     cache: 'no-store'
   });
 
@@ -183,7 +186,22 @@ async function fetchJson(url) {
   return response.json();
 }
 
+function getLiveDataSyncUrl() {
+  const url = new URL(getLiveDataUrl(), window.location.origin);
+
+  if (remoteDataVersion) {
+    url.searchParams.set('since', remoteDataVersion);
+  }
+
+  return url.toString();
+}
+
 function applyLiveDataset(liveData, statusMessage = 'Synced live') {
+  if (liveData.unchanged) {
+    remoteDataVersion = liveData.version || remoteDataVersion;
+    return false;
+  }
+
   const nextProperties = liveData.properties || [];
   const nextMarkers = liveData.markers || [];
   const nextOrgs = liveData.orgs || {};
@@ -195,16 +213,19 @@ function applyLiveDataset(liveData, statusMessage = 'Synced live') {
 
   if (liveData.updatedBy === clientId) {
     remoteDataSignature = nextSignature;
+    remoteDataVersion = liveData.version || liveData.updatedAt || remoteDataVersion;
     return false;
   }
 
   if (nextSignature === lastLocalSaveSignature) {
     remoteDataSignature = nextSignature;
+    remoteDataVersion = liveData.version || liveData.updatedAt || remoteDataVersion;
     return false;
   }
 
   if (nextSignature === remoteDataSignature || nextSignature === currentDataSignature()) {
     remoteDataSignature = nextSignature;
+    remoteDataVersion = liveData.version || liveData.updatedAt || remoteDataVersion;
     return false;
   }
 
@@ -218,6 +239,7 @@ function applyLiveDataset(liveData, statusMessage = 'Synced live') {
   };
   propertiesById = new Map(properties.map(property => [property.id, property]));
   remoteDataSignature = nextSignature;
+  remoteDataVersion = liveData.version || liveData.updatedAt || remoteDataVersion;
   clearStoredEditorState();
   renderOptions();
   renderMarkers();
@@ -243,7 +265,7 @@ async function syncFromLiveData() {
   }
 
   try {
-    const liveData = await fetchJson(getLiveDataUrl());
+    const liveData = await fetchJson(getLiveDataSyncUrl());
     applyLiveDataset(liveData);
   } catch (error) {
     console.error(error);
@@ -674,6 +696,7 @@ async function saveBoxesToCloud() {
     }
 
     remoteDataSignature = lastLocalSaveSignature;
+    remoteDataVersion = result.version || result.updatedAt || remoteDataVersion;
     setPublishStatus(result.live ? 'Live saved' : 'Published');
   } catch (error) {
     setPublishStatus(error.message.includes('GITHUB_TOKEN') ? 'Missing token' : 'Save failed');
