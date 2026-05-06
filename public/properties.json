@@ -246,7 +246,7 @@
     "buildingType": "building",
     "owner": "BM Industries",
     "price": "$1,000,000",
-    "tax": "$60,000",
+    "tax": "$50,000",
     "custom": false
   },
   {
