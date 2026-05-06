@@ -316,7 +316,7 @@
     "buildingType": "office building",
     "owner": "N/A",
     "price": "$300,000",
-    "tax": "Not for sale",
+    "tax": "$50,000",
     "custom": false
   },
   {
