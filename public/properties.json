@@ -166,7 +166,7 @@
     "buildingType": "building",
     "owner": "Liam",
     "price": "$950,000",
-    "tax": "1",
+    "tax": "$30,000",
     "custom": false
   },
   {
