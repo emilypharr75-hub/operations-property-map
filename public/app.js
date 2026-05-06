@@ -8,7 +8,7 @@ const PROPERTY_STORAGE_KEY = 'erlcPropertyEdits';
 const CUSTOM_PROPERTY_STORAGE_KEY = 'erlcCustomProperties';
 const ORG_STORAGE_KEY = 'erlcDirectoryRecords';
 const LIVE_DATA_URL = 'https://floridaoperationshub.vercel.app/api/live-data';
-const LIVE_SYNC_INTERVAL = 10000;
+const LIVE_SYNC_INTERVAL = 2000;
 const MIN_MARKER_SIZE = 18;
 const EDIT_PASSWORD = 'BillingForTheWin';
 
@@ -143,6 +143,10 @@ function getLiveDataUrl() {
   return isLocalHostPreview() ? LIVE_DATA_URL : '/api/live-data';
 }
 
+function getSaveBoxesUrl() {
+  return isLocalHostPreview() ? 'https://floridaoperationshub.vercel.app/api/save-boxes' : '/api/save-boxes';
+}
+
 function currentDataSignature() {
   return JSON.stringify({
     properties: buildExportData().properties,
@@ -163,6 +167,44 @@ async function fetchJson(url) {
   return response.json();
 }
 
+function applyLiveDataset(liveData, statusMessage = 'Synced live') {
+  const nextProperties = liveData.properties || [];
+  const nextMarkers = liveData.markers || [];
+  const nextOrgs = liveData.orgs || {};
+  const nextSignature = JSON.stringify({
+    properties: nextProperties,
+    markers: nextMarkers,
+    orgs: nextOrgs
+  });
+
+  if (nextSignature === remoteDataSignature || nextSignature === currentDataSignature()) {
+    remoteDataSignature = nextSignature;
+    return false;
+  }
+
+  properties = nextProperties;
+  propertyMarkers = nextMarkers;
+  directoryRecords = {
+    businesses: Array.isArray(nextOrgs.businesses) ? nextOrgs.businesses.map(normalizeDirectoryRecord) : [],
+    mafias: Array.isArray(nextOrgs.mafias) ? nextOrgs.mafias.map(normalizeDirectoryRecord) : [],
+    businessRegulations: Array.isArray(nextOrgs.businessRegulations) ? nextOrgs.businessRegulations.map(normalizeRegulationRecord) : [],
+    mafiaRegulations: Array.isArray(nextOrgs.mafiaRegulations) ? nextOrgs.mafiaRegulations.map(normalizeRegulationRecord) : []
+  };
+  propertiesById = new Map(properties.map(property => [property.id, property]));
+  remoteDataSignature = nextSignature;
+  clearStoredEditorState();
+  renderOptions();
+  renderMarkers();
+  renderDirectoryLists();
+
+  if (selectedMarkerId && propertiesById.has(selectedMarkerId)) {
+    selectProperty(selectedMarkerId);
+  }
+
+  setPublishStatus(statusMessage);
+  return true;
+}
+
 async function syncFromLiveData() {
   if (editMode || cloudSaveInFlight) {
     return;
@@ -170,40 +212,7 @@ async function syncFromLiveData() {
 
   try {
     const liveData = await fetchJson(getLiveDataUrl());
-    const nextProperties = liveData.properties || [];
-    const nextMarkers = liveData.markers || [];
-    const nextOrgs = liveData.orgs || {};
-    const nextSignature = JSON.stringify({
-      properties: nextProperties,
-      markers: nextMarkers,
-      orgs: nextOrgs
-    });
-
-    if (nextSignature === remoteDataSignature || nextSignature === currentDataSignature()) {
-      remoteDataSignature = nextSignature;
-      return;
-    }
-
-    properties = nextProperties;
-    propertyMarkers = nextMarkers;
-    directoryRecords = {
-      businesses: Array.isArray(nextOrgs.businesses) ? nextOrgs.businesses.map(normalizeDirectoryRecord) : [],
-      mafias: Array.isArray(nextOrgs.mafias) ? nextOrgs.mafias.map(normalizeDirectoryRecord) : [],
-      businessRegulations: Array.isArray(nextOrgs.businessRegulations) ? nextOrgs.businessRegulations.map(normalizeRegulationRecord) : [],
-      mafiaRegulations: Array.isArray(nextOrgs.mafiaRegulations) ? nextOrgs.mafiaRegulations.map(normalizeRegulationRecord) : []
-    };
-    propertiesById = new Map(properties.map(property => [property.id, property]));
-    remoteDataSignature = nextSignature;
-    clearStoredEditorState();
-    renderOptions();
-    renderMarkers();
-    renderDirectoryLists();
-
-    if (selectedMarkerId && propertiesById.has(selectedMarkerId)) {
-      selectProperty(selectedMarkerId);
-    }
-
-    setPublishStatus('Synced live');
+    applyLiveDataset(liveData);
   } catch (error) {
     console.error(error);
   }
@@ -594,7 +603,7 @@ async function saveBoxesToCloud() {
   setPublishStatus('Publishing');
 
   try {
-    const response = await fetch('/api/save-boxes', {
+    const response = await fetch(getSaveBoxesUrl(), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -610,7 +619,8 @@ async function saveBoxesToCloud() {
       throw new Error(result.error || 'Live save failed.');
     }
 
-    setPublishStatus('Published');
+    applyLiveDataset(result, result.live ? 'Live saved' : 'Published');
+    setPublishStatus(result.live ? 'Live saved' : 'Published');
   } catch (error) {
     setPublishStatus(error.message.includes('GITHUB_TOKEN') ? 'Missing token' : 'Save failed');
     console.error(error);
@@ -1476,28 +1486,43 @@ function selectFromSearch() {
 async function init() {
   resetStoredEditorStateForImportedData();
 
-  const [propertiesResponse, markersResponse] = await Promise.all([
-    fetch('/properties.json'),
-    fetch('/property-markers.json')
-  ]);
-  properties = await propertiesResponse.json();
-  propertyMarkers = await markersResponse.json();
+  let loadedLiveData = false;
+
   try {
-    const orgsResponse = await fetch('/orgs.json');
-    directoryRecords = await orgsResponse.json();
-  } catch {
-    directoryRecords = {
-      businesses: [],
-      mafias: [],
-      businessRegulations: [],
-      mafiaRegulations: []
-    };
+    const liveData = await fetchJson(getLiveDataUrl());
+
+    if (Array.isArray(liveData.properties) && Array.isArray(liveData.markers)) {
+      applyLiveDataset(liveData, 'Live loaded');
+      loadedLiveData = true;
+    }
+  } catch (error) {
+    console.error(error);
   }
-  applyStoredDirectoryRecords();
-  applyStoredCustomProperties();
-  applyStoredPropertyEdits();
-  applyStoredMarkerEdits();
-  propertiesById = new Map(properties.map(property => [property.id, property]));
+
+  if (!loadedLiveData) {
+    const [propertiesResponse, markersResponse] = await Promise.all([
+      fetch('/properties.json'),
+      fetch('/property-markers.json')
+    ]);
+    properties = await propertiesResponse.json();
+    propertyMarkers = await markersResponse.json();
+    try {
+      const orgsResponse = await fetch('/orgs.json');
+      directoryRecords = await orgsResponse.json();
+    } catch {
+      directoryRecords = {
+        businesses: [],
+        mafias: [],
+        businessRegulations: [],
+        mafiaRegulations: []
+      };
+    }
+    applyStoredDirectoryRecords();
+    applyStoredCustomProperties();
+    applyStoredPropertyEdits();
+    applyStoredMarkerEdits();
+    propertiesById = new Map(properties.map(property => [property.id, property]));
+  }
 
   renderOptions();
   renderMarkers();

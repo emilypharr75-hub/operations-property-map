@@ -1,10 +1,14 @@
 const REPO = process.env.GITHUB_REPO || 'emilypharr75-hub/operations-property-map';
 const BRANCH = process.env.GITHUB_BRANCH || 'main';
 const EDIT_PASSWORD = process.env.EDIT_PASSWORD || 'BillingForTheWin';
+const { hasLiveStore, writeLiveData } = require('../lib/live-store');
 
 function jsonResponse(response, status, body) {
   response.statusCode = status;
   response.setHeader('Content-Type', 'application/json');
+  response.setHeader('Access-Control-Allow-Origin', '*');
+  response.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  response.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   response.end(JSON.stringify(body));
 }
 
@@ -90,6 +94,11 @@ function normalizeRegulationRecord(record) {
 }
 
 module.exports = async function handler(request, response) {
+  if (request.method === 'OPTIONS') {
+    jsonResponse(response, 204, {});
+    return;
+  }
+
   if (request.method !== 'POST') {
     jsonResponse(response, 405, { error: 'Method not allowed' });
     return;
@@ -118,6 +127,16 @@ module.exports = async function handler(request, response) {
     const properties = body.properties.map(normalizeProperty);
     const markers = body.markers.map(normalizeMarker);
     const orgs = normalizeDirectories(body.orgs);
+    let liveData = null;
+
+    if (hasLiveStore()) {
+      liveData = await writeLiveData({
+        properties,
+        markers,
+        orgs
+      });
+    }
+
     const files = {
       'data/web-properties.json': `${JSON.stringify(properties, null, 2)}\n`,
       'data/property-markers.json': `${JSON.stringify(markers, null, 2)}\n`,
@@ -174,7 +193,12 @@ module.exports = async function handler(request, response) {
 
     jsonResponse(response, 200, {
       ok: true,
-      commit: newCommit.sha
+      commit: newCommit.sha,
+      live: Boolean(liveData),
+      updatedAt: liveData?.updatedAt || new Date().toISOString(),
+      properties,
+      markers,
+      orgs
     });
   } catch (error) {
     jsonResponse(response, 500, {

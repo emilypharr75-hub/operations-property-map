@@ -10,3 +10,5 @@ eng.traineddata
 
 *.tmp
 *.log
+
+.vercel
