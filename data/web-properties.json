@@ -44,7 +44,7 @@
     "name": "Springfield Gas Station",
     "number": "11101",
     "buildingType": "building",
-    "owner": "N/A",
+    "owner": "BM Industries",
     "price": "$4,500,000",
     "tax": "$30,000",
     "custom": false
