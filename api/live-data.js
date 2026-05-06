@@ -27,16 +27,16 @@ function githubHeaders() {
 }
 
 async function fetchRepoJson(path) {
-  const response = await fetch(`https://api.github.com/repos/${REPO}/contents/${path}?ref=${BRANCH}`, {
+  const response = await fetch(`https://raw.githubusercontent.com/${REPO}/${BRANCH}/${path}`, {
     headers: githubHeaders()
   });
-  const data = await response.json();
+  const text = await response.text();
 
   if (!response.ok) {
-    throw new Error(data.message || `Could not fetch ${path}`);
+    throw new Error(text || `Could not fetch ${path}`);
   }
 
-  return JSON.parse(Buffer.from(data.content, 'base64').toString('utf8'));
+  return JSON.parse(text);
 }
 
 function getSearchParam(request, name) {
