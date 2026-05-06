@@ -2616,5 +2616,22 @@
     ],
     "rotation": 0,
     "custom": true
+  },
+  {
+    "id": "custom-1778040823482",
+    "rect": [
+      695,
+      2598,
+      785,
+      2668
+    ],
+    "buildingRect": [
+      756,
+      2606,
+      846,
+      2676
+    ],
+    "rotation": 0,
+    "custom": true
   }
 ]
