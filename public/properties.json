@@ -154,7 +154,7 @@
     "name": "Farm Field 1#",
     "number": "N/A",
     "buildingType": "building",
-    "owner": "676431193276678164",
+    "owner": "Golden Harvest Farms (676431193276678164)",
     "price": "$1,300,000",
     "tax": "$20,000",
     "custom": false
@@ -164,7 +164,7 @@
     "name": "Barnhouse #2",
     "number": "N/A",
     "buildingType": "building",
-    "owner": "676431193276678164",
+    "owner": "Golden Harvest Farms (676431193276678164)",
     "price": "$1,235,000",
     "tax": "$30,000",
     "custom": false
@@ -844,7 +844,7 @@
     "name": "House 7013",
     "number": "7013",
     "buildingType": "house",
-    "owner": "970122673113956382",
+    "owner": "PoopyFarts (970122673113956382)",
     "price": "$1,950,000",
     "tax": "$45,000",
     "custom": false
@@ -884,7 +884,7 @@
     "name": "House 7041",
     "number": "7041",
     "buildingType": "house",
-    "owner": "1476206310994219059",
+    "owner": "Omg2012darin (1476206310994219059)",
     "price": "$1,170,000",
     "tax": "$25,000",
     "custom": false
@@ -1054,7 +1054,7 @@
     "name": "House 7094",
     "number": "7094",
     "buildingType": "house",
-    "owner": "1231431744960331798",
+    "owner": "Chuck (1231431744960331798)",
     "price": "$1,950,000",
     "tax": "$45,000",
     "custom": false
@@ -1064,7 +1064,7 @@
     "name": "House 7095",
     "number": "7095",
     "buildingType": "house",
-    "owner": "1231431744960331798",
+    "owner": "Chuck (1231431744960331798)",
     "price": "$1,105,000",
     "tax": "$21,500",
     "custom": false
@@ -1204,7 +1204,7 @@
     "name": "House 11031",
     "number": "11031",
     "buildingType": "house",
-    "owner": "1286495563839442997",
+    "owner": "jaxdog1009 (1286495563839442997)",
     "price": "$1,950,000",
     "tax": "$45,000",
     "custom": false
@@ -1404,7 +1404,7 @@
     "name": "Property 7002",
     "number": "7002",
     "buildingType": "house",
-    "owner": "1339771188292882485",
+    "owner": "VipBrew (1339771188292882485)",
     "price": "$1,950,000",
     "tax": "$45,000",
     "custom": true
@@ -1554,7 +1554,7 @@
     "name": "Barnhouse",
     "number": "6001",
     "buildingType": "building",
-    "owner": "676431193276678164",
+    "owner": "Golden Harvest Farms (676431193276678164)",
     "price": "$1,365,000",
     "tax": "$27,500",
     "custom": true
@@ -1564,7 +1564,7 @@
     "name": "Property Farm Field #2",
     "number": "Farm Field #2",
     "buildingType": "building",
-    "owner": "676431193276678164",
+    "owner": "Golden Harvest Farms (676431193276678164)",
     "price": "$650,000",
     "tax": "$12,500",
     "custom": true
@@ -1574,7 +1574,7 @@
     "name": "Property Farm Field #3",
     "number": "Farm Field #3",
     "buildingType": "building",
-    "owner": "676431193276678164",
+    "owner": "Golden Harvest Farms (676431193276678164)",
     "price": "$617,500",
     "tax": "$10,000",
     "custom": true
@@ -1584,7 +1584,7 @@
     "name": "Property Farm Field #4",
     "number": "Farm Field #4",
     "buildingType": "building",
-    "owner": "676431193276678164",
+    "owner": "Golden Harvest Farms (676431193276678164)",
     "price": "$780,000",
     "tax": "$12,500",
     "custom": true
@@ -1594,7 +1594,7 @@
     "name": "Property Farm Field #5",
     "number": "Farm Field #5",
     "buildingType": "building",
-    "owner": "676431193276678164",
+    "owner": "Golden Harvest Farms (676431193276678164)",
     "price": "$975,000",
     "tax": "$17,500",
     "custom": true
