@@ -1638,5 +1638,15 @@
     "price": "Not for sale",
     "tax": "Not for sale",
     "custom": true
+  },
+  {
+    "id": "custom-1778041197715",
+    "name": "Property 2032",
+    "number": "2032",
+    "buildingType": "building",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale",
+    "custom": true
   }
 ]
