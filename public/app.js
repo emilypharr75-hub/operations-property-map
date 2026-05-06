@@ -79,6 +79,7 @@ let cloudSaveQueued = false;
 let remoteDataSignature = '';
 let remoteDataVersion = '';
 let lastLocalSaveSignature = '';
+let lastSavedDataSignature = '';
 let liveSyncTimer = null;
 const clientId = getClientId();
 
@@ -213,18 +214,21 @@ function applyLiveDataset(liveData, statusMessage = 'Synced live') {
 
   if (liveData.updatedBy === clientId) {
     remoteDataSignature = nextSignature;
+    lastSavedDataSignature = nextSignature;
     remoteDataVersion = liveData.version || liveData.updatedAt || remoteDataVersion;
     return false;
   }
 
   if (nextSignature === lastLocalSaveSignature) {
     remoteDataSignature = nextSignature;
+    lastSavedDataSignature = nextSignature;
     remoteDataVersion = liveData.version || liveData.updatedAt || remoteDataVersion;
     return false;
   }
 
   if (nextSignature === remoteDataSignature || nextSignature === currentDataSignature()) {
     remoteDataSignature = nextSignature;
+    lastSavedDataSignature = nextSignature;
     remoteDataVersion = liveData.version || liveData.updatedAt || remoteDataVersion;
     return false;
   }
@@ -239,6 +243,7 @@ function applyLiveDataset(liveData, statusMessage = 'Synced live') {
   };
   propertiesById = new Map(properties.map(property => [property.id, property]));
   remoteDataSignature = nextSignature;
+  lastSavedDataSignature = nextSignature;
   remoteDataVersion = liveData.version || liveData.updatedAt || remoteDataVersion;
   clearStoredEditorState();
   renderOptions();
@@ -286,6 +291,7 @@ function scheduleNextLiveSync(delay = LIVE_SYNC_VISIBLE_INTERVAL) {
 
 function startLiveDataSync() {
   remoteDataSignature = currentDataSignature();
+  lastSavedDataSignature = remoteDataSignature;
   scheduleNextLiveSync();
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
@@ -657,6 +663,12 @@ function scheduleCloudSave() {
     return;
   }
 
+  if (currentDataSignature() === lastSavedDataSignature) {
+    window.clearTimeout(cloudSaveTimeout);
+    setPublishStatus('No changes');
+    return;
+  }
+
   window.clearTimeout(cloudSaveTimeout);
   setPublishStatus('Saving soon');
   cloudSaveTimeout = window.setTimeout(saveBoxesToCloud, 1800);
@@ -672,12 +684,20 @@ async function saveBoxesToCloud() {
     return;
   }
 
+  const nextSignature = currentDataSignature();
+
+  if (nextSignature === lastSavedDataSignature) {
+    cloudSaveQueued = false;
+    setPublishStatus('No changes');
+    return;
+  }
+
   cloudSaveInFlight = true;
   cloudSaveQueued = false;
   setPublishStatus('Publishing');
 
   try {
-    lastLocalSaveSignature = currentDataSignature();
+    lastLocalSaveSignature = nextSignature;
     const response = await fetch(getSaveBoxesUrl(), {
       method: 'POST',
       headers: {
@@ -696,6 +716,7 @@ async function saveBoxesToCloud() {
     }
 
     remoteDataSignature = lastLocalSaveSignature;
+    lastSavedDataSignature = lastLocalSaveSignature;
     remoteDataVersion = result.version || result.updatedAt || remoteDataVersion;
     setPublishStatus(result.live ? 'Live saved' : 'Published');
   } catch (error) {
