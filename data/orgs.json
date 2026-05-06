@@ -35,10 +35,18 @@
     {
       "id": "businesses-1778035266440",
       "name": "Moonlight Security",
-      "owner": "Security Company",
+      "owner": "darth_julian",
       "type": "Security",
       "server": "https://discord.gg/ASTygzWHKS",
       "logo": "https://cdn.discordapp.com/icons/1497732805973512214/5232ea3cbd7811ca924cfba9c33b28f4.webp?size=1280"
+    },
+    {
+      "id": "businesses-1778035324941",
+      "name": "New business",
+      "owner": "N/A",
+      "type": "Business",
+      "server": "",
+      "logo": ""
     }
   ],
   "mafias": [],
