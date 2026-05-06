@@ -1,5 +1,14 @@
 {
-  "businesses": [],
+  "businesses": [
+    {
+      "id": "businesses-1778035049587",
+      "name": "New business",
+      "owner": "N/A",
+      "type": "Business",
+      "server": "",
+      "logo": ""
+    }
+  ],
   "mafias": [],
   "businessRegulations": [],
   "mafiaRegulations": []
