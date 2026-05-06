@@ -73,6 +73,14 @@
       "type": "Mafia",
       "server": "https://discord.gg/vwYApGZ32G",
       "logo": "https://cdn.discordapp.com/icons/1459639283378950385/6575fc497f28320d09738297402e2903.webp?size=1280"
+    },
+    {
+      "id": "mafias-1778039811484",
+      "name": "New mafia",
+      "owner": "N/A",
+      "type": "Mafia",
+      "server": "",
+      "logo": ""
     }
   ],
   "businessRegulations": [],
