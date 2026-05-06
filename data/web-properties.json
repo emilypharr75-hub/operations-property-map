@@ -163,9 +163,9 @@
     "id": "main-farm-rural-heartland",
     "name": "Barnhouse #2",
     "number": "N/A",
-    "buildingType": "building",
+    "buildingType": "government",
     "owner": "N/A",
-    "price": "$4,500,000",
+    "price": "Not for Sale",
     "tax": "$25,000",
     "custom": false
   },
