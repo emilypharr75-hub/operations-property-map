@@ -4,9 +4,17 @@
       "id": "businesses-1778035049587",
       "name": "Onyx Services",
       "owner": "N/A",
-      "type": "Business",
+      "type": "General and Security",
       "server": "https://discord.gg/XycqrwTUYg",
       "logo": "https://cdn.discordapp.com/icons/1289585106129784854/c0b9acd31a3f186880339cbccb98a90d.webp?size=1280"
+    },
+    {
+      "id": "businesses-1778035072857",
+      "name": "New business",
+      "owner": "N/A",
+      "type": "Business",
+      "server": "",
+      "logo": ""
     }
   ],
   "mafias": [],
