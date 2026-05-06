@@ -10,7 +10,6 @@ const ORG_STORAGE_KEY = 'erlcDirectoryRecords';
 const CLIENT_ID_STORAGE_KEY = 'erlcPropertyMapClientId';
 const LIVE_DATA_URL = 'https://floridaoperationshub.vercel.app/api/live-data';
 const LIVE_SYNC_VISIBLE_INTERVAL = 15000;
-const LIVE_SYNC_HIDDEN_INTERVAL = 60000;
 const MIN_MARKER_SIZE = 18;
 const EDIT_PASSWORD = 'BillingForTheWin';
 
@@ -233,6 +232,11 @@ function applyLiveDataset(liveData, statusMessage = 'Synced live') {
 }
 
 async function syncFromLiveData() {
+  if (document.hidden) {
+    window.clearTimeout(liveSyncTimer);
+    return;
+  }
+
   if (editMode || cloudSaveInFlight) {
     scheduleNextLiveSync();
     return;
@@ -248,12 +252,13 @@ async function syncFromLiveData() {
   }
 }
 
-function getLiveSyncInterval() {
-  return document.hidden ? LIVE_SYNC_HIDDEN_INTERVAL : LIVE_SYNC_VISIBLE_INTERVAL;
-}
-
-function scheduleNextLiveSync(delay = getLiveSyncInterval()) {
+function scheduleNextLiveSync(delay = LIVE_SYNC_VISIBLE_INTERVAL) {
   window.clearTimeout(liveSyncTimer);
+
+  if (document.hidden) {
+    return;
+  }
+
   liveSyncTimer = window.setTimeout(syncFromLiveData, delay);
 }
 
@@ -261,7 +266,12 @@ function startLiveDataSync() {
   remoteDataSignature = currentDataSignature();
   scheduleNextLiveSync();
   document.addEventListener('visibilitychange', () => {
-    scheduleNextLiveSync(document.hidden ? LIVE_SYNC_HIDDEN_INTERVAL : 250);
+    if (document.hidden) {
+      window.clearTimeout(liveSyncTimer);
+      return;
+    }
+
+    scheduleNextLiveSync(250);
   });
 }
 
