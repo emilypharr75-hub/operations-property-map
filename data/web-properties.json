@@ -1598,5 +1598,15 @@
     "price": "$3,000,000",
     "tax": "$17,500",
     "custom": true
+  },
+  {
+    "id": "custom-1778040772435",
+    "name": "Property 2201",
+    "number": "2201",
+    "buildingType": "building",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale",
+    "custom": true
   }
 ]
