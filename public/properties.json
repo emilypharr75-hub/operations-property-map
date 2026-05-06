@@ -1625,7 +1625,7 @@
     "number": "2202",
     "buildingType": "building",
     "owner": "N/A",
-    "price": "Not for sale",
+    "price": "for sale",
     "tax": "$12,000",
     "custom": true
   }
