@@ -1586,7 +1586,7 @@
     "buildingType": "building",
     "owner": "N/A",
     "price": "$600,000",
-    "tax": "12,500",
+    "tax": "$12,500",
     "custom": true
   },
   {
