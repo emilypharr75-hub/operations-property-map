@@ -26,11 +26,19 @@
     },
     {
       "id": "businesses-1778035219681",
-      "name": "BM ",
+      "name": "BM Industries",
       "owner": "Blox",
       "type": "General",
       "server": "https://discord.gg/dkaNtb9z3c",
       "logo": "https://cdn.discordapp.com/icons/1492237937927000220/c6449ed330fca3efeadf0236ddca2123.webp?size=1280"
+    },
+    {
+      "id": "businesses-1778035266440",
+      "name": "New business",
+      "owner": "N/A",
+      "type": "Business",
+      "server": "",
+      "logo": ""
     }
   ],
   "mafias": [],
