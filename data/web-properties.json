@@ -1595,8 +1595,8 @@
     "number": "Farm Field #5",
     "buildingType": "building",
     "owner": "N/A",
-    "price": "3,000,000",
-    "tax": "Not for sale",
+    "price": "$3,000,000",
+    "tax": "17",
     "custom": true
   }
 ]
