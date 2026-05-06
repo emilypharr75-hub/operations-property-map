@@ -7,8 +7,8 @@ const MARKER_STORAGE_KEY = 'erlcPropertyMarkerEdits';
 const PROPERTY_STORAGE_KEY = 'erlcPropertyEdits';
 const CUSTOM_PROPERTY_STORAGE_KEY = 'erlcCustomProperties';
 const ORG_STORAGE_KEY = 'erlcDirectoryRecords';
-const REMOTE_DATA_BASE = 'https://raw.githubusercontent.com/emilypharr75-hub/operations-property-map/main/public';
-const REMOTE_SYNC_INTERVAL = 20000;
+const LIVE_DATA_URL = 'https://floridaoperationshub.vercel.app/api/live-data';
+const LIVE_SYNC_INTERVAL = 10000;
 const MIN_MARKER_SIZE = 18;
 const EDIT_PASSWORD = 'BillingForTheWin';
 
@@ -139,6 +139,10 @@ function isLocalHostPreview() {
   return ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname);
 }
 
+function getLiveDataUrl() {
+  return isLocalHostPreview() ? LIVE_DATA_URL : '/api/live-data';
+}
+
 function currentDataSignature() {
   return JSON.stringify({
     properties: buildExportData().properties,
@@ -159,17 +163,16 @@ async function fetchJson(url) {
   return response.json();
 }
 
-async function syncLocalPreviewFromLiveData() {
-  if (!isLocalHostPreview() || editMode) {
+async function syncFromLiveData() {
+  if (editMode || cloudSaveInFlight) {
     return;
   }
 
   try {
-    const [nextProperties, nextMarkers, nextOrgs] = await Promise.all([
-      fetchJson(`${REMOTE_DATA_BASE}/properties.json`),
-      fetchJson(`${REMOTE_DATA_BASE}/property-markers.json`),
-      fetchJson(`${REMOTE_DATA_BASE}/orgs.json`)
-    ]);
+    const liveData = await fetchJson(getLiveDataUrl());
+    const nextProperties = liveData.properties || [];
+    const nextMarkers = liveData.markers || [];
+    const nextOrgs = liveData.orgs || {};
     const nextSignature = JSON.stringify({
       properties: nextProperties,
       markers: nextMarkers,
@@ -206,13 +209,9 @@ async function syncLocalPreviewFromLiveData() {
   }
 }
 
-function startLocalPreviewSync() {
-  if (!isLocalHostPreview()) {
-    return;
-  }
-
+function startLiveDataSync() {
   remoteDataSignature = currentDataSignature();
-  window.setInterval(syncLocalPreviewFromLiveData, REMOTE_SYNC_INTERVAL);
+  window.setInterval(syncFromLiveData, LIVE_SYNC_INTERVAL);
 }
 
 function getDirectoryExportData() {
@@ -725,12 +724,12 @@ function markerOutlineColorFor(property) {
     price === 'n/a' ||
     tax === 'n/a';
 
-  if (isUnavailable) {
-    return '#ff3030';
-  }
-
   if (isOwned) {
     return '#24d16f';
+  }
+
+  if (isUnavailable) {
+    return '#ff3030';
   }
 
   return '#ffd43b';
@@ -1596,7 +1595,7 @@ async function init() {
   window.addEventListener('pointermove', moveMarkerEdit);
   window.addEventListener('pointerup', stopMarkerEdit);
   setZoom(1, false);
-  startLocalPreviewSync();
+  startLiveDataSync();
 }
 
 window.addEventListener('resize', renderMarkers);
