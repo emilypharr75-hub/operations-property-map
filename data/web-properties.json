@@ -1628,5 +1628,15 @@
     "price": "$300,000",
     "tax": "$12,000",
     "custom": true
+  },
+  {
+    "id": "custom-1778040987433",
+    "name": "Property 2231",
+    "number": "2231",
+    "buildingType": "building",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale",
+    "custom": true
   }
 ]
