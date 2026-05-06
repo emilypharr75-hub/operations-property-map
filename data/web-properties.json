@@ -154,7 +154,7 @@
     "name": "Farm Field 1#",
     "number": "N/A",
     "buildingType": "building",
-    "owner": "N/A",
+    "owner": "Golden Harvest Farms",
     "price": "$1,000,000",
     "tax": "$20,000",
     "custom": false
