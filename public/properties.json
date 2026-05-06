@@ -1465,8 +1465,8 @@
     "number": "11051",
     "buildingType": "office building",
     "owner": "N/A",
-    "price": "$225,000+",
-    "tax": "Not for sale",
+    "price": "$225,000",
+    "tax": "$15,000",
     "custom": true
   },
   {
