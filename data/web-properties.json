@@ -213,7 +213,7 @@
     "id": "post-office",
     "name": "Post Office",
     "number": "3081",
-    "buildingType": "government",
+    "buildingType": "building",
     "owner": "N/A",
     "price": "$3,000,000",
     "tax": "$30,000",
