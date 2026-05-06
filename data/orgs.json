@@ -12,9 +12,17 @@
       "id": "businesses-1778035072857",
       "name": "The Saints",
       "owner": "Fish543621",
-      "type": "Business",
+      "type": "Real Estate",
       "server": "https://discord.gg/8XGpj7VEHT",
       "logo": "https://cdn.discordapp.com/icons/1499477246740533391/bc271866158abdeaa31f84097b68c9d3.webp?size=1280"
+    },
+    {
+      "id": "businesses-1778035170027",
+      "name": "New business",
+      "owner": "N/A",
+      "type": "Business",
+      "server": "",
+      "logo": ""
     }
   ],
   "mafias": [],
