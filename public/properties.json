@@ -1626,7 +1626,7 @@
     "buildingType": "building",
     "owner": "N/A",
     "price": "Not for sale",
-    "tax": "Not for sale",
+    "tax": "$",
     "custom": true
   }
 ]
