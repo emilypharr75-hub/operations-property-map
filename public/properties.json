@@ -1648,5 +1648,15 @@
     "price": "$175,000",
     "tax": "$14,000",
     "custom": true
+  },
+  {
+    "id": "custom-1778073495601",
+    "name": "Property 801",
+    "number": "801",
+    "buildingType": "building",
+    "owner": "N/A",
+    "price": "Not for sale",
+    "tax": "Not for sale",
+    "custom": true
   }
 ]
