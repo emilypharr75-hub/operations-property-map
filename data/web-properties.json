@@ -163,7 +163,7 @@
     "id": "main-farm-rural-heartland",
     "name": "Barnhouse #2",
     "number": "N/A",
-    "buildingType": "government",
+    "buildingType": "building",
     "owner": "N/A",
     "price": "Not for Sale",
     "tax": "Not for Sale",
