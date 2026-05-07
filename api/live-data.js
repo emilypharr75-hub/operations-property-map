@@ -27,8 +27,12 @@ function githubHeaders() {
 }
 
 async function fetchRepoJson(path) {
-  const response = await fetch(`https://raw.githubusercontent.com/${REPO}/${BRANCH}/${path}`, {
-    headers: githubHeaders()
+  const response = await fetch(`https://raw.githubusercontent.com/${REPO}/${BRANCH}/${path}?t=${Date.now()}`, {
+    cache: 'no-store',
+    headers: {
+      ...githubHeaders(),
+      'Cache-Control': 'no-store'
+    }
   });
   const text = await response.text();
 
