@@ -201,6 +201,12 @@ function getLiveDataSyncUrl() {
   return url.toString();
 }
 
+function getFullLiveDataUrl() {
+  const url = new URL(getLiveDataUrl(), window.location.origin);
+  url.searchParams.set('full', '1');
+  return url.toString();
+}
+
 function applyLiveDataset(liveData, statusMessage = 'Synced live') {
   if (liveData.unchanged) {
     remoteDataVersion = liveData.version || remoteDataVersion;
@@ -276,7 +282,19 @@ async function syncFromLiveData() {
   }
 
   try {
-    const liveData = await fetchJson(getLiveDataSyncUrl());
+    const liveMeta = await fetchJson(getLiveDataSyncUrl());
+
+    if (liveMeta.unchanged) {
+      applyLiveDataset(liveMeta);
+      return;
+    }
+
+    if (liveMeta.updatedBy === clientId) {
+      remoteDataVersion = liveMeta.version || remoteDataVersion;
+      return;
+    }
+
+    const liveData = await fetchJson(getFullLiveDataUrl());
     applyLiveDataset(liveData);
   } catch (error) {
     console.error(error);
@@ -1605,7 +1623,7 @@ async function init() {
   let loadedLiveData = false;
 
   try {
-    const liveData = await fetchJson(getLiveDataUrl());
+    const liveData = await fetchJson(getFullLiveDataUrl());
 
     if (Array.isArray(liveData.properties) && Array.isArray(liveData.markers)) {
       applyLiveDataset(liveData, 'Live loaded');

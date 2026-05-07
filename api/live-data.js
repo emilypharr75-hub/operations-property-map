@@ -85,6 +85,16 @@ function unchangedResponse(response, version, source) {
   });
 }
 
+function metaResponse(response, { version, source, updatedBy = '' }) {
+  jsonResponse(response, 200, {
+    unchanged: false,
+    version,
+    source,
+    updatedBy,
+    checkedAt: new Date().toISOString()
+  });
+}
+
 module.exports = async function handler(request, response) {
   if (request.method === 'OPTIONS') {
     jsonResponse(response, 204, {});
@@ -98,13 +108,23 @@ module.exports = async function handler(request, response) {
 
   try {
     const since = getSearchParam(request, 'since');
+    const wantsFullData = getSearchParam(request, 'full') === '1';
 
     if (hasLiveStore()) {
-      if (since) {
-        const meta = await readLiveMeta();
+      const meta = await readLiveMeta();
 
-        if (meta?.version === since) {
+      if (meta?.version) {
+        if (since === meta.version) {
           unchangedResponse(response, meta.version, 'live-store');
+          return;
+        }
+
+        if (!wantsFullData) {
+          metaResponse(response, {
+            version: meta.version,
+            source: 'live-store',
+            updatedBy: meta.updatedBy
+          });
           return;
         }
       }
@@ -116,6 +136,15 @@ module.exports = async function handler(request, response) {
 
         if (since === version) {
           unchangedResponse(response, version, 'live-store');
+          return;
+        }
+
+        if (!wantsFullData) {
+          metaResponse(response, {
+            version,
+            source: 'live-store',
+            updatedBy: liveData.updatedBy
+          });
           return;
         }
 
@@ -131,23 +160,30 @@ module.exports = async function handler(request, response) {
 
     const ref = await fetchGithubRef();
 
+    if (since === ref) {
+      unchangedResponse(response, ref, 'github');
+      return;
+    }
+
+    if (!wantsFullData) {
+      metaResponse(response, {
+        version: ref,
+        source: 'github'
+      });
+      return;
+    }
+
     const [properties, markers, orgs] = await Promise.all([
       fetchRepoJson('public/properties.json', ref),
       fetchRepoJson('public/property-markers.json', ref),
       fetchRepoJson('public/orgs.json', ref)
     ]);
-    const version = versionFor({ properties, markers, orgs });
-
-    if (since === version) {
-      unchangedResponse(response, version, 'github');
-      return;
-    }
 
     jsonResponse(response, 200, {
       properties,
       markers,
       orgs,
-      version,
+      version: ref,
       source: 'github',
       checkedAt: new Date().toISOString()
     });
