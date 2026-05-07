@@ -19,6 +19,8 @@
         <div class="sidebar-section">
           <p class="sidebar-section-title">Regulations</p>
           <nav class="sidebar-nav">
+            <button type="button" class="nav-link" data-view="generalRegulations">General Regulations</button>
+            <button type="button" class="nav-link" data-view="billingRegulations">Billing Regulations</button>
             <button type="button" class="nav-link" data-view="businessRegulations">Business Regulations</button>
             <button type="button" class="nav-link" data-view="mafiaRegulations">Mafia Regulations</button>
           </nav>
@@ -132,6 +134,28 @@
             <button type="button" class="edit-toggle regulation-add" data-regulation-add="businessRegulations" disabled>Add Regulation</button>
           </div>
           <div class="regulation-list" id="businessRegulationList"></div>
+        </section>
+
+        <section class="app-view directory-view" id="generalRegulationsView" data-view-panel="generalRegulations">
+          <div class="directory-header">
+            <div>
+              <p class="eyebrow">Regulations</p>
+              <h1>General Regulations</h1>
+            </div>
+            <button type="button" class="edit-toggle regulation-add" data-regulation-add="generalRegulations" disabled>Add Regulation</button>
+          </div>
+          <div class="regulation-list" id="generalRegulationList"></div>
+        </section>
+
+        <section class="app-view directory-view" id="billingRegulationsView" data-view-panel="billingRegulations">
+          <div class="directory-header">
+            <div>
+              <p class="eyebrow">Regulations</p>
+              <h1>Billing Regulations</h1>
+            </div>
+            <button type="button" class="edit-toggle regulation-add" data-regulation-add="billingRegulations" disabled>Add Regulation</button>
+          </div>
+          <div class="regulation-list" id="billingRegulationList"></div>
         </section>
 
         <section class="app-view directory-view" id="mafiaRegulationsView" data-view-panel="mafiaRegulations">

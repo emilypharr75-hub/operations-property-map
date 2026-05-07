@@ -20,6 +20,8 @@ const elements = {
   regulationAddButtons: document.querySelectorAll('[data-regulation-add]'),
   businessList: document.querySelector('#businessList'),
   mafiaList: document.querySelector('#mafiaList'),
+  generalRegulationList: document.querySelector('#generalRegulationList'),
+  billingRegulationList: document.querySelector('#billingRegulationList'),
   businessRegulationList: document.querySelector('#businessRegulationList'),
   mafiaRegulationList: document.querySelector('#mafiaRegulationList'),
   datalist: document.querySelector('#propertyOptions'),
@@ -63,6 +65,8 @@ let propertyMarkers = [];
 let directoryRecords = {
   businesses: [],
   mafias: [],
+  generalRegulations: [],
+  billingRegulations: [],
   businessRegulations: [],
   mafiaRegulations: []
 };
@@ -235,12 +239,14 @@ function applyLiveDataset(liveData, statusMessage = 'Synced live') {
 
   properties = nextProperties;
   propertyMarkers = nextMarkers;
-  directoryRecords = {
-    businesses: Array.isArray(nextOrgs.businesses) ? nextOrgs.businesses.map(normalizeDirectoryRecord) : [],
-    mafias: Array.isArray(nextOrgs.mafias) ? nextOrgs.mafias.map(normalizeDirectoryRecord) : [],
-    businessRegulations: Array.isArray(nextOrgs.businessRegulations) ? nextOrgs.businessRegulations.map(normalizeRegulationRecord) : [],
-    mafiaRegulations: Array.isArray(nextOrgs.mafiaRegulations) ? nextOrgs.mafiaRegulations.map(normalizeRegulationRecord) : []
-  };
+    directoryRecords = {
+      businesses: Array.isArray(nextOrgs.businesses) ? nextOrgs.businesses.map(normalizeDirectoryRecord) : [],
+      mafias: Array.isArray(nextOrgs.mafias) ? nextOrgs.mafias.map(normalizeDirectoryRecord) : [],
+      generalRegulations: Array.isArray(nextOrgs.generalRegulations) ? nextOrgs.generalRegulations.map(normalizeRegulationRecord) : [],
+      billingRegulations: Array.isArray(nextOrgs.billingRegulations) ? nextOrgs.billingRegulations.map(normalizeRegulationRecord) : [],
+      businessRegulations: Array.isArray(nextOrgs.businessRegulations) ? nextOrgs.businessRegulations.map(normalizeRegulationRecord) : [],
+      mafiaRegulations: Array.isArray(nextOrgs.mafiaRegulations) ? nextOrgs.mafiaRegulations.map(normalizeRegulationRecord) : []
+    };
   propertiesById = new Map(properties.map(property => [property.id, property]));
   remoteDataSignature = nextSignature;
   lastSavedDataSignature = nextSignature;
@@ -307,6 +313,8 @@ function getDirectoryExportData() {
   return {
     businesses: directoryRecords.businesses.map(normalizeDirectoryRecord),
     mafias: directoryRecords.mafias.map(normalizeDirectoryRecord),
+    generalRegulations: directoryRecords.generalRegulations.map(normalizeRegulationRecord),
+    billingRegulations: directoryRecords.billingRegulations.map(normalizeRegulationRecord),
     businessRegulations: directoryRecords.businessRegulations.map(normalizeRegulationRecord),
     mafiaRegulations: directoryRecords.mafiaRegulations.map(normalizeRegulationRecord)
   };
@@ -345,12 +353,14 @@ function applyStoredDirectoryRecords() {
     return;
   }
 
-  directoryRecords = {
-    businesses: Array.isArray(stored.businesses) ? stored.businesses.map(normalizeDirectoryRecord) : [],
-    mafias: Array.isArray(stored.mafias) ? stored.mafias.map(normalizeDirectoryRecord) : [],
-    businessRegulations: Array.isArray(stored.businessRegulations) ? stored.businessRegulations.map(normalizeRegulationRecord) : [],
-    mafiaRegulations: Array.isArray(stored.mafiaRegulations) ? stored.mafiaRegulations.map(normalizeRegulationRecord) : []
-  };
+    directoryRecords = {
+      businesses: Array.isArray(stored.businesses) ? stored.businesses.map(normalizeDirectoryRecord) : [],
+      mafias: Array.isArray(stored.mafias) ? stored.mafias.map(normalizeDirectoryRecord) : [],
+      generalRegulations: Array.isArray(stored.generalRegulations) ? stored.generalRegulations.map(normalizeRegulationRecord) : [],
+      billingRegulations: Array.isArray(stored.billingRegulations) ? stored.billingRegulations.map(normalizeRegulationRecord) : [],
+      businessRegulations: Array.isArray(stored.businessRegulations) ? stored.businessRegulations.map(normalizeRegulationRecord) : [],
+      mafiaRegulations: Array.isArray(stored.mafiaRegulations) ? stored.mafiaRegulations.map(normalizeRegulationRecord) : []
+    };
 }
 
 function directoryConfig(key) {
@@ -368,17 +378,30 @@ function directoryConfig(key) {
 }
 
 function regulationConfig(key) {
-  return key === 'mafiaRegulations'
-    ? {
+  const configs = {
+    generalRegulations: {
+      title: 'general regulation',
+      list: elements.generalRegulationList,
+      records: directoryRecords.generalRegulations
+    },
+    billingRegulations: {
+      title: 'billing regulation',
+      list: elements.billingRegulationList,
+      records: directoryRecords.billingRegulations
+    },
+    businessRegulations: {
+      title: 'business regulation',
+      list: elements.businessRegulationList,
+      records: directoryRecords.businessRegulations
+    },
+    mafiaRegulations: {
       title: 'mafia regulation',
       list: elements.mafiaRegulationList,
       records: directoryRecords.mafiaRegulations
     }
-    : {
-      title: 'business regulation',
-      list: elements.businessRegulationList,
-      records: directoryRecords.businessRegulations
-    };
+  };
+
+  return configs[key] || configs.businessRegulations;
 }
 
 function addDirectoryRecord(key) {
@@ -514,6 +537,8 @@ function renderDirectoryList(key) {
 function renderDirectoryLists() {
   renderDirectoryList('businesses');
   renderDirectoryList('mafias');
+  renderRegulationList('generalRegulations');
+  renderRegulationList('billingRegulations');
   renderRegulationList('businessRegulations');
   renderRegulationList('mafiaRegulations');
 }
@@ -1604,6 +1629,8 @@ async function init() {
       directoryRecords = {
         businesses: [],
         mafias: [],
+        generalRegulations: [],
+        billingRegulations: [],
         businessRegulations: [],
         mafiaRegulations: []
       };

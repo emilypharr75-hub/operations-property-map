@@ -78,6 +78,8 @@ function normalizeDirectories(orgs) {
   return {
     businesses: Array.isArray(orgs?.businesses) ? orgs.businesses.map(normalizeDirectoryRecord) : [],
     mafias: Array.isArray(orgs?.mafias) ? orgs.mafias.map(normalizeDirectoryRecord) : [],
+    generalRegulations: Array.isArray(orgs?.generalRegulations) ? orgs.generalRegulations.map(normalizeRegulationRecord) : [],
+    billingRegulations: Array.isArray(orgs?.billingRegulations) ? orgs.billingRegulations.map(normalizeRegulationRecord) : [],
     businessRegulations: Array.isArray(orgs?.businessRegulations) ? orgs.businessRegulations.map(normalizeRegulationRecord) : [],
     mafiaRegulations: Array.isArray(orgs?.mafiaRegulations) ? orgs.mafiaRegulations.map(normalizeRegulationRecord) : []
   };
