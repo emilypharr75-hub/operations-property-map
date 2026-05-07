@@ -26,13 +26,27 @@ function githubHeaders() {
   return headers;
 }
 
-async function fetchRepoJson(path) {
-  const response = await fetch(`https://raw.githubusercontent.com/${REPO}/${BRANCH}/${path}?t=${Date.now()}`, {
+async function fetchGithubRef() {
+  const response = await fetch(`https://api.github.com/repos/${REPO}/git/ref/heads/${BRANCH}?t=${Date.now()}`, {
     cache: 'no-store',
     headers: {
       ...githubHeaders(),
       'Cache-Control': 'no-store'
     }
+  });
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || `Could not resolve ${BRANCH}`);
+  }
+
+  return data.object.sha;
+}
+
+async function fetchRepoJson(path, ref) {
+  const response = await fetch(`https://raw.githubusercontent.com/${REPO}/${ref}/${path}`, {
+    cache: 'no-store',
+    headers: githubHeaders()
   });
   const text = await response.text();
 
@@ -115,10 +129,12 @@ module.exports = async function handler(request, response) {
       }
     }
 
+    const ref = await fetchGithubRef();
+
     const [properties, markers, orgs] = await Promise.all([
-      fetchRepoJson('public/properties.json'),
-      fetchRepoJson('public/property-markers.json'),
-      fetchRepoJson('public/orgs.json')
+      fetchRepoJson('public/properties.json', ref),
+      fetchRepoJson('public/property-markers.json', ref),
+      fetchRepoJson('public/orgs.json', ref)
     ]);
     const version = versionFor({ properties, markers, orgs });
 
