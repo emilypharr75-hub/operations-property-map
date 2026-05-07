@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const Tesseract = require('tesseract.js');
 
-const imagePath = path.join(__dirname, '..', 'public', 'assets', 'erlc-map.png');
+const imagePath = path.join(__dirname, '..', 'public', 'assets', 'erlc-map.svg');
 const propertiesPath = path.join(__dirname, '..', 'public', 'properties.json');
 const outputPath = path.join(__dirname, '..', 'public', 'property-markers.json');
 

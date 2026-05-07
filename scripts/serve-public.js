@@ -10,7 +10,8 @@ const contentTypes = {
   '.html': 'text/html',
   '.js': 'text/javascript',
   '.json': 'application/json',
-  '.png': 'image/png'
+  '.png': 'image/png',
+  '.svg': 'image/svg+xml'
 };
 
 const server = http.createServer((request, response) => {
