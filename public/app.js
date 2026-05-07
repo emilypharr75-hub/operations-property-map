@@ -9,7 +9,6 @@ const CUSTOM_PROPERTY_STORAGE_KEY = 'erlcCustomProperties';
 const ORG_STORAGE_KEY = 'erlcDirectoryRecords';
 const CLIENT_ID_STORAGE_KEY = 'erlcPropertyMapClientId';
 const LIVE_DATA_URL = 'https://floridaoperationshub.vercel.app/api/live-data';
-const LIVE_SYNC_VISIBLE_INTERVAL = 15000;
 const MIN_MARKER_SIZE = 18;
 const EDIT_PASSWORD = 'BillingForTheWin';
 
@@ -84,7 +83,6 @@ let remoteDataSignature = '';
 let remoteDataVersion = '';
 let lastLocalSaveSignature = '';
 let lastSavedDataSignature = '';
-let liveSyncTimer = null;
 const clientId = getClientId();
 
 function getClientId() {
@@ -191,16 +189,6 @@ async function fetchJson(url) {
   return response.json();
 }
 
-function getLiveDataSyncUrl() {
-  const url = new URL(getLiveDataUrl(), window.location.origin);
-
-  if (remoteDataVersion) {
-    url.searchParams.set('since', remoteDataVersion);
-  }
-
-  return url.toString();
-}
-
 function getFullLiveDataUrl() {
   const url = new URL(getLiveDataUrl(), window.location.origin);
   url.searchParams.set('full', '1');
@@ -270,61 +258,9 @@ function applyLiveDataset(liveData, statusMessage = 'Synced live') {
   return true;
 }
 
-async function syncFromLiveData() {
-  if (document.hidden) {
-    window.clearTimeout(liveSyncTimer);
-    return;
-  }
-
-  if (editMode || cloudSaveInFlight) {
-    scheduleNextLiveSync();
-    return;
-  }
-
-  try {
-    const liveMeta = await fetchJson(getLiveDataSyncUrl());
-
-    if (liveMeta.unchanged) {
-      applyLiveDataset(liveMeta);
-      return;
-    }
-
-    if (liveMeta.updatedBy === clientId) {
-      remoteDataVersion = liveMeta.version || remoteDataVersion;
-      return;
-    }
-
-    const liveData = await fetchJson(getFullLiveDataUrl());
-    applyLiveDataset(liveData);
-  } catch (error) {
-    console.error(error);
-  } finally {
-    scheduleNextLiveSync();
-  }
-}
-
-function scheduleNextLiveSync(delay = LIVE_SYNC_VISIBLE_INTERVAL) {
-  window.clearTimeout(liveSyncTimer);
-
-  if (document.hidden) {
-    return;
-  }
-
-  liveSyncTimer = window.setTimeout(syncFromLiveData, delay);
-}
-
 function startLiveDataSync() {
   remoteDataSignature = currentDataSignature();
   lastSavedDataSignature = remoteDataSignature;
-  scheduleNextLiveSync();
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
-      window.clearTimeout(liveSyncTimer);
-      return;
-    }
-
-    scheduleNextLiveSync(250);
-  });
 }
 
 function getDirectoryExportData() {
