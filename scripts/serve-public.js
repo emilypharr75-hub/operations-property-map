@@ -14,6 +14,25 @@ const contentTypes = {
   '.svg': 'image/svg+xml'
 };
 
+function getCacheControl(filePath) {
+  const relativePath = path.relative(root, filePath).replace(/\\/g, '/');
+  const extension = path.extname(filePath);
+
+  if (relativePath.startsWith('assets/')) {
+    return 'public, max-age=31536000, immutable';
+  }
+
+  if (extension === '.css' || extension === '.js') {
+    return 'public, max-age=3600, stale-while-revalidate=86400';
+  }
+
+  if (extension === '.json') {
+    return 'no-cache';
+  }
+
+  return 'no-cache';
+}
+
 const server = http.createServer((request, response) => {
   let urlPath = decodeURIComponent(request.url.split('?')[0]);
 
@@ -37,7 +56,8 @@ const server = http.createServer((request, response) => {
     }
 
     response.writeHead(200, {
-      'Content-Type': contentTypes[path.extname(filePath)] || 'application/octet-stream'
+      'Content-Type': contentTypes[path.extname(filePath)] || 'application/octet-stream',
+      'Cache-Control': getCacheControl(filePath)
     });
     response.end(data);
   });
