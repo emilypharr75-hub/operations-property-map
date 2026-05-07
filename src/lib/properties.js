@@ -1,449 +1,521 @@
 const fs = require('fs');
 const path = require('path');
+const { EmbedBuilder } = require('discord.js');
+const { logger } = require('./logger');
 
 const CHECK_PROPERTY_CHANNEL_ID = '1491639237693673593';
-const PROPERTY_OVERRIDES_PATH = path.join(__dirname, '..', '..', 'data', 'properties-overrides.json');
+const PROPERTY_MOVEMENT_LOG_CHANNEL_ID = '1501750254125580430';
+const WEBSITE_BASE_URL = process.env.PROPERTY_WEBSITE_URL || 'https://floridaoperationshub.vercel.app';
+const EDIT_PASSWORD = process.env.EDIT_PASSWORD || 'BillingForTheWin';
+const CACHE_MS = 300000;
+const FETCH_TIMEOUT_MS = 10000;
 
-const baseProperties = [
-  {
-    id: 'starblox-cafe',
-    name: 'Starblox Cafe',
-    number: '2063',
-    buildingType: 'Starblox Cafe',
-    owner: 'N/A',
-    price: '$3,000,000',
-    tax: '$25,000'
-  },
-  {
-    id: 'three-guys',
-    name: 'Three Guys',
-    number: '2171',
-    buildingType: 'Three Guys',
-    owner: 'N/A',
-    price: '$3,500,000',
-    tax: '$25,000'
-  },
-  {
-    id: 'river-city-gas-station',
-    name: 'River City Gas Station',
-    number: '2001',
-    buildingType: 'River City Gas Station',
-    owner: 'N/A',
-    price: '$4,500,000',
-    tax: '$30,000'
-  },
-  {
-    id: 'county-gas-station',
-    name: 'County Gas Station',
-    number: '6021',
-    buildingType: 'County Gas Station',
-    owner: 'N/A',
-    price: '$4,500,000',
-    tax: '$30,000'
-  },
-  {
-    id: 'springfield-gas-station',
-    name: 'Springfield Gas Station',
-    number: '11101',
-    buildingType: 'Springfield Gas Station',
-    owner: 'N/A',
-    price: '$4,500,000',
-    tax: '$30,000'
-  },
-  {
-    id: 'gas-depot',
-    name: 'Gas Depot',
-    number: '3071',
-    buildingType: 'Gas Depot',
-    owner: 'Government',
-    price: 'N/A',
-    tax: 'N/A'
-  },
-  {
-    id: 'river-city-gun-store',
-    name: 'River City Gun Store',
-    number: '4011',
-    buildingType: 'River City Gun Store',
-    owner: 'N/A',
-    price: '$15,500,000',
-    tax: '$50,000'
-  },
-  {
-    id: 'family-jewels',
-    name: 'Family Jewels',
-    number: '4031',
-    buildingType: 'Family Jewels',
-    owner: 'N/A',
-    price: '$6,000,000',
-    tax: '$35,000'
-  },
-  {
-    id: 'springfield-repair-shop',
-    name: 'Springfield Repair Shop',
-    number: '11082',
-    buildingType: 'Springfield Repair Shop',
-    owner: 'N/A',
-    price: '$3,500,000',
-    tax: '$25,000'
-  },
-  {
-    id: 'rick-and-johns',
-    name: "Rick and John's",
-    number: '11051',
-    buildingType: "Rick and John's",
-    owner: 'N/A',
-    price: '$2,000,000',
-    tax: '$15,000'
-  },
-  {
-    id: 'spring-bakery',
-    name: 'Spring Bakery',
-    number: '11051',
-    buildingType: 'Spring Bakery',
-    owner: 'N/A',
-    price: '$2,000,000',
-    tax: '$15,000'
-  },
-  {
-    id: 'springfield-apparel',
-    name: 'Springfield Apparel',
-    number: '11071',
-    buildingType: 'Springfield Apparel',
-    owner: 'N/A',
-    price: '$2,000,000',
-    tax: '$15,000'
-  },
-  {
-    id: 'redwood-outdoor-store',
-    name: 'Redwood Outdoor Store',
-    number: '4121',
-    buildingType: 'Redwood Outdoor Store',
-    owner: 'N/A',
-    price: '$5,000,000',
-    tax: '$30,000'
-  },
-  {
-    id: 'tool-store',
-    name: 'Tool Store',
-    number: '4061',
-    buildingType: 'Tool Store',
-    owner: 'N/A',
-    price: '$6,000,000',
-    tax: '$40,000'
-  },
-  {
-    id: 'valley-transit',
-    name: 'Valley Transit',
-    number: '2172',
-    buildingType: 'Valley Transit',
-    owner: 'N/A',
-    price: '$3,500,000',
-    tax: '$25,000'
-  },
-  {
-    id: 'county-farm',
-    name: 'County Farm',
-    number: 'N/A',
-    buildingType: 'County Farm',
-    owner: 'N/A',
-    price: '$4,000,000',
-    tax: '$20,000'
-  },
-  {
-    id: 'main-farm-rural-heartland',
-    name: 'Main Farm (Rural Heartland)',
-    number: 'N/A',
-    buildingType: 'Main Farm (Rural Heartland)',
-    owner: 'N/A',
-    price: '$4,500,000',
-    tax: '$25,000'
-  },
-  {
-    id: 'theater',
-    name: 'Theater',
-    number: '11081',
-    buildingType: 'Theater',
-    owner: 'N/A',
-    price: '$2,000,000',
-    tax: '$25,000'
-  },
-  {
-    id: 'dealership',
-    name: 'Dealership',
-    number: '2031',
-    buildingType: 'Dealership',
-    owner: 'N/A',
-    price: '$20,000,000',
-    tax: '$80,000'
-  },
-  {
-    id: 'bank',
-    name: 'Bank',
-    number: '2051',
-    buildingType: 'Bank',
-    owner: 'Government',
-    price: 'N/A',
-    tax: 'N/A'
-  },
-  {
-    id: 'memorial-hospital',
-    name: 'Memorial Hospital',
-    number: '4041',
-    buildingType: 'Memorial Hospital',
-    owner: 'Government',
-    price: 'N/A',
-    tax: 'N/A'
-  },
-  {
-    id: 'post-office',
-    name: 'Post Office',
-    number: '3081',
-    buildingType: 'Post Office',
-    owner: 'N/A',
-    price: '$3,000,000',
-    tax: '$30,000'
-  },
-  {
-    id: 'waste-services',
-    name: 'Waste Services',
-    number: 'N/A',
-    buildingType: 'Waste Services',
-    owner: 'N/A',
-    price: '$7,500,000',
-    tax: '$40,000'
-  },
-  {
-    id: 'distribution-center',
-    name: 'Distribution Center',
-    number: 'N/A',
-    buildingType: 'Distribution Center',
-    owner: 'N/A',
-    price: '$7,500,000',
-    tax: '$40,000'
-  },
-  {
-    id: 'warehouse',
-    name: 'Warehouse',
-    number: 'N/A',
-    buildingType: 'Warehouse',
-    owner: 'N/A',
-    price: '$10,000,000',
-    tax: '$60,000'
-  },
-  {
-    id: 'springfield-guns-and-ammo',
-    name: 'Springfield Guns and Ammo',
-    number: '11043',
-    buildingType: 'Springfield Guns and Ammo',
-    owner: 'N/A',
-    price: '$15,500,000',
-    tax: '$50,000'
-  },
-  {
-    id: 'news-service',
-    name: 'News Service',
-    number: 'N/A',
-    buildingType: 'News Service',
-    owner: 'N/A',
-    price: '$1,000,000',
-    tax: '$15,000'
-  },
-  {
-    id: 'metro-tactical',
-    name: 'Metro Tactical',
-    number: 'N/A',
-    buildingType: 'Metro Tactical',
-    owner: 'N/A',
-    price: '$6,000,000',
-    tax: '$30,000'
-  },
-  {
-    id: 'construction-site',
-    name: 'Construction Site',
-    number: '4071',
-    buildingType: 'Construction Site',
-    owner: 'N/A',
-    price: '$3,500,000',
-    tax: '$20,000'
-  },
-  {
-    id: 'la-mesa',
-    name: 'La Mesa',
-    number: 'N/A',
-    buildingType: 'La Mesa',
-    owner: 'N/A',
-    price: '$4,500,000',
-    tax: '$30,000'
-  },
-  {
-    id: 'springfield-office-building-5',
-    name: 'Springfield Office Building #5',
-    number: '5',
-    buildingType: 'Springfield Office Building #5',
-    owner: 'N/A',
-    price: '$1,000,000',
-    tax: '$15,000'
-  }
-];
+const LOCAL_PROPERTIES_PATH = path.join(__dirname, '..', '..', 'public', 'properties.json');
+const LOCAL_MARKERS_PATH = path.join(__dirname, '..', '..', 'public', 'property-markers.json');
+const LOCAL_ORGS_PATH = path.join(__dirname, '..', '..', 'public', 'orgs.json');
+const DATA_PROPERTIES_PATH = path.join(__dirname, '..', '..', 'data', 'web-properties.json');
+const DATA_MARKERS_PATH = path.join(__dirname, '..', '..', 'data', 'property-markers.json');
+const DATA_ORGS_PATH = path.join(__dirname, '..', '..', 'data', 'orgs.json');
+const PROPERTY_HISTORY_PATH = path.join(__dirname, '..', '..', 'data', 'property-history.json');
 
-const housingPostalNumbers = [
-  '2011', '2012',
-  '2061', '2062', '2063',
-  '2071', '2072', '2073', '2074',
-  '2081', '2082', '2083', '2084', '2085',
-  '2111', '2121', '2131', '2132', '2161', '2191',
-  '2201', '2202', '2211', '2212', '2213', '2214', '2221', '2222',
-  '3001', '3041', '3051', '3061', '3091',
-  '4052', '4053', '4054', '4055', '4056',
-  '5021', '5041', '5042', '5043', '5044',
-  '5051', '5052', '5053', '5054', '5061', '5062', '5063',
-  '7001', '7011', '7012', '7013',
-  '7021', '7022', '7023',
-  '7041', '7042', '7043', '7044',
-  '7051', '7052', '7053', '7054', '7055', '7056',
-  '7061', '7062', '7063', '7064',
-  '7091', '7092', '7093', '7094', '7095',
-  '9041', '9042', '9043', '9045',
-  '9061', '9062',
-  '9071', '9072', '9073', '9074',
-  '9081', '9082', '9101',
-  '11031', '11032',
-  '11091', '11092',
-  '11121', '11122', '11123',
-  '12021', '12022', '12023',
-  '12051', '12052', '12053', '12054', '12055', '12056'
-];
+let cachedData = null;
+let cachedAt = 0;
 
-const housingProperties = housingPostalNumbers.map(number => ({
-  id: `house-${number}`,
-  name: `House ${number}`,
-  number,
-  buildingType: 'House',
-  owner: 'N/A',
-  price: 'Not for sale',
-  tax: 'Not for sale'
-}));
-
-const mapPostalNumbers = [
-  '200', '201', '202', '203', '204', '205', '206', '207', '208', '210', '211', '212', '213',
-  '216', '217', '218', '219', '220', '221', '222', '223', '224', '225',
-  '300', '301', '302', '303', '304', '305', '306', '307', '308', '309', '310', '311', '312',
-  '313', '314',
-  '400', '401', '402', '403', '404', '405', '406', '407', '408', '409', '410', '411', '412',
-  '500', '501', '502', '503', '504', '505', '506', '507', '509', '510', '511',
-  '600', '601', '602', '603', '604', '605',
-  '700', '701', '702', '703', '704', '705', '706', '707', '708', '709', '710', '711',
-  '800', '801', '802', '803', '804', '805', '806',
-  '900', '901', '902', '903', '904', '905', '906', '907', '908', '909', '910',
-  '1100', '1101', '1102', '1103', '1104', '1105', '1106', '1107', '1108', '1109',
-  '1110', '1111', '1112', '1113',
-  '1200', '1201', '1202', '1203', '1204', '1205', '1206', '1207'
-];
-
-const notableNumbers = new Set(baseProperties.map(property => property.number));
-const housingNumbers = new Set(housingPostalNumbers);
-
-const mapPostalProperties = mapPostalNumbers
-  .filter(number => !notableNumbers.has(number) && !housingNumbers.has(number))
-  .map(number => ({
-    id: `postal-${number}`,
-    name: `Property ${number}`,
-    number,
-    buildingType: 'Property',
-    owner: 'N/A',
-    price: 'Not for sale',
-    tax: 'Not for sale'
-  }));
-
-const allProperties = [...baseProperties, ...housingProperties, ...mapPostalProperties];
-const basePropertyById = new Map(allProperties.map(property => [property.id, property]));
-
-function readPropertyOverrides() {
-  if (!fs.existsSync(PROPERTY_OVERRIDES_PATH)) {
-    return {};
+function readJson(filePath, fallback) {
+  if (!fs.existsSync(filePath)) {
+    return fallback;
   }
 
-  return JSON.parse(fs.readFileSync(PROPERTY_OVERRIDES_PATH, 'utf8'));
+  return JSON.parse(fs.readFileSync(filePath, 'utf8'));
 }
 
-function writePropertyOverrides(overrides) {
-  fs.mkdirSync(path.dirname(PROPERTY_OVERRIDES_PATH), { recursive: true });
-  fs.writeFileSync(PROPERTY_OVERRIDES_PATH, `${JSON.stringify(overrides, null, 2)}\n`);
+function writeJson(filePath, value) {
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, `${JSON.stringify(value, null, 2)}\n`);
 }
 
-function applyPropertyOverride(property, overrides) {
-  const merged = {
-    ...property,
-    ...(overrides[property.id] || {})
-  };
+function readPropertyHistory() {
+  return readJson(PROPERTY_HISTORY_PATH, {});
+}
+
+function writePropertyHistory(history) {
+  writeJson(PROPERTY_HISTORY_PATH, history);
+}
+
+function addPropertyHistoryEntry(propertyId, entry) {
+  const history = readPropertyHistory();
+  const entries = Array.isArray(history[propertyId]) ? history[propertyId] : [];
+
+  entries.push({
+    ...entry,
+    at: new Date().toISOString()
+  });
+
+  history[propertyId] = entries;
+  writePropertyHistory(history);
+}
+
+async function fetchJson(url, options = {}) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(options.headers || {})
+      }
+    });
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || `Request failed with ${response.status}`);
+    }
+
+    return data;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function normalizeBuildingType(value) {
+  const text = String(value || '').trim().toLowerCase();
+
+  if (text === 'office building') {
+    return 'Office Building';
+  }
+
+  if (text === 'government') {
+    return 'Government';
+  }
+
+  if (text === 'house') {
+    return 'House';
+  }
+
+  return text ? text.replace(/\b\w/g, letter => letter.toUpperCase()) : 'Building';
+}
+
+function normalizeProperty(property) {
+  const price = String(property.price || 'Not for sale');
+  const tax = String(property.tax || 'Not for sale');
 
   return {
-    ...merged,
-    price: merged.price === 'N/A' ? 'Not for sale' : merged.price,
-    tax: merged.tax === 'N/A' ? 'Not for sale' : merged.tax
+    id: String(property.id),
+    name: String(property.name || property.number || property.id),
+    number: String(property.number || 'N/A'),
+    buildingType: normalizeBuildingType(property.buildingType),
+    owner: String(property.owner || 'N/A'),
+    price: price.toLowerCase() === 'n/a' ? 'Not for sale' : price,
+    tax: tax.toLowerCase() === 'n/a' ? 'Not for sale' : tax,
+    custom: Boolean(property.custom)
   };
+}
+
+function normalizeDataset(data) {
+  return {
+    properties: Array.isArray(data.properties) ? data.properties.map(normalizeProperty) : [],
+    markers: Array.isArray(data.markers) ? data.markers : [],
+    orgs: data.orgs || { businesses: [], mafias: [], businessRegulations: [], mafiaRegulations: [] }
+  };
+}
+
+function readLocalDataset() {
+  return normalizeDataset({
+    properties: readJson(LOCAL_PROPERTIES_PATH, readJson(DATA_PROPERTIES_PATH, [])),
+    markers: readJson(LOCAL_MARKERS_PATH, readJson(DATA_MARKERS_PATH, [])),
+    orgs: readJson(LOCAL_ORGS_PATH, readJson(DATA_ORGS_PATH, {}))
+  });
+}
+
+function writeLocalDataset(data) {
+  writeJson(LOCAL_PROPERTIES_PATH, data.properties);
+  writeJson(DATA_PROPERTIES_PATH, data.properties);
+  writeJson(LOCAL_MARKERS_PATH, data.markers);
+  writeJson(DATA_MARKERS_PATH, data.markers);
+  writeJson(LOCAL_ORGS_PATH, data.orgs);
+  writeJson(DATA_ORGS_PATH, data.orgs);
+}
+
+async function fetchWebsiteDataset() {
+  const data = await fetchJson(`${WEBSITE_BASE_URL}/api/live-data?full=1&t=${Date.now()}`, {
+    headers: {
+      'Cache-Control': 'no-store'
+    }
+  });
+
+  return normalizeDataset(data);
+}
+
+async function getPropertyDataset({ forceRefresh = false } = {}) {
+  const now = Date.now();
+
+  if (!forceRefresh && cachedData && now - cachedAt < CACHE_MS) {
+    return cachedData;
+  }
+
+  try {
+    cachedData = await fetchWebsiteDataset();
+  } catch {
+    cachedData = readLocalDataset();
+  }
+
+  cachedAt = now;
+  return cachedData;
 }
 
 function formatPropertyLabel(property) {
-  return `${property.name} (${property.number})`;
+  const name = property.name || property.buildingType || 'Property';
+  return `${name} (${property.number})`;
 }
 
-function getProperties() {
-  const overrides = readPropertyOverrides();
-  return allProperties.map(property => applyPropertyOverride(property, overrides));
+function formatOwnerMention(owner) {
+  const value = String(owner || 'N/A');
+  return /^\d{17,20}$/.test(value) ? `<@${value}>` : `**${value}**`;
 }
 
-function getPropertyById(id) {
-  const property = basePropertyById.get(id);
+function formatMovementAction(action) {
+  if (action === 'bought-property') {
+    return 'Bought Property';
+  }
+
+  if (action === 'transfer') {
+    return 'Transfer Property';
+  }
+
+  return action
+    .split(/[-_\s]+/)
+    .filter(Boolean)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ') || 'Property Movement';
+}
+
+async function logPropertyMovement({
+  action,
+  actor,
+  client,
+  newOwner,
+  previousOwner,
+  property
+}) {
+  try {
+    const channel = await client.channels.fetch(PROPERTY_MOVEMENT_LOG_CHANNEL_ID);
+
+    await channel.send({
+      embeds: [
+        new EmbedBuilder()
+          .setColor(0xffffff)
+          .setTitle('Property Movement')
+          .addFields(
+            {
+              name: 'Property',
+              value: `**${formatPropertyLabel(property)}**`,
+              inline: false
+            },
+            {
+              name: 'Previous Owner',
+              value: formatOwnerMention(previousOwner),
+              inline: true
+            },
+            {
+              name: 'New Owner',
+              value: formatOwnerMention(newOwner),
+              inline: true
+            },
+            {
+              name: 'Action',
+              value: formatMovementAction(action),
+              inline: true
+            },
+            {
+              name: 'Handled By',
+              value: `${actor} (${actor.id})`,
+              inline: false
+            }
+          )
+          .setTimestamp()
+      ],
+      allowedMentions: { parse: [] }
+    });
+  } catch (error) {
+    logger.warn('Failed to log property movement:', error);
+  }
+}
+
+async function getProperties(options) {
+  const data = await getPropertyDataset(options);
+  return data.properties;
+}
+
+async function getBusinesses(options) {
+  const data = await getPropertyDataset(options);
+  return Array.isArray(data.orgs.businesses) ? data.orgs.businesses : [];
+}
+
+async function getPropertyById(id, options) {
+  const properties = await getProperties(options);
+  return properties.find(property => property.id === id) || null;
+}
+
+async function getPropertiesByIds(ids, options) {
+  const properties = await getProperties(options);
+  const byId = new Map(properties.map(property => [property.id, property]));
+  return ids.map(id => byId.get(id)).filter(Boolean);
+}
+
+function matchesPropertySearch(property, search) {
+  const searchableText = [
+    formatPropertyLabel(property),
+    property.number,
+    property.name,
+    property.buildingType,
+    property.id
+  ].join(' ').toLowerCase();
+  const terms = search.split(/\s+/).filter(Boolean);
+
+  if (!terms.length) {
+    return true;
+  }
+
+  return terms.every(term => searchableText.includes(term));
+}
+
+async function getPropertyAutocompleteChoices(focusedValue) {
+  const search = String(focusedValue || '').toLowerCase();
+  const properties = await getProperties();
+
+  return properties
+    .filter(property => matchesPropertySearch(property, search))
+    .sort((a, b) => formatPropertyLabel(a).localeCompare(formatPropertyLabel(b), undefined, { numeric: true }))
+    .slice(0, 25)
+    .map(property => ({
+      name: formatPropertyLabel(property).slice(0, 100),
+      value: property.id.slice(0, 100)
+    }));
+}
+
+async function getBusinessAutocompleteChoices(focusedValue) {
+  const search = String(focusedValue || '').toLowerCase();
+  const businesses = await getBusinesses();
+
+  return businesses
+    .filter(business => {
+      const searchableText = [
+        business.name,
+        business.owner,
+        business.type,
+        business.id
+      ].join(' ').toLowerCase();
+
+      return !search || searchableText.includes(search);
+    })
+    .sort((a, b) => String(a.name).localeCompare(String(b.name), undefined, { numeric: true }))
+    .slice(0, 25)
+    .map(business => ({
+      name: String(business.name).slice(0, 100),
+      value: String(business.name).slice(0, 100)
+    }));
+}
+
+async function getBusinessByName(name, options) {
+  const businesses = await getBusinesses(options);
+  return businesses.find(business => business.name === name) || null;
+}
+
+async function updatePropertyField(id, field, value) {
+  const data = await getPropertyDataset({ forceRefresh: true });
+  const property = data.properties.find(entry => entry.id === id);
 
   if (!property) {
     return null;
   }
 
-  return applyPropertyOverride(property, readPropertyOverrides());
-}
+  property[field] = field === 'buildingType' ? normalizeBuildingType(value) : String(value);
+  writeLocalDataset(data);
+  cachedData = data;
+  cachedAt = Date.now();
 
-function getPropertiesByIds(ids) {
-  return ids
-    .map(getPropertyById)
-    .filter(Boolean);
-}
-
-function getPropertyAutocompleteChoices(focusedValue) {
-  const search = focusedValue.toLowerCase();
-
-  return getProperties()
-    .filter(property => {
-      const label = formatPropertyLabel(property).toLowerCase();
-      return label.includes(search) || property.id.includes(search);
-    })
-    .slice(0, 25)
-    .map(property => ({
-      name: formatPropertyLabel(property),
-      value: property.id
-    }));
-}
-
-function updatePropertyField(id, field, value) {
-  if (!basePropertyById.has(id)) {
-    return null;
+  try {
+    await fetchJson(`${WEBSITE_BASE_URL}/api/save-boxes`, {
+      method: 'POST',
+      body: JSON.stringify({
+        ...data,
+        password: EDIT_PASSWORD,
+        clientId: 'discord-bot'
+      })
+    });
+  } catch (error) {
+    error.message = `Updated locally, but website sync failed: ${error.message}`;
+    throw error;
   }
 
-  const overrides = readPropertyOverrides();
-  overrides[id] = {
-    ...(overrides[id] || {}),
-    [field]: value
+  return property;
+}
+
+async function syncPropertyDataset(data) {
+  writeLocalDataset(data);
+  cachedData = data;
+  cachedAt = Date.now();
+
+  try {
+    await fetchJson(`${WEBSITE_BASE_URL}/api/save-boxes`, {
+      method: 'POST',
+      body: JSON.stringify({
+        ...data,
+        password: EDIT_PASSWORD,
+        clientId: 'discord-bot'
+      })
+    });
+  } catch (error) {
+    error.message = `Updated locally, but website sync failed: ${error.message}`;
+    throw error;
+  }
+}
+
+async function transferPropertyOwnership({ actorId, fromOwnerId, id, toOwnerId }) {
+  const data = await getPropertyDataset({ forceRefresh: true });
+  const property = data.properties.find(entry => entry.id === id);
+
+  if (!property) {
+    return { ok: false, reason: 'not_found' };
+  }
+
+  if (property.owner !== fromOwnerId) {
+    return { ok: false, reason: 'not_owner', property };
+  }
+
+  const previousOwner = property.owner;
+  property.owner = String(toOwnerId);
+
+  await syncPropertyDataset(data);
+
+  addPropertyHistoryEntry(property.id, {
+    action: 'transfer',
+    actorId,
+    fromOwner: previousOwner,
+    toOwner: property.owner
+  });
+
+  return { ok: true, property, previousOwner };
+}
+
+async function setPropertyOwner({ action = 'owner-update', actorId, id, ownerId }) {
+  const data = await getPropertyDataset({ forceRefresh: true });
+  const property = data.properties.find(entry => entry.id === id);
+
+  if (!property) {
+    return { ok: false, reason: 'not_found' };
+  }
+
+  const previousOwner = property.owner;
+  property.owner = String(ownerId);
+
+  await syncPropertyDataset(data);
+
+  addPropertyHistoryEntry(property.id, {
+    action,
+    actorId,
+    fromOwner: previousOwner,
+    toOwner: property.owner
+  });
+
+  return { ok: true, property, previousOwner };
+}
+
+async function upsertBusiness({ actorId, logo, name, owner, server, type }) {
+  const data = await getPropertyDataset({ forceRefresh: true });
+  data.orgs = data.orgs || {};
+  data.orgs.businesses = Array.isArray(data.orgs.businesses) ? data.orgs.businesses : [];
+
+  const businessName = String(name || '').trim();
+
+  if (!businessName) {
+    return { ok: false, reason: 'missing_name' };
+  }
+
+  const existing = data.orgs.businesses.find(business =>
+    String(business.name || '').toLowerCase() === businessName.toLowerCase()
+  );
+  const business = existing || {
+    id: `businesses-${Date.now()}`
   };
 
-  writePropertyOverrides(overrides);
-  return getPropertyById(id);
+  business.name = businessName;
+  business.owner = String(owner || 'N/A').trim() || 'N/A';
+  business.type = String(type || 'General').trim() || 'General';
+  business.server = String(server || '').trim();
+  business.logo = String(logo || '').trim();
+
+  if (!existing) {
+    data.orgs.businesses.push(business);
+  }
+
+  await syncPropertyDataset(data);
+
+  return {
+    business,
+    created: !existing,
+    ok: true,
+    updatedBy: actorId
+  };
+}
+
+async function replacePropertyOwners(ownerMap, actorId = 'system') {
+  const data = await getPropertyDataset({ forceRefresh: true });
+  const changed = [];
+
+  for (const property of data.properties) {
+    const nextOwner = ownerMap[property.owner];
+
+    if (!nextOwner || nextOwner === property.owner) {
+      continue;
+    }
+
+    const previousOwner = property.owner;
+    property.owner = String(nextOwner);
+    changed.push({ property, previousOwner });
+  }
+
+  if (!changed.length) {
+    return [];
+  }
+
+  await syncPropertyDataset(data);
+
+  for (const change of changed) {
+    addPropertyHistoryEntry(change.property.id, {
+      action: 'owner-id-sync',
+      actorId,
+      fromOwner: change.previousOwner,
+      toOwner: change.property.owner
+    });
+  }
+
+  return changed;
+}
+
+function getPropertyHistory(propertyId) {
+  const history = readPropertyHistory();
+  return Array.isArray(history[propertyId]) ? history[propertyId] : [];
 }
 
 module.exports = {
   CHECK_PROPERTY_CHANNEL_ID,
+  PROPERTY_MOVEMENT_LOG_CHANNEL_ID,
   formatPropertyLabel,
+  getBusinessAutocompleteChoices,
+  getBusinessByName,
+  getBusinesses,
   getProperties,
   getPropertyAutocompleteChoices,
   getPropertiesByIds,
+  getPropertyHistory,
+  logPropertyMovement,
+  replacePropertyOwners,
+  setPropertyOwner,
+  transferPropertyOwnership,
+  upsertBusiness,
   updatePropertyField
 };
