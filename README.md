@@ -14,6 +14,7 @@ Important files:
 - `public/properties.json`: exported property data for the website.
 - `public/property-markers.json`: property box positions.
 - `public/assets/erlc-map.png`: map image.
+- `public/assets/regulations/`: uploaded regulation PDFs served as cached assets.
 
 Vercel settings:
 

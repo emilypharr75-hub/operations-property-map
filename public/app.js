@@ -291,7 +291,8 @@ function normalizeRegulationRecord(record) {
     name: String(record.name || ''),
     regulations: String(record.regulations || ''),
     pdfName: String(record.pdfName || ''),
-    pdfData: String(record.pdfData || '')
+    pdfData: String(record.pdfData || ''),
+    pdfPath: String(record.pdfPath || '')
   };
 }
 
@@ -509,7 +510,8 @@ function addRegulationRecord(key) {
     name: `New ${config.title}`,
     regulations: '',
     pdfName: '',
-    pdfData: ''
+    pdfData: '',
+    pdfPath: ''
   });
   saveDirectoryRecords();
   renderDirectoryLists();
@@ -558,6 +560,7 @@ function updateRegulationPdf(key, id, file) {
   reader.addEventListener('load', () => {
     record.pdfName = file.name;
     record.pdfData = String(reader.result || '');
+    record.pdfPath = '';
     saveDirectoryRecords();
     renderDirectoryLists();
   });
@@ -574,6 +577,7 @@ function removeRegulationPdf(key, id) {
 
   record.pdfName = '';
   record.pdfData = '';
+  record.pdfPath = '';
   saveDirectoryRecords();
   renderDirectoryLists();
 }
@@ -581,8 +585,9 @@ function removeRegulationPdf(key, id) {
 function createRegulationCard(key, record) {
   const card = document.createElement('article');
   card.className = `regulation-card${record.regulations ? '' : ' no-regulations'}`;
-  const pdfLink = record.pdfData
-    ? `<a href="${record.pdfData}" target="_blank" rel="noopener noreferrer">${escapeHtml(record.pdfName || 'Open PDF')}</a>`
+  const pdfHref = record.pdfData || record.pdfPath;
+  const pdfLink = pdfHref
+    ? `<a href="${escapeHtml(pdfHref)}" target="_blank" rel="noopener noreferrer">${escapeHtml(record.pdfName || 'Open PDF')}</a>`
     : '-';
   card.innerHTML = `
     <h2>${escapeHtml(record.name || 'Unnamed')}</h2>

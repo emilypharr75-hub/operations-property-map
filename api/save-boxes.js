@@ -91,8 +91,61 @@ function normalizeRegulationRecord(record) {
     name: String(record.name || ''),
     regulations: String(record.regulations || ''),
     pdfName: String(record.pdfName || ''),
-    pdfData: String(record.pdfData || '')
+    pdfData: String(record.pdfData || ''),
+    pdfPath: String(record.pdfPath || '')
   };
+}
+
+function sanitizeFileName(value) {
+  return String(value || 'regulation')
+    .replace(/[^a-z0-9._-]+/gi, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80) || 'regulation';
+}
+
+function splitDataUrl(value) {
+  const match = String(value || '').match(/^data:application\/pdf;base64,([a-z0-9+/=]+)$/i);
+  return match ? match[1] : '';
+}
+
+function compactRegulationRecord(record) {
+  return {
+    id: record.id,
+    name: record.name,
+    regulations: record.regulations,
+    pdfName: record.pdfName,
+    pdfPath: record.pdfPath
+  };
+}
+
+function prepareDirectoriesForSave(orgs) {
+  const pdfFiles = {};
+  const prepared = {
+    businesses: orgs.businesses,
+    mafias: orgs.mafias,
+    generalRegulations: [],
+    billingRegulations: [],
+    businessRegulations: [],
+    mafiaRegulations: []
+  };
+
+  for (const key of ['generalRegulations', 'billingRegulations', 'businessRegulations', 'mafiaRegulations']) {
+    prepared[key] = orgs[key].map(record => {
+      const pdfBase64 = splitDataUrl(record.pdfData);
+      const next = { ...record };
+
+      if (pdfBase64) {
+        const fileName = sanitizeFileName(`${next.id}-${next.pdfName || 'regulation.pdf'}`);
+        const path = `public/assets/regulations/${fileName.endsWith('.pdf') ? fileName : `${fileName}.pdf`}`;
+        pdfFiles[path] = pdfBase64;
+        next.pdfPath = `/${path.replace(/^public\//, '')}`;
+      }
+
+      return compactRegulationRecord(next);
+    });
+  }
+
+  return { orgs: prepared, pdfFiles };
 }
 
 module.exports = async function handler(request, response) {
@@ -129,7 +182,8 @@ module.exports = async function handler(request, response) {
     const clientId = typeof body.clientId === 'string' ? body.clientId.slice(0, 120) : '';
     const properties = body.properties.map(normalizeProperty);
     const markers = body.markers.map(normalizeMarker);
-    const orgs = normalizeDirectories(body.orgs);
+    const normalizedOrgs = normalizeDirectories(body.orgs);
+    const { orgs, pdfFiles } = prepareDirectoriesForSave(normalizedOrgs);
     let liveData = null;
 
     if (hasLiveStore()) {
@@ -142,24 +196,28 @@ module.exports = async function handler(request, response) {
     }
 
     const files = {
-      'data/web-properties.json': `${JSON.stringify(properties, null, 2)}\n`,
-      'data/property-markers.json': `${JSON.stringify(markers, null, 2)}\n`,
-      'data/orgs.json': `${JSON.stringify(orgs, null, 2)}\n`,
-      'public/properties.json': `${JSON.stringify(properties, null, 2)}\n`,
-      'public/property-markers.json': `${JSON.stringify(markers, null, 2)}\n`,
-      'public/orgs.json': `${JSON.stringify(orgs, null, 2)}\n`
+      'data/web-properties.json': { content: `${JSON.stringify(properties, null, 2)}\n`, encoding: 'utf-8' },
+      'data/property-markers.json': { content: `${JSON.stringify(markers, null, 2)}\n`, encoding: 'utf-8' },
+      'data/orgs.json': { content: `${JSON.stringify(orgs, null, 2)}\n`, encoding: 'utf-8' },
+      'public/properties.json': { content: `${JSON.stringify(properties, null, 2)}\n`, encoding: 'utf-8' },
+      'public/property-markers.json': { content: `${JSON.stringify(markers, null, 2)}\n`, encoding: 'utf-8' },
+      'public/orgs.json': { content: `${JSON.stringify(orgs, null, 2)}\n`, encoding: 'utf-8' }
     };
+
+    for (const [path, content] of Object.entries(pdfFiles)) {
+      files[path] = { content, encoding: 'base64' };
+    }
 
     const ref = await githubRequest(`/git/ref/heads/${BRANCH}`);
     const latestCommit = await githubRequest(`/git/commits/${ref.object.sha}`);
     const tree = [];
 
-    for (const [path, content] of Object.entries(files)) {
+    for (const [path, file] of Object.entries(files)) {
       const blob = await githubRequest('/git/blobs', {
         method: 'POST',
         body: JSON.stringify({
-          content,
-          encoding: 'utf-8'
+          content: file.content,
+          encoding: file.encoding
         })
       });
 
@@ -201,9 +259,7 @@ module.exports = async function handler(request, response) {
       live: Boolean(liveData),
       updatedAt: liveData?.updatedAt || new Date().toISOString(),
       updatedBy: clientId,
-      properties,
-      markers,
-      orgs
+      version: liveData?.version || newCommit.sha
     });
   } catch (error) {
     jsonResponse(response, 500, {

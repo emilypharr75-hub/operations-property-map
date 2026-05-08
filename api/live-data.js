@@ -95,6 +95,69 @@ function metaResponse(response, { version, source, updatedBy = '' }) {
   });
 }
 
+function sanitizeFileName(value) {
+  return String(value || 'regulation')
+    .replace(/[^a-z0-9._-]+/gi, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80) || 'regulation';
+}
+
+function regulationPdfPath(record) {
+  if (record.pdfPath) {
+    return String(record.pdfPath);
+  }
+
+  if (!record.pdfData) {
+    return '';
+  }
+
+  const fileName = sanitizeFileName(`${record.id || 'regulation'}-${record.pdfName || 'regulation.pdf'}`);
+  return `/assets/regulations/${fileName.endsWith('.pdf') ? fileName : `${fileName}.pdf`}`;
+}
+
+function compactRegulationRecord(record) {
+  return {
+    id: String(record.id || ''),
+    name: String(record.name || ''),
+    regulations: String(record.regulations || ''),
+    pdfName: String(record.pdfName || ''),
+    pdfPath: regulationPdfPath(record)
+  };
+}
+
+function compactDirectoryRecord(record) {
+  return {
+    id: String(record.id || ''),
+    name: String(record.name || ''),
+    owner: String(record.owner || ''),
+    type: String(record.type || ''),
+    server: String(record.server || ''),
+    logo: String(record.logo || '')
+  };
+}
+
+function compactOrgs(orgs = {}) {
+  return {
+    businesses: Array.isArray(orgs.businesses) ? orgs.businesses.map(compactDirectoryRecord) : [],
+    mafias: Array.isArray(orgs.mafias) ? orgs.mafias.map(compactDirectoryRecord) : [],
+    generalRegulations: Array.isArray(orgs.generalRegulations) ? orgs.generalRegulations.map(compactRegulationRecord) : [],
+    billingRegulations: Array.isArray(orgs.billingRegulations) ? orgs.billingRegulations.map(compactRegulationRecord) : [],
+    businessRegulations: Array.isArray(orgs.businessRegulations) ? orgs.businessRegulations.map(compactRegulationRecord) : [],
+    mafiaRegulations: Array.isArray(orgs.mafiaRegulations) ? orgs.mafiaRegulations.map(compactRegulationRecord) : []
+  };
+}
+
+function compactLiveData(data) {
+  return {
+    properties: Array.isArray(data.properties) ? data.properties : [],
+    markers: Array.isArray(data.markers) ? data.markers : [],
+    orgs: compactOrgs(data.orgs),
+    updatedBy: data.updatedBy || '',
+    updatedAt: data.updatedAt,
+    version: data.version
+  };
+}
+
 module.exports = async function handler(request, response) {
   if (request.method === 'OPTIONS') {
     jsonResponse(response, 204, {});
@@ -149,7 +212,7 @@ module.exports = async function handler(request, response) {
         }
 
         jsonResponse(response, 200, {
-          ...liveData,
+          ...compactLiveData(liveData),
           version,
           source: 'live-store',
           checkedAt: new Date().toISOString()
@@ -182,7 +245,7 @@ module.exports = async function handler(request, response) {
     jsonResponse(response, 200, {
       properties,
       markers,
-      orgs,
+      orgs: compactOrgs(orgs),
       version: ref,
       source: 'github',
       checkedAt: new Date().toISOString()
