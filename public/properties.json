@@ -224,7 +224,7 @@
     "name": "Waste Center",
     "number": "3011",
     "buildingType": "government",
-    "owner": "N/A",
+    "owner": "SRT",
     "price": "Not for sale",
     "tax": "$75,000",
     "custom": false
