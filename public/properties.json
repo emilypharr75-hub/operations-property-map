@@ -223,7 +223,7 @@
     "id": "waste-services",
     "name": "Waste Center",
     "number": "3011",
-    "buildingType": "building",
+    "buildingType": "government",
     "owner": "N/A",
     "price": "$2,210,000",
     "tax": "$75,000",
