@@ -246,7 +246,7 @@
     "buildingType": "government",
     "owner": "BM Industries",
     "price": "Not for sale",
-    "tax": "$50,000",
+    "tax": "Not",
     "custom": false
   },
   {
