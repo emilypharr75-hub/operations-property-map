@@ -382,10 +382,10 @@
       2265
     ],
     "buildingRect": [
-      1618,
+      1575,
       2435,
       1679,
-      2522
+      2519
     ],
     "rotation": 0,
     "custom": false
@@ -403,23 +403,6 @@
       2285,
       1557,
       2364
-    ],
-    "rotation": 0,
-    "custom": false
-  },
-  {
-    "id": "warehouse",
-    "rect": [
-      1738,
-      1875,
-      1838,
-      1975
-    ],
-    "buildingRect": [
-      1525,
-      2437,
-      1556,
-      2509
     ],
     "rotation": 0,
     "custom": false
