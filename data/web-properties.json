@@ -221,7 +221,7 @@
   },
   {
     "id": "waste-services",
-    "name": "Waste Center",
+    "name": "SRT Base",
     "number": "3011",
     "buildingType": "government",
     "owner": "SRT",
