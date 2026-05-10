@@ -243,9 +243,9 @@
     "id": "warehouse",
     "name": "Warehouse",
     "number": "3002",
-    "buildingType": "office building",
+    "buildingType": "government",
     "owner": "BM Industries",
-    "price": "$1,300,000",
+    "price": "Not for sale",
     "tax": "$50,000",
     "custom": false
   },
