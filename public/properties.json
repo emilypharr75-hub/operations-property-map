@@ -673,7 +673,7 @@
     "id": "house-4055",
     "name": "House 4055",
     "number": "4055",
-    "buildingType": "mafia",
+    "buildingType": "house",
     "owner": "BCS",
     "price": "$1,040,000",
     "tax": "$20,000",
