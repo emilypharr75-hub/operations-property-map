@@ -1163,7 +1163,7 @@
     "id": "house-9074",
     "name": "Docks",
     "number": "9074",
-    "buildingType": "building",
+    "buildingType": "government",
     "owner": "N/A",
     "price": "$650,000",
     "tax": "$20,000",
