@@ -2,8 +2,8 @@
   {
     "id": "turf-01",
     "number": "1",
-    "owner": "West Side Hustlers",
-    "status": "Claimed",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
     "rect": [
       698,
       9,
@@ -15,8 +15,8 @@
   {
     "id": "turf-02",
     "number": "2",
-    "owner": "West Side Hustlers",
-    "status": "Claimed",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
     "rect": [
       1252,
       60,
@@ -28,8 +28,8 @@
   {
     "id": "turf-03",
     "number": "3",
-    "owner": "West Side Hustlers",
-    "status": "Claimed",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
     "rect": [
       2048,
       179,
@@ -41,8 +41,8 @@
   {
     "id": "turf-04",
     "number": "4",
-    "owner": "West Side Hustlers",
-    "status": "Claimed",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
     "rect": [
       1775,
       320,
@@ -54,8 +54,8 @@
   {
     "id": "turf-05",
     "number": "5",
-    "owner": "West Side Hustlers",
-    "status": "Claimed",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
     "rect": [
       26,
       324,
@@ -67,8 +67,8 @@
   {
     "id": "turf-06",
     "number": "6",
-    "owner": "Mainside Authority Sanctuary",
-    "status": "Claimed",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
     "rect": [
       1071,
       358,
@@ -80,8 +80,8 @@
   {
     "id": "turf-07",
     "number": "7",
-    "owner": "West Side Hustlers",
-    "status": "Claimed",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
     "rect": [
       669,
       453,
@@ -93,8 +93,8 @@
   {
     "id": "turf-08",
     "number": "8",
-    "owner": "West Side Hustlers",
-    "status": "Claimed",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
     "rect": [
       2254,
       737,
@@ -106,8 +106,8 @@
   {
     "id": "turf-09",
     "number": "9",
-    "owner": "West Side Hustlers",
-    "status": "Claimed",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
     "rect": [
       2511,
       737,
@@ -119,8 +119,8 @@
   {
     "id": "turf-10",
     "number": "10",
-    "owner": "West Side Hustlers",
-    "status": "Claimed",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
     "rect": [
       1693,
       835,
@@ -132,8 +132,8 @@
   {
     "id": "turf-11",
     "number": "11",
-    "owner": "West Side Hustlers",
-    "status": "Claimed",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
     "rect": [
       333,
       867,
@@ -145,8 +145,8 @@
   {
     "id": "turf-12",
     "number": "12",
-    "owner": "West Side Hustlers",
-    "status": "Claimed",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
     "rect": [
       1545,
       989,
@@ -158,8 +158,8 @@
   {
     "id": "turf-13",
     "number": "13",
-    "owner": "West Side Hustlers",
-    "status": "Claimed",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
     "rect": [
       2482,
       1102,
@@ -171,7 +171,7 @@
   {
     "id": "turf-14",
     "number": "14",
-    "owner": "West Side Hustlers",
+    "owner": "Unclaimed",
     "status": "Unclaimed",
     "rect": [
       2605,
@@ -184,8 +184,8 @@
   {
     "id": "turf-15",
     "number": "15",
-    "owner": "West Side Hustlers",
-    "status": "Claimed",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
     "rect": [
       1160,
       1245,
@@ -197,8 +197,8 @@
   {
     "id": "turf-16",
     "number": "16",
-    "owner": "West Side Hustlers",
-    "status": "Claimed",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
     "rect": [
       1376,
       1253,
@@ -210,8 +210,8 @@
   {
     "id": "turf-17",
     "number": "17",
-    "owner": "West Side Hustlers",
-    "status": "Claimed",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
     "rect": [
       2253,
       1287,
@@ -223,8 +223,8 @@
   {
     "id": "turf-18",
     "number": "18",
-    "owner": "West Side Hustlers",
-    "status": "Claimed",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
     "rect": [
       13,
       1517,
@@ -236,8 +236,8 @@
   {
     "id": "turf-19",
     "number": "19",
-    "owner": "West Side Hustlers",
-    "status": "Claimed",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
     "rect": [
       699,
       1515,
@@ -249,8 +249,8 @@
   {
     "id": "turf-20",
     "number": "20",
-    "owner": "West Side Hustlers",
-    "status": "Claimed",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
     "rect": [
       1638,
       1592,
@@ -262,8 +262,8 @@
   {
     "id": "turf-21",
     "number": "21",
-    "owner": "Black Crown Syndacite",
-    "status": "Claimed",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
     "rect": [
       2151,
       1724,
@@ -275,7 +275,7 @@
   {
     "id": "turf-22",
     "number": "22",
-    "owner": "West Side Hustlers",
+    "owner": "Unclaimed",
     "status": "Unclaimed",
     "rect": [
       2334,
@@ -288,8 +288,8 @@
   {
     "id": "turf-23",
     "number": "23",
-    "owner": "West Side Hustlers",
-    "status": "Claimed",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
     "rect": [
       1173,
       1863,
@@ -301,8 +301,8 @@
   {
     "id": "turf-24",
     "number": "24",
-    "owner": "West Side Hustlers",
-    "status": "Claimed",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
     "rect": [
       566,
       1912,
@@ -314,8 +314,8 @@
   {
     "id": "turf-25",
     "number": "25",
-    "owner": "West Side Hustlers",
-    "status": "Claimed",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
     "rect": [
       10,
       2023,
@@ -327,8 +327,8 @@
   {
     "id": "turf-26",
     "number": "26",
-    "owner": "West Side Hustlers",
-    "status": "Claimed",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
     "rect": [
       1492,
       2042,
@@ -340,8 +340,8 @@
   {
     "id": "turf-27",
     "number": "27",
-    "owner": "West Side Hustlers",
-    "status": "Claimed",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
     "rect": [
       534,
       2263,
@@ -353,8 +353,8 @@
   {
     "id": "turf-28",
     "number": "28",
-    "owner": "West Side Hustlers",
-    "status": "Claimed",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
     "rect": [
       2513,
       2318,
@@ -366,8 +366,8 @@
   {
     "id": "turf-29",
     "number": "29",
-    "owner": "West Side Hustlers",
-    "status": "Claimed",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
     "rect": [
       1031,
       2410,
@@ -379,8 +379,8 @@
   {
     "id": "turf-30",
     "number": "30",
-    "owner": "West Side Hustlers",
-    "status": "Claimed",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
     "rect": [
       364,
       2594,

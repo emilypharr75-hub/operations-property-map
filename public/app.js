@@ -616,12 +616,33 @@ function hashColor(value) {
 
 function turfColorFor(owner) {
   const text = String(owner || '').trim();
+  const normalized = text.toLowerCase();
 
-  if (!text || text.toLowerCase() === 'unclaimed' || text.toLowerCase() === 'n/a') {
+  if (!text || normalized === 'unclaimed' || normalized === 'n/a') {
     return '#7a828a';
   }
 
-  return hashColor(text.toLowerCase());
+  if (normalized === 'west side hustlers') {
+    return '#2fb344';
+  }
+
+  if (normalized === 'bsc' || normalized === 'black crown syndacite' || normalized === 'black crown syndicate') {
+    return '#0077be';
+  }
+
+  if (
+    normalized === 'mainside authority syndacite' ||
+    normalized === 'mainside authority syndicate' ||
+    normalized === 'mainside authority sanctuary'
+  ) {
+    return '#ff4fb8';
+  }
+
+  if (normalized === 'camorra') {
+    return '#ffd23f';
+  }
+
+  return hashColor(normalized);
 }
 
 function isUnclaimedTurf(turf) {
