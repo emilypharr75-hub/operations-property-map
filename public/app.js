@@ -105,6 +105,7 @@ let dragState = null;
 let turfDragState = null;
 let turfHitMap = null;
 let turfHitIds = [];
+let turfOutsideMask = null;
 let undoStack = [];
 let turfUndoStack = [];
 let editSessionPassword = '';
@@ -571,6 +572,7 @@ function renderDirectoryLists() {
   renderRegulationList('businessRegulations');
   renderRegulationList('mafiaRegulations');
   renderTurfKey();
+  renderTurfOwnerOptions(selectedTurfId ? mafiaTurfs.find(turf => turf.id === selectedTurfId)?.owner : 'Unclaimed');
   renderTurfs();
 }
 
@@ -660,6 +662,34 @@ function renderTurfOptions() {
   }
 }
 
+function renderTurfOwnerOptions(selectedOwner = 'Unclaimed') {
+  const currentValue = selectedOwner || 'Unclaimed';
+  const owners = new Set(['Unclaimed']);
+
+  for (const mafia of Array.isArray(directoryRecords.mafias) ? directoryRecords.mafias : []) {
+    const name = String(mafia.name || '').trim();
+
+    if (name) {
+      owners.add(name);
+    }
+  }
+
+  if (currentValue && currentValue !== 'Unclaimed') {
+    owners.add(currentValue);
+  }
+
+  elements.turfOwnerEdit.textContent = '';
+
+  for (const owner of owners) {
+    const option = document.createElement('option');
+    option.value = owner;
+    option.textContent = owner;
+    elements.turfOwnerEdit.append(option);
+  }
+
+  elements.turfOwnerEdit.value = owners.has(currentValue) ? currentValue : 'Unclaimed';
+}
+
 function parseHexColor(value) {
   const fallback = [122, 130, 138];
   const match = String(value || '').match(/^#([a-f0-9]{6})$/i);
@@ -738,24 +768,94 @@ function turfSeedPoint(turf) {
   ];
 }
 
-function drawTurfFallbackRegion(output, hitMap, turf, turfIndex) {
+function turfLinePlacement(image) {
+  const scale = Math.min(TURF_CANVAS_SIZE / image.width, TURF_CANVAS_SIZE / image.height) * 0.94;
+  const width = Math.round(image.width * scale);
+  const height = Math.round(image.height * scale);
+
+  return {
+    x: Math.round((TURF_CANVAS_SIZE - width) / 2),
+    y: Math.round((TURF_CANVAS_SIZE - height) / 2),
+    width,
+    height
+  };
+}
+
+function isLinePixel(lineData, index) {
+  return lineData[index * 4 + 3] > 20;
+}
+
+function buildOutsideMask(lineData) {
+  const width = TURF_CANVAS_SIZE;
+  const height = TURF_CANVAS_SIZE;
+  const outside = new Uint8Array(width * height);
+  const queue = [];
+  const add = index => {
+    if (!outside[index] && !isLinePixel(lineData, index)) {
+      outside[index] = 1;
+      queue.push(index);
+    }
+  };
+
+  for (let x = 0; x < width; x++) {
+    add(x);
+    add((height - 1) * width + x);
+  }
+
+  for (let y = 0; y < height; y++) {
+    add(y * width);
+    add(y * width + width - 1);
+  }
+
+  for (let cursor = 0; cursor < queue.length; cursor++) {
+    const index = queue[cursor];
+    const x = index % width;
+    const y = Math.floor(index / width);
+
+    if (x > 0) {
+      add(index - 1);
+    }
+
+    if (x < width - 1) {
+      add(index + 1);
+    }
+
+    if (y > 0) {
+      add(index - width);
+    }
+
+    if (y < height - 1) {
+      add(index + width);
+    }
+  }
+
+  return outside;
+}
+
+function drawTurfFallbackRegion(output, hitMap, outsideMask, turf, turfIndex) {
   const [left, top, right, bottom] = turf.rect.map(value => Math.round((value / MAP_SIZE) * TURF_CANVAS_SIZE));
   const [red, green, blue] = parseHslColor(turfColorFor(turf.owner));
   const alpha = isUnclaimedTurf(turf) ? 0 : 76;
 
   for (let y = Math.max(0, top); y < Math.min(TURF_CANVAS_SIZE, bottom); y++) {
     for (let x = Math.max(0, left); x < Math.min(TURF_CANVAS_SIZE, right); x++) {
+      const index = y * TURF_CANVAS_SIZE + x;
+
+      if (outsideMask?.[index]) {
+        continue;
+      }
+
       const offset = (y * TURF_CANVAS_SIZE + x) * 4;
       output[offset] = red;
       output[offset + 1] = green;
       output[offset + 2] = blue;
       output[offset + 3] = alpha;
-      hitMap[y * TURF_CANVAS_SIZE + x] = turfIndex + 1;
+      hitMap[index] = turfIndex + 1;
     }
   }
 }
 
-function floodFillTurfRegion(lineData, output, hitMap, turf, turfIndex) {
+function floodFillTurfRegion(lineData, output, hitMap, outsideMask, turf, turfIndex) {
   const width = TURF_CANVAS_SIZE;
   const height = TURF_CANVAS_SIZE;
   const [seedX, seedY] = turfSeedPoint(turf);
@@ -775,11 +875,14 @@ function floodFillTurfRegion(lineData, output, hitMap, turf, turfIndex) {
 
   const startIndex = seedY * width + seedX;
 
+  if (outsideMask?.[startIndex]) {
+    return false;
+  }
+
   if (hitMap[startIndex]) {
     return true;
   }
 
-  const isBlocked = index => lineData[index * 4 + 3] > 20;
   const visited = new Uint8Array(width * height);
   const queue = [startIndex];
   const filled = [];
@@ -790,7 +893,7 @@ function floodFillTurfRegion(lineData, output, hitMap, turf, turfIndex) {
   for (let cursor = 0; cursor < queue.length; cursor++) {
     const index = queue[cursor];
 
-    if (isBlocked(index)) {
+    if (isLinePixel(lineData, index) || outsideMask?.[index]) {
       continue;
     }
 
@@ -852,11 +955,12 @@ function floodFillTurfRegion(lineData, output, hitMap, turf, turfIndex) {
 }
 
 function drawTurfLineImage(context, image) {
+  const placement = turfLinePlacement(image);
   context.save();
   context.globalAlpha = 0.95;
   context.shadowColor = '#000000';
   context.shadowBlur = 4;
-  context.drawImage(image, 0, 0, TURF_CANVAS_SIZE, TURF_CANVAS_SIZE);
+  context.drawImage(image, placement.x, placement.y, placement.width, placement.height);
   context.restore();
 }
 
@@ -886,17 +990,19 @@ function renderTurfShapeCanvas() {
       return;
     }
 
-    lineContext.drawImage(image, 0, 0, TURF_CANVAS_SIZE, TURF_CANVAS_SIZE);
+    const placement = turfLinePlacement(image);
+    lineContext.drawImage(image, placement.x, placement.y, placement.width, placement.height);
     const lineImage = lineContext.getImageData(0, 0, TURF_CANVAS_SIZE, TURF_CANVAS_SIZE);
     const fillImage = context.createImageData(TURF_CANVAS_SIZE, TURF_CANVAS_SIZE);
     const activeTurfs = mafiaTurfs.filter(entry => !entry.removed);
     const hitMap = new Uint16Array(TURF_CANVAS_SIZE * TURF_CANVAS_SIZE);
+    const outsideMask = buildOutsideMask(lineImage.data);
 
     turfHitIds = activeTurfs.map(turf => turf.id);
 
     activeTurfs.forEach((turf, index) => {
-      if (!floodFillTurfRegion(lineImage.data, fillImage.data, hitMap, turf, index)) {
-        drawTurfFallbackRegion(fillImage.data, hitMap, turf, index);
+      if (!floodFillTurfRegion(lineImage.data, fillImage.data, hitMap, outsideMask, turf, index)) {
+        drawTurfFallbackRegion(fillImage.data, hitMap, outsideMask, turf, index);
       }
     });
 
@@ -904,6 +1010,7 @@ function renderTurfShapeCanvas() {
     context.putImageData(fillImage, 0, 0);
     drawTurfLineImage(context, image);
     turfHitMap = hitMap;
+    turfOutsideMask = outsideMask;
   };
   image.onerror = () => {
     const activeTurfs = mafiaTurfs.filter(entry => !entry.removed);
@@ -911,12 +1018,13 @@ function renderTurfShapeCanvas() {
     const hitMap = new Uint16Array(TURF_CANVAS_SIZE * TURF_CANVAS_SIZE);
     turfHitIds = activeTurfs.map(turf => turf.id);
 
-    activeTurfs.forEach((turf, index) => drawTurfFallbackRegion(fillImage.data, hitMap, turf, index));
+    activeTurfs.forEach((turf, index) => drawTurfFallbackRegion(fillImage.data, hitMap, null, turf, index));
     context.clearRect(0, 0, TURF_CANVAS_SIZE, TURF_CANVAS_SIZE);
     context.putImageData(fillImage, 0, 0);
     turfHitMap = hitMap;
+    turfOutsideMask = null;
   };
-  image.src = `/assets/mafia-turf-lines-v3.png?v=6`;
+  image.src = `/assets/mafia-turf-lines-v3.png?v=7`;
 }
 
 function selectTurfFromCanvas(event) {
@@ -929,6 +1037,10 @@ function selectTurfFromCanvas(event) {
   const y = Math.floor(((event.clientY - rect.top) / rect.height) * TURF_CANVAS_SIZE);
 
   if (x < 0 || y < 0 || x >= TURF_CANVAS_SIZE || y >= TURF_CANVAS_SIZE) {
+    return;
+  }
+
+  if (turfOutsideMask?.[y * TURF_CANVAS_SIZE + x]) {
     return;
   }
 
@@ -950,7 +1062,7 @@ function selectTurf(id) {
   elements.turfNumber.textContent = turf.number || '-';
   elements.turfNumberEdit.value = turf.number || '';
   elements.turfOwner.textContent = turf.owner || 'Unclaimed';
-  elements.turfOwnerEdit.value = turf.owner || '';
+  renderTurfOwnerOptions(turf.owner || 'Unclaimed');
   elements.turfStatus.textContent = turf.status || 'Unclaimed';
   elements.turfStatusEdit.value = turf.status || 'Unclaimed';
   elements.turfSearch.value = `${turfLabel(turf)} - ${turf.owner} - ${turf.status}`;
@@ -2557,7 +2669,7 @@ async function init() {
   }
   elements.buildingTypeEdit.addEventListener('change', updateSelectedBuildingType);
   elements.turfNumberEdit.addEventListener('input', event => updateSelectedTurfField('number', event.currentTarget.value));
-  elements.turfOwnerEdit.addEventListener('input', event => updateSelectedTurfField('owner', event.currentTarget.value));
+  elements.turfOwnerEdit.addEventListener('change', event => updateSelectedTurfField('owner', event.currentTarget.value));
   elements.turfStatusEdit.addEventListener('change', event => updateSelectedTurfField('status', event.currentTarget.value));
   window.addEventListener('keydown', handleKeyboardEdit);
   window.addEventListener('pointermove', moveMarkerEdit);

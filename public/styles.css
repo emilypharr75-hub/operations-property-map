@@ -249,6 +249,15 @@ body {
   z-index: 3;
 }
 
+.toolbar select {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  padding: 10px 12px;
+}
+
 .markers,
 .turf-markers {
   position: absolute;
@@ -276,6 +285,7 @@ body {
   border-color: transparent;
   background: transparent;
   box-shadow: none;
+  pointer-events: none;
 }
 
 .marker:hover,
@@ -295,6 +305,7 @@ body {
 .markers.editing .marker,
 .turf-markers.editing .turf-marker {
   cursor: move;
+  pointer-events: auto;
 }
 
 .resize-handle,
