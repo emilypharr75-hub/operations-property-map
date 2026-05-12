@@ -600,9 +600,12 @@ function turfColorFor(owner) {
 
 function isUnclaimedTurf(turf) {
   const owner = String(turf.owner || '').trim().toLowerCase();
-  const status = String(turf.status || '').trim().toLowerCase();
 
-  return !owner || owner === 'unclaimed' || owner === 'n/a' || status === 'unclaimed';
+  return !owner || owner === 'unclaimed' || owner === 'n/a';
+}
+
+function turfFillAlpha(turf) {
+  return isUnclaimedTurf(turf) ? 0 : 112;
 }
 
 function renderTurfKey() {
@@ -835,7 +838,7 @@ function buildOutsideMask(lineData) {
 function drawTurfFallbackRegion(output, hitMap, outsideMask, turf, turfIndex) {
   const [left, top, right, bottom] = turf.rect.map(value => Math.round((value / MAP_SIZE) * TURF_CANVAS_SIZE));
   const [red, green, blue] = parseHslColor(turfColorFor(turf.owner));
-  const alpha = isUnclaimedTurf(turf) ? 0 : 76;
+  const alpha = turfFillAlpha(turf);
 
   for (let y = Math.max(0, top); y < Math.min(TURF_CANVAS_SIZE, bottom); y++) {
     for (let x = Math.max(0, left); x < Math.min(TURF_CANVAS_SIZE, right); x++) {
@@ -887,7 +890,7 @@ function floodFillTurfRegion(lineData, output, hitMap, outsideMask, turf, turfIn
   const queue = [startIndex];
   const filled = [];
   const [red, green, blue] = parseHslColor(turfColorFor(turf.owner));
-  const alpha = isUnclaimedTurf(turf) ? 0 : 76;
+  const alpha = turfFillAlpha(turf);
   visited[startIndex] = 1;
 
   for (let cursor = 0; cursor < queue.length; cursor++) {
@@ -1099,6 +1102,15 @@ function updateSelectedTurfField(field, value) {
   }
 
   turf[field] = String(value || '').trim() || (field === 'owner' ? 'Unclaimed' : '');
+
+  if (field === 'owner') {
+    if (isUnclaimedTurf(turf)) {
+      turf.status = 'Unclaimed';
+    } else if (String(turf.status || '').trim().toLowerCase() === 'unclaimed') {
+      turf.status = 'Claimed';
+    }
+  }
+
   saveTurfRecords();
   renderTurfOptions();
   renderTurfs();
