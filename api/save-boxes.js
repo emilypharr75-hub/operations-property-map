@@ -1,6 +1,6 @@
 const REPO = process.env.GITHUB_REPO || 'emilypharr75-hub/operations-property-map';
 const BRANCH = process.env.GITHUB_BRANCH || 'main';
-const EDIT_PASSWORD = process.env.EDIT_PASSWORD || 'BillingForTheWin';
+const EDIT_PASSWORD = 'MoreBusinesses';
 const { hasLiveStore, writeLiveData } = require('../lib/live-store');
 
 function jsonResponse(response, status, body) {

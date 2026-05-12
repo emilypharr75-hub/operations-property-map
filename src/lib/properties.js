@@ -6,7 +6,7 @@ const { logger } = require('./logger');
 const CHECK_PROPERTY_CHANNEL_ID = '1491639237693673593';
 const PROPERTY_MOVEMENT_LOG_CHANNEL_ID = '1501750254125580430';
 const WEBSITE_BASE_URL = process.env.PROPERTY_WEBSITE_URL || 'https://floridaoperationshub.vercel.app';
-const EDIT_PASSWORD = process.env.EDIT_PASSWORD || 'BillingForTheWin';
+const EDIT_PASSWORD = 'MoreBusinesses';
 const CACHE_MS = 300000;
 const FETCH_TIMEOUT_MS = 10000;
 

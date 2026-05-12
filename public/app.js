@@ -10,7 +10,7 @@ const ORG_STORAGE_KEY = 'erlcDirectoryRecords';
 const CLIENT_ID_STORAGE_KEY = 'erlcPropertyMapClientId';
 const LIVE_DATA_URL = 'https://floridaoperationshub.vercel.app/api/live-data';
 const MIN_MARKER_SIZE = 18;
-const EDIT_PASSWORD = 'BillingForTheWin';
+const EDIT_PASSWORD = 'MoreBusinesses';
 
 const elements = {
   navLinks: document.querySelectorAll('.nav-link'),
@@ -37,7 +37,6 @@ const elements = {
   publishStatus: document.querySelector('#publishStatus'),
   editModeLock: document.querySelector('#editModeLock'),
   undoEdit: document.querySelector('#undoEdit'),
-  resetBoxes: document.querySelector('#resetBoxes'),
   passwordDialog: document.querySelector('#passwordDialog'),
   passwordForm: document.querySelector('#passwordForm'),
   editPassword: document.querySelector('#editPassword'),
@@ -1144,7 +1143,6 @@ function setEditMode(enabled) {
   elements.addBox.disabled = !editMode;
   elements.exportBoxes.disabled = !editMode;
   elements.undoEdit.disabled = !editMode;
-  elements.resetBoxes.disabled = !editMode;
   for (const button of elements.directoryAddButtons) {
     button.disabled = !editMode;
   }
@@ -1607,7 +1605,6 @@ async function init() {
   elements.addBox.disabled = true;
   elements.exportBoxes.disabled = true;
   elements.undoEdit.disabled = true;
-  elements.resetBoxes.disabled = true;
   for (const button of elements.directoryAddButtons) {
     button.disabled = true;
     button.addEventListener('click', () => addDirectoryRecord(button.dataset.directoryAdd));
@@ -1681,10 +1678,6 @@ async function init() {
         elements.exportBoxes.textContent = 'Export Boxes';
       }, 1600);
     });
-  });
-  elements.resetBoxes.addEventListener('click', () => {
-    clearStoredEditorState();
-    window.location.reload();
   });
   for (const [field, element] of editablePropertyFields()) {
     element.dataset.field = field;
