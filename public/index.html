@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Liberty County Property Map</title>
-    <link rel="stylesheet" href="/styles.css?v=8">
+    <link rel="stylesheet" href="/styles.css?v=9">
   </head>
   <body>
     <main class="shell">
@@ -118,6 +118,10 @@
               </div>
               <button type="button" class="edit-toggle" id="addTurf">Add Turf</button>
               <button type="button" class="edit-toggle" id="undoTurfEdit">Undo</button>
+              <button type="button" class="edit-toggle" id="alignTurfs" aria-pressed="false">Align Turfs</button>
+              <button type="button" class="edit-toggle" id="turfScaleDown" aria-label="Scale turf layer down">Scale -</button>
+              <button type="button" class="edit-toggle" id="turfScaleUp" aria-label="Scale turf layer up">Scale +</button>
+              <button type="button" class="edit-toggle" id="resetTurfAlignment">Reset Align</button>
               <button type="button" class="edit-toggle" id="toggleTurfKey" aria-expanded="false">Key</button>
               <span class="publish-status" id="turfPublishStatus" aria-live="polite">Live save locked</span>
             </div>
@@ -252,6 +256,6 @@
         </div>
       </form>
     </dialog>
-    <script src="/app.js?v=9"></script>
+    <script src="/app.js?v=10"></script>
   </body>
 </html>

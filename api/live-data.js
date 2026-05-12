@@ -72,7 +72,8 @@ function versionFor(data) {
       properties: data.properties || [],
       markers: data.markers || [],
       orgs: data.orgs || {},
-      turfs: data.turfs || []
+      turfs: data.turfs || [],
+      turfAlignment: data.turfAlignment || {}
     }))
     .digest('hex');
 }
@@ -154,6 +155,7 @@ function compactLiveData(data) {
     markers: Array.isArray(data.markers) ? data.markers : [],
     orgs: compactOrgs(data.orgs),
     turfs: Array.isArray(data.turfs) ? data.turfs : [],
+    turfAlignment: data.turfAlignment || { scale: 0.94, offsetX: 0, offsetY: 0 },
     updatedBy: data.updatedBy || '',
     updatedAt: data.updatedAt,
     version: data.version
@@ -218,6 +220,7 @@ module.exports = async function handler(request, response) {
         if (!compactedLiveData.turfs.length) {
           const ref = await fetchGithubRef();
           compactedLiveData.turfs = await fetchRepoJson('public/mafia-turfs.json', ref).catch(() => []);
+          compactedLiveData.turfAlignment = await fetchRepoJson('public/turf-alignment.json', ref).catch(() => compactedLiveData.turfAlignment);
         }
 
         jsonResponse(response, 200, {
@@ -245,11 +248,12 @@ module.exports = async function handler(request, response) {
       return;
     }
 
-    const [properties, markers, orgs, turfs] = await Promise.all([
+    const [properties, markers, orgs, turfs, turfAlignment] = await Promise.all([
       fetchRepoJson('public/properties.json', ref),
       fetchRepoJson('public/property-markers.json', ref),
       fetchRepoJson('public/orgs.json', ref),
-      fetchRepoJson('public/mafia-turfs.json', ref).catch(() => [])
+      fetchRepoJson('public/mafia-turfs.json', ref).catch(() => []),
+      fetchRepoJson('public/turf-alignment.json', ref).catch(() => ({ scale: 0.94, offsetX: 0, offsetY: 0 }))
     ]);
 
     jsonResponse(response, 200, {
@@ -257,6 +261,7 @@ module.exports = async function handler(request, response) {
       markers,
       orgs: compactOrgs(orgs),
       turfs,
+      turfAlignment,
       version: ref,
       source: 'github',
       checkedAt: new Date().toISOString()

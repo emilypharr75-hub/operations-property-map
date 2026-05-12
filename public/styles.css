@@ -249,6 +249,10 @@ body {
   z-index: 3;
 }
 
+.turf-shape-canvas.aligning {
+  cursor: move;
+}
+
 .toolbar select {
   border: 1px solid var(--line);
   border-radius: 6px;

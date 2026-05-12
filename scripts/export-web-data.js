@@ -8,6 +8,8 @@ const markerSourcePath = path.join(__dirname, '..', 'data', 'property-markers.js
 const markerOutputPath = path.join(__dirname, '..', 'public', 'property-markers.json');
 const turfSourcePath = path.join(__dirname, '..', 'data', 'mafia-turfs.json');
 const turfOutputPath = path.join(__dirname, '..', 'public', 'mafia-turfs.json');
+const turfAlignmentSourcePath = path.join(__dirname, '..', 'data', 'turf-alignment.json');
+const turfAlignmentOutputPath = path.join(__dirname, '..', 'public', 'turf-alignment.json');
 const orgsSourcePath = path.join(__dirname, '..', 'data', 'orgs.json');
 const orgsOutputPath = path.join(__dirname, '..', 'public', 'orgs.json');
 
@@ -34,6 +36,14 @@ if (fs.existsSync(markerSourcePath)) {
 if (fs.existsSync(turfSourcePath)) {
   fs.copyFileSync(turfSourcePath, turfOutputPath);
   console.log(`Copied mafia turfs to ${turfOutputPath}`);
+}
+
+if (fs.existsSync(turfAlignmentSourcePath)) {
+  fs.copyFileSync(turfAlignmentSourcePath, turfAlignmentOutputPath);
+  console.log(`Copied turf alignment to ${turfAlignmentOutputPath}`);
+} else {
+  fs.writeFileSync(turfAlignmentOutputPath, `${JSON.stringify({ scale: 0.94, offsetX: 0, offsetY: 0 }, null, 2)}\n`);
+  console.log(`Created default turf alignment at ${turfAlignmentOutputPath}`);
 }
 
 if (fs.existsSync(orgsSourcePath)) {

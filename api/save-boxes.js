@@ -61,6 +61,14 @@ function normalizeTurf(turf) {
   };
 }
 
+function normalizeTurfAlignment(record) {
+  return {
+    scale: Math.min(1.4, Math.max(0.55, Number(record?.scale) || 0.94)),
+    offsetX: Math.min(220, Math.max(-220, Number(record?.offsetX) || 0)),
+    offsetY: Math.min(220, Math.max(-220, Number(record?.offsetY) || 0))
+  };
+}
+
 function normalizeProperty(property) {
   return {
     id: String(property.id),
@@ -194,6 +202,7 @@ module.exports = async function handler(request, response) {
     const properties = body.properties.map(normalizeProperty);
     const markers = body.markers.map(normalizeMarker);
     const turfs = Array.isArray(body.turfs) ? body.turfs.map(normalizeTurf) : [];
+    const turfAlignment = normalizeTurfAlignment(body.turfAlignment);
     const normalizedOrgs = normalizeDirectories(body.orgs);
     const { orgs, pdfFiles } = prepareDirectoriesForSave(normalizedOrgs);
     let liveData = null;
@@ -203,6 +212,7 @@ module.exports = async function handler(request, response) {
         properties,
         markers,
         turfs,
+        turfAlignment,
         orgs,
         updatedBy: clientId
       });
@@ -212,10 +222,12 @@ module.exports = async function handler(request, response) {
       'data/web-properties.json': { content: `${JSON.stringify(properties, null, 2)}\n`, encoding: 'utf-8' },
       'data/property-markers.json': { content: `${JSON.stringify(markers, null, 2)}\n`, encoding: 'utf-8' },
       'data/mafia-turfs.json': { content: `${JSON.stringify(turfs, null, 2)}\n`, encoding: 'utf-8' },
+      'data/turf-alignment.json': { content: `${JSON.stringify(turfAlignment, null, 2)}\n`, encoding: 'utf-8' },
       'data/orgs.json': { content: `${JSON.stringify(orgs, null, 2)}\n`, encoding: 'utf-8' },
       'public/properties.json': { content: `${JSON.stringify(properties, null, 2)}\n`, encoding: 'utf-8' },
       'public/property-markers.json': { content: `${JSON.stringify(markers, null, 2)}\n`, encoding: 'utf-8' },
       'public/mafia-turfs.json': { content: `${JSON.stringify(turfs, null, 2)}\n`, encoding: 'utf-8' },
+      'public/turf-alignment.json': { content: `${JSON.stringify(turfAlignment, null, 2)}\n`, encoding: 'utf-8' },
       'public/orgs.json': { content: `${JSON.stringify(orgs, null, 2)}\n`, encoding: 'utf-8' }
     };
 

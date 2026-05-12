@@ -9,6 +9,7 @@ const PROPERTY_STORAGE_KEY = 'erlcPropertyEdits';
 const CUSTOM_PROPERTY_STORAGE_KEY = 'erlcCustomProperties';
 const ORG_STORAGE_KEY = 'erlcDirectoryRecords';
 const TURF_STORAGE_KEY = 'erlcMafiaTurfEdits';
+const TURF_ALIGNMENT_STORAGE_KEY = 'erlcMafiaTurfAlignment';
 const CLIENT_ID_STORAGE_KEY = 'erlcPropertyMapClientId';
 const LIVE_DATA_URL = 'https://floridaoperationshub.vercel.app/api/live-data';
 const MIN_MARKER_SIZE = 18;
@@ -41,6 +42,10 @@ const elements = {
   turfZoomValue: document.querySelector('#turfZoomValue'),
   addTurf: document.querySelector('#addTurf'),
   undoTurfEdit: document.querySelector('#undoTurfEdit'),
+  alignTurfs: document.querySelector('#alignTurfs'),
+  turfScaleDown: document.querySelector('#turfScaleDown'),
+  turfScaleUp: document.querySelector('#turfScaleUp'),
+  resetTurfAlignment: document.querySelector('#resetTurfAlignment'),
   toggleTurfKey: document.querySelector('#toggleTurfKey'),
   turfKeyPanel: document.querySelector('#turfKeyPanel'),
   turfKeyList: document.querySelector('#turfKeyList'),
@@ -106,6 +111,9 @@ let turfDragState = null;
 let turfHitMap = null;
 let turfHitIds = [];
 let turfOutsideMask = null;
+let turfAlignment = { scale: 0.94, offsetX: 0, offsetY: 0 };
+let turfAlignmentMode = false;
+let turfAlignmentDrag = null;
 let undoStack = [];
 let turfUndoStack = [];
 let editSessionPassword = '';
@@ -160,6 +168,7 @@ function clearStoredEditorState() {
   localStorage.removeItem(CUSTOM_PROPERTY_STORAGE_KEY);
   localStorage.removeItem(ORG_STORAGE_KEY);
   localStorage.removeItem(TURF_STORAGE_KEY);
+  localStorage.removeItem(TURF_ALIGNMENT_STORAGE_KEY);
 }
 
 function buildExportData() {
@@ -187,7 +196,8 @@ function buildExportData() {
       }))
     ,
     orgs: getDirectoryExportData(),
-    turfs: getTurfExportData()
+    turfs: getTurfExportData(),
+    turfAlignment: getTurfAlignmentExportData()
   };
 }
 
@@ -213,7 +223,8 @@ function currentDataSignature() {
     properties: buildExportData().properties,
     markers: buildExportData().markers,
     orgs: getDirectoryExportData(),
-    turfs: getTurfExportData()
+    turfs: getTurfExportData(),
+    turfAlignment: getTurfAlignmentExportData()
   });
 }
 
@@ -247,11 +258,13 @@ function applyLiveDataset(liveData, statusMessage = 'Synced live') {
   const nextMarkers = liveData.markers || [];
   const nextOrgs = liveData.orgs || {};
   const nextTurfs = Array.isArray(liveData.turfs) ? liveData.turfs.map(normalizeTurfRecord) : [];
+  const nextTurfAlignment = normalizeTurfAlignment(liveData.turfAlignment);
   const nextSignature = JSON.stringify({
     properties: nextProperties,
     markers: nextMarkers,
     orgs: nextOrgs,
-    turfs: nextTurfs
+    turfs: nextTurfs,
+    turfAlignment: nextTurfAlignment
   });
 
   if (liveData.updatedBy === clientId) {
@@ -278,6 +291,7 @@ function applyLiveDataset(liveData, statusMessage = 'Synced live') {
   properties = nextProperties;
   propertyMarkers = nextMarkers;
   mafiaTurfs = nextTurfs;
+  turfAlignment = nextTurfAlignment;
     directoryRecords = {
       businesses: Array.isArray(nextOrgs.businesses) ? nextOrgs.businesses.map(normalizeDirectoryRecord) : [],
       mafias: Array.isArray(nextOrgs.mafias) ? nextOrgs.mafias.map(normalizeDirectoryRecord) : [],
@@ -310,6 +324,14 @@ function startLiveDataSync() {
   lastSavedDataSignature = remoteDataSignature;
 }
 
+function normalizeTurfAlignment(record) {
+  return {
+    scale: Math.min(1.4, Math.max(0.55, Number(record?.scale) || 0.94)),
+    offsetX: Math.min(220, Math.max(-220, Number(record?.offsetX) || 0)),
+    offsetY: Math.min(220, Math.max(-220, Number(record?.offsetY) || 0))
+  };
+}
+
 function normalizeTurfRecord(record) {
   const rect = Array.isArray(record.rect) && record.rect.length === 4
     ? record.rect.map(value => Math.round(Number(value) || 0))
@@ -323,6 +345,10 @@ function normalizeTurfRecord(record) {
     rect,
     rotation: Number(record.rotation || 0)
   };
+}
+
+function getTurfAlignmentExportData() {
+  return normalizeTurfAlignment(turfAlignment);
 }
 
 function getTurfExportData() {
@@ -650,6 +676,21 @@ function applyStoredTurfRecords() {
   }
 }
 
+function saveTurfAlignment() {
+  turfAlignment = normalizeTurfAlignment(turfAlignment);
+  localStorage.setItem(TURF_ALIGNMENT_STORAGE_KEY, JSON.stringify(turfAlignment));
+  renderTurfs();
+  scheduleCloudSave();
+}
+
+function applyStoredTurfAlignment() {
+  const stored = JSON.parse(localStorage.getItem(TURF_ALIGNMENT_STORAGE_KEY) || 'null');
+
+  if (stored) {
+    turfAlignment = normalizeTurfAlignment(stored);
+  }
+}
+
 function turfLabel(turf) {
   return `Turf ${turf.number || turf.id}`;
 }
@@ -772,13 +813,13 @@ function turfSeedPoint(turf) {
 }
 
 function turfLinePlacement(image) {
-  const scale = Math.min(TURF_CANVAS_SIZE / image.width, TURF_CANVAS_SIZE / image.height) * 0.94;
+  const scale = Math.min(TURF_CANVAS_SIZE / image.width, TURF_CANVAS_SIZE / image.height) * turfAlignment.scale;
   const width = Math.round(image.width * scale);
   const height = Math.round(image.height * scale);
 
   return {
-    x: Math.round((TURF_CANVAS_SIZE - width) / 2),
-    y: Math.round((TURF_CANVAS_SIZE - height) / 2),
+    x: Math.round((TURF_CANVAS_SIZE - width) / 2 + turfAlignment.offsetX),
+    y: Math.round((TURF_CANVAS_SIZE - height) / 2 + turfAlignment.offsetY),
     width,
     height
   };
@@ -1018,8 +1059,9 @@ function drawTurfNumbers(context, assignments) {
       continue;
     }
 
-    context.strokeText(turf.number, region.centerX, region.centerY);
-    context.fillText(turf.number, region.centerX, region.centerY);
+    const labelX = region.centerX + (String(turf.number).trim() === '5' ? -18 : 0);
+    context.strokeText(turf.number, labelX, region.centerY);
+    context.fillText(turf.number, labelX, region.centerY);
   }
 
   context.restore();
@@ -1099,6 +1141,10 @@ function renderTurfShapeCanvas() {
 }
 
 function selectTurfFromCanvas(event) {
+  if (editMode && turfAlignmentMode) {
+    return;
+  }
+
   if (!turfHitMap?.length) {
     return;
   }
@@ -1120,6 +1166,69 @@ function selectTurfFromCanvas(event) {
   if (turfId) {
     selectTurf(turfId);
   }
+}
+
+function setTurfAlignmentMode(enabled) {
+  turfAlignmentMode = Boolean(enabled);
+  elements.alignTurfs.setAttribute('aria-pressed', String(turfAlignmentMode));
+  elements.turfShapeCanvas.classList.toggle('aligning', turfAlignmentMode && editMode);
+}
+
+function startTurfAlignmentDrag(event) {
+  if (!editMode || !turfAlignmentMode) {
+    return;
+  }
+
+  event.preventDefault();
+  const scale = elements.turfShapeCanvas.getBoundingClientRect().width / TURF_CANVAS_SIZE;
+  turfAlignmentDrag = {
+    startX: event.clientX,
+    startY: event.clientY,
+    offsetX: turfAlignment.offsetX,
+    offsetY: turfAlignment.offsetY,
+    scale
+  };
+  elements.turfShapeCanvas.setPointerCapture(event.pointerId);
+}
+
+function moveTurfAlignmentDrag(event) {
+  if (!turfAlignmentDrag) {
+    return;
+  }
+
+  turfAlignment.offsetX = turfAlignmentDrag.offsetX + (event.clientX - turfAlignmentDrag.startX) / turfAlignmentDrag.scale;
+  turfAlignment.offsetY = turfAlignmentDrag.offsetY + (event.clientY - turfAlignmentDrag.startY) / turfAlignmentDrag.scale;
+  turfAlignment = normalizeTurfAlignment(turfAlignment);
+  renderTurfs();
+}
+
+function stopTurfAlignmentDrag() {
+  if (!turfAlignmentDrag) {
+    return;
+  }
+
+  turfAlignmentDrag = null;
+  saveTurfAlignment();
+}
+
+function scaleTurfAlignment(delta) {
+  if (!editMode) {
+    openPasswordDialog();
+    return;
+  }
+
+  turfAlignment.scale += delta;
+  saveTurfAlignment();
+}
+
+function resetTurfAlignment() {
+  if (!editMode) {
+    openPasswordDialog();
+    return;
+  }
+
+  turfAlignment = { scale: 0.94, offsetX: 0, offsetY: 0 };
+  saveTurfAlignment();
 }
 
 function selectTurf(id) {
@@ -2137,6 +2246,13 @@ function setEditMode(enabled) {
   elements.undoEdit.disabled = !editMode;
   elements.addTurf.disabled = !editMode;
   elements.undoTurfEdit.disabled = !editMode;
+  elements.alignTurfs.disabled = !editMode;
+  elements.turfScaleDown.disabled = !editMode;
+  elements.turfScaleUp.disabled = !editMode;
+  elements.resetTurfAlignment.disabled = !editMode;
+  if (!editMode) {
+    setTurfAlignmentMode(false);
+  }
   for (const button of elements.directoryAddButtons) {
     button.disabled = !editMode;
   }
@@ -2606,6 +2722,12 @@ async function init() {
     propertyMarkers = await markersResponse.json();
     mafiaTurfs = await turfResponse.json();
     try {
+      const turfAlignmentResponse = await fetch('/turf-alignment.json');
+      turfAlignment = normalizeTurfAlignment(await turfAlignmentResponse.json());
+    } catch {
+      turfAlignment = normalizeTurfAlignment(turfAlignment);
+    }
+    try {
       const orgsResponse = await fetch('/orgs.json');
       directoryRecords = await orgsResponse.json();
     } catch {
@@ -2620,6 +2742,7 @@ async function init() {
     }
     applyStoredDirectoryRecords();
     applyStoredTurfRecords();
+    applyStoredTurfAlignment();
     applyStoredCustomProperties();
     applyStoredPropertyEdits();
     applyStoredMarkerEdits();
@@ -2636,6 +2759,10 @@ async function init() {
   elements.undoEdit.disabled = true;
   elements.addTurf.disabled = true;
   elements.undoTurfEdit.disabled = true;
+  elements.alignTurfs.disabled = true;
+  elements.turfScaleDown.disabled = true;
+  elements.turfScaleUp.disabled = true;
+  elements.resetTurfAlignment.disabled = true;
   for (const button of elements.directoryAddButtons) {
     button.disabled = true;
     button.addEventListener('click', () => addDirectoryRecord(button.dataset.directoryAdd));
@@ -2659,6 +2786,20 @@ async function init() {
   elements.turfZoomIn.addEventListener('click', () => setTurfZoom(turfZoom + 0.5));
   elements.turfZoomOut.addEventListener('click', () => setTurfZoom(turfZoom - 0.35));
   elements.turfZoomRange.addEventListener('input', event => setTurfZoom(Number(event.target.value)));
+  elements.alignTurfs.addEventListener('click', () => {
+    if (!editMode) {
+      openPasswordDialog();
+      return;
+    }
+
+    setTurfAlignmentMode(!turfAlignmentMode);
+  });
+  elements.turfScaleDown.addEventListener('click', () => scaleTurfAlignment(-0.02));
+  elements.turfScaleUp.addEventListener('click', () => scaleTurfAlignment(0.02));
+  elements.resetTurfAlignment.addEventListener('click', resetTurfAlignment);
+  elements.turfShapeCanvas.addEventListener('pointerdown', startTurfAlignmentDrag);
+  window.addEventListener('pointermove', moveTurfAlignmentDrag);
+  window.addEventListener('pointerup', stopTurfAlignmentDrag);
   elements.turfShapeCanvas.addEventListener('click', selectTurfFromCanvas);
   elements.mapWrap.addEventListener('wheel', event => {
     if (!event.ctrlKey && !event.metaKey) {
