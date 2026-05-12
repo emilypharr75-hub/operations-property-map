@@ -673,7 +673,7 @@
     "id": "house-4055",
     "name": "House 4055",
     "number": "4055",
-    "buildingType": "house",
+    "buildingType": "mafia",
     "owner": "N/A",
     "price": "$1,040,000",
     "tax": "$20,000",
