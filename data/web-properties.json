@@ -1163,8 +1163,8 @@
     "id": "house-9074",
     "name": "Docks",
     "number": "9074",
-    "buildingType": "building",
-    "owner": "N/A",
+    "buildingType": "mafia",
+    "owner": "MAS",
     "price": "$650,000",
     "tax": "$20,000",
     "custom": false
