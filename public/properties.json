@@ -1244,7 +1244,7 @@
     "name": "House 11121",
     "number": "11121",
     "buildingType": "mafia",
-    "owner": "N/A",
+    "owner": "WSH",
     "price": "$1,040,000",
     "tax": "$20,000",
     "custom": false
@@ -1254,7 +1254,7 @@
     "name": "House 11122",
     "number": "11122",
     "buildingType": "mafia",
-    "owner": "N/A",
+    "owner": "WSH",
     "price": "$1,040,000",
     "tax": "$20,000",
     "custom": false
@@ -1264,7 +1264,7 @@
     "name": "House 11123",
     "number": "11123",
     "buildingType": "mafia",
-    "owner": "N/A",
+    "owner": "WSH",
     "price": "$1,040,000",
     "tax": "$20,000",
     "custom": false
