@@ -662,6 +662,15 @@ function renderTurfKey() {
 
   elements.turfKeyList.textContent = '';
   const mafias = Array.isArray(directoryRecords.mafias) ? directoryRecords.mafias : [];
+  const blacklistItem = document.createElement('div');
+  blacklistItem.className = 'turf-key-item';
+  const blacklistSwatch = document.createElement('span');
+  blacklistSwatch.className = 'turf-key-swatch';
+  blacklistSwatch.style.background = '#d6122d';
+  const blacklistLabel = document.createElement('span');
+  blacklistLabel.textContent = 'Blacklisted territory';
+  blacklistItem.append(blacklistSwatch, blacklistLabel);
+  elements.turfKeyList.append(blacklistItem);
 
   if (!mafias.length) {
     const empty = document.createElement('div');
@@ -1066,6 +1075,17 @@ function drawTurfLineImage(context, image) {
   context.restore();
 }
 
+function drawTurfBlacklistImage(context, image, placement) {
+  if (!image) {
+    return;
+  }
+
+  context.save();
+  context.globalAlpha = 0.92;
+  context.drawImage(image, placement.x, placement.y, placement.width, placement.height);
+  context.restore();
+}
+
 function drawTurfNumbers(context, assignments) {
   context.save();
   context.textAlign = 'center';
@@ -1105,6 +1125,7 @@ function renderTurfShapeCanvas() {
   canvas.height = TURF_CANVAS_SIZE;
   const image = new Image();
   image.onload = () => {
+    const draw = blacklistImage => {
     const lineCanvas = document.createElement('canvas');
     lineCanvas.width = TURF_CANVAS_SIZE;
     lineCanvas.height = TURF_CANVAS_SIZE;
@@ -1141,10 +1162,16 @@ function renderTurfShapeCanvas() {
 
     context.clearRect(0, 0, TURF_CANVAS_SIZE, TURF_CANVAS_SIZE);
     context.putImageData(fillImage, 0, 0);
+    drawTurfBlacklistImage(context, blacklistImage, placement);
     drawTurfLineImage(context, image);
     drawTurfNumbers(context, assignments);
     turfHitMap = hitMap;
     turfOutsideMask = outsideMask;
+    };
+    const blacklistImage = new Image();
+    blacklistImage.onload = () => draw(blacklistImage);
+    blacklistImage.onerror = () => draw(null);
+    blacklistImage.src = '/assets/mafia-turf-blacklist.png?v=1';
   };
   image.onerror = () => {
     const activeTurfs = mafiaTurfs.filter(entry => !entry.removed);
@@ -1158,7 +1185,7 @@ function renderTurfShapeCanvas() {
     turfHitMap = hitMap;
     turfOutsideMask = null;
   };
-  image.src = `/assets/mafia-turf-lines-v3.png?v=7`;
+  image.src = `/assets/mafia-turf-lines-v3.png?v=8`;
 }
 
 function selectTurfFromCanvas(event) {
