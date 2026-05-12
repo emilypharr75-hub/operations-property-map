@@ -1253,7 +1253,7 @@
     "id": "house-11122",
     "name": "House 11122",
     "number": "11122",
-    "buildingType": "house",
+    "buildingType": "mafia",
     "owner": "N/A",
     "price": "$1,040,000",
     "tax": "$20,000",
