@@ -54,8 +54,8 @@
   {
     "id": "turf-05",
     "number": "5",
-    "owner": "Unclaimed",
-    "status": "Unclaimed",
+    "owner": "West Side Hustlers",
+    "status": "Claimed",
     "rect": [
       26,
       324,
@@ -158,8 +158,8 @@
   {
     "id": "turf-13",
     "number": "13",
-    "owner": "Unclaimed",
-    "status": "Unclaimed",
+    "owner": "West Side Hustlers",
+    "status": "Claimed",
     "rect": [
       2482,
       1102,
