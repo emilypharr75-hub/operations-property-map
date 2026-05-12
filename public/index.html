@@ -13,6 +13,7 @@
         <button type="button" class="lock-button" id="editModeLock" aria-label="Unlock edit mode" aria-pressed="false">Lock</button>
         <nav class="sidebar-nav">
           <button type="button" class="nav-link active" data-view="propertyMap">Property Map</button>
+          <button type="button" class="nav-link" data-view="mafiaTurfMap">Mafia Turf Map</button>
           <button type="button" class="nav-link" data-view="currentBusinesses">Current Businesses</button>
           <button type="button" class="nav-link" data-view="currentMafias">Current Mafias</button>
         </nav>
@@ -97,6 +98,70 @@
                 <dd>
                   <span id="propertyTax">-</span>
                   <input id="propertyTaxEdit" class="field-editor" type="text" aria-label="Edit property tax" disabled>
+                </dd>
+              </div>
+            </dl>
+          </aside>
+        </section>
+
+        <section class="app-view" id="mafiaTurfMapView" data-view-panel="mafiaTurfMap">
+          <section class="map-panel" aria-label="Mafia turf map">
+            <div class="toolbar">
+              <label for="turfSearch">Turf</label>
+              <input id="turfSearch" list="turfOptions" type="search" placeholder="Search turf owner, status, or number">
+              <datalist id="turfOptions"></datalist>
+              <div class="zoom-controls" aria-label="Turf map zoom controls">
+                <button type="button" id="turfZoomOut" aria-label="Zoom out">-</button>
+                <input id="turfZoomRange" type="range" min="0.45" max="6" step="0.05" value="1">
+                <button type="button" id="turfZoomIn" aria-label="Zoom in">+</button>
+                <output id="turfZoomValue" for="turfZoomRange">100%</output>
+              </div>
+              <button type="button" class="edit-toggle" id="addTurf">Add Turf</button>
+              <button type="button" class="edit-toggle" id="undoTurfEdit">Undo</button>
+              <button type="button" class="edit-toggle" id="toggleTurfKey" aria-expanded="false">Key</button>
+              <span class="publish-status" id="turfPublishStatus" aria-live="polite">Live save locked</span>
+            </div>
+            <div class="turf-key-panel" id="turfKeyPanel" hidden>
+              <h2>Mafia Turf Key</h2>
+              <div class="turf-key-list" id="turfKeyList"></div>
+            </div>
+            <div class="map-wrap" id="turfMapWrap">
+              <div class="map-surface" id="turfMapSurface">
+                <img src="/assets/erlc-map.png" alt="Emergency Response Liberty County map" id="turfMapImage">
+                <img src="/assets/mafia-turf-reference.png" alt="" class="turf-reference-overlay">
+                <div class="turf-markers" id="turfMarkers" aria-label="Editable mafia turf markers"></div>
+              </div>
+            </div>
+          </section>
+
+          <aside class="status-panel turf-status-panel" aria-live="polite">
+            <p class="eyebrow">Selected Turf</p>
+            <h1 id="turfName">Choose a turf</h1>
+            <dl>
+              <div>
+                <dt>Number</dt>
+                <dd>
+                  <span id="turfNumber">-</span>
+                  <input id="turfNumberEdit" class="field-editor" type="text" aria-label="Edit turf number" disabled>
+                </dd>
+              </div>
+              <div>
+                <dt>Owner</dt>
+                <dd>
+                  <span id="turfOwner">-</span>
+                  <input id="turfOwnerEdit" class="field-editor" type="text" aria-label="Edit turf owner" disabled>
+                </dd>
+              </div>
+              <div>
+                <dt>Status</dt>
+                <dd>
+                  <span id="turfStatus">-</span>
+                  <select id="turfStatusEdit" class="field-editor" aria-label="Edit turf status" disabled>
+                    <option value="Unclaimed">Unclaimed</option>
+                    <option value="Claimed">Claimed</option>
+                    <option value="Contested">Contested</option>
+                    <option value="Unavailable">Unavailable</option>
+                  </select>
                 </dd>
               </div>
             </dl>

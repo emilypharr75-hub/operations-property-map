@@ -50,6 +50,17 @@ function normalizeMarker(marker) {
   };
 }
 
+function normalizeTurf(turf) {
+  return {
+    id: String(turf.id),
+    number: String(turf.number || ''),
+    owner: String(turf.owner || 'Unclaimed'),
+    status: String(turf.status || 'Unclaimed'),
+    rect: Array.isArray(turf.rect) ? turf.rect.map(value => Math.round(Number(value) || 0)) : [1200, 1200, 1380, 1320],
+    rotation: Number(turf.rotation || 0)
+  };
+}
+
 function normalizeProperty(property) {
   return {
     id: String(property.id),
@@ -182,6 +193,7 @@ module.exports = async function handler(request, response) {
     const clientId = typeof body.clientId === 'string' ? body.clientId.slice(0, 120) : '';
     const properties = body.properties.map(normalizeProperty);
     const markers = body.markers.map(normalizeMarker);
+    const turfs = Array.isArray(body.turfs) ? body.turfs.map(normalizeTurf) : [];
     const normalizedOrgs = normalizeDirectories(body.orgs);
     const { orgs, pdfFiles } = prepareDirectoriesForSave(normalizedOrgs);
     let liveData = null;
@@ -190,6 +202,7 @@ module.exports = async function handler(request, response) {
       liveData = await writeLiveData({
         properties,
         markers,
+        turfs,
         orgs,
         updatedBy: clientId
       });
@@ -198,9 +211,11 @@ module.exports = async function handler(request, response) {
     const files = {
       'data/web-properties.json': { content: `${JSON.stringify(properties, null, 2)}\n`, encoding: 'utf-8' },
       'data/property-markers.json': { content: `${JSON.stringify(markers, null, 2)}\n`, encoding: 'utf-8' },
+      'data/mafia-turfs.json': { content: `${JSON.stringify(turfs, null, 2)}\n`, encoding: 'utf-8' },
       'data/orgs.json': { content: `${JSON.stringify(orgs, null, 2)}\n`, encoding: 'utf-8' },
       'public/properties.json': { content: `${JSON.stringify(properties, null, 2)}\n`, encoding: 'utf-8' },
       'public/property-markers.json': { content: `${JSON.stringify(markers, null, 2)}\n`, encoding: 'utf-8' },
+      'public/mafia-turfs.json': { content: `${JSON.stringify(turfs, null, 2)}\n`, encoding: 'utf-8' },
       'public/orgs.json': { content: `${JSON.stringify(orgs, null, 2)}\n`, encoding: 'utf-8' }
     };
 

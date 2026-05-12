@@ -7,6 +7,7 @@ const MARKER_STORAGE_KEY = 'erlcPropertyMarkerEdits';
 const PROPERTY_STORAGE_KEY = 'erlcPropertyEdits';
 const CUSTOM_PROPERTY_STORAGE_KEY = 'erlcCustomProperties';
 const ORG_STORAGE_KEY = 'erlcDirectoryRecords';
+const TURF_STORAGE_KEY = 'erlcMafiaTurfEdits';
 const CLIENT_ID_STORAGE_KEY = 'erlcPropertyMapClientId';
 const LIVE_DATA_URL = 'https://floridaoperationshub.vercel.app/api/live-data';
 const MIN_MARKER_SIZE = 18;
@@ -27,6 +28,21 @@ const elements = {
   mapSurface: document.querySelector('#mapSurface'),
   mapWrap: document.querySelector('#mapWrap'),
   markers: document.querySelector('#markers'),
+  turfDatalist: document.querySelector('#turfOptions'),
+  turfMapSurface: document.querySelector('#turfMapSurface'),
+  turfMapWrap: document.querySelector('#turfMapWrap'),
+  turfMarkers: document.querySelector('#turfMarkers'),
+  turfSearch: document.querySelector('#turfSearch'),
+  turfZoomIn: document.querySelector('#turfZoomIn'),
+  turfZoomOut: document.querySelector('#turfZoomOut'),
+  turfZoomRange: document.querySelector('#turfZoomRange'),
+  turfZoomValue: document.querySelector('#turfZoomValue'),
+  addTurf: document.querySelector('#addTurf'),
+  undoTurfEdit: document.querySelector('#undoTurfEdit'),
+  toggleTurfKey: document.querySelector('#toggleTurfKey'),
+  turfKeyPanel: document.querySelector('#turfKeyPanel'),
+  turfKeyList: document.querySelector('#turfKeyList'),
+  turfPublishStatus: document.querySelector('#turfPublishStatus'),
   search: document.querySelector('#propertySearch'),
   zoomIn: document.querySelector('#zoomIn'),
   zoomOut: document.querySelector('#zoomOut'),
@@ -54,12 +70,20 @@ const elements = {
   propertyPrice: document.querySelector('#propertyPrice'),
   propertyPriceEdit: document.querySelector('#propertyPriceEdit'),
   propertyTax: document.querySelector('#propertyTax'),
-  propertyTaxEdit: document.querySelector('#propertyTaxEdit')
+  propertyTaxEdit: document.querySelector('#propertyTaxEdit'),
+  turfName: document.querySelector('#turfName'),
+  turfNumber: document.querySelector('#turfNumber'),
+  turfNumberEdit: document.querySelector('#turfNumberEdit'),
+  turfOwner: document.querySelector('#turfOwner'),
+  turfOwnerEdit: document.querySelector('#turfOwnerEdit'),
+  turfStatus: document.querySelector('#turfStatus'),
+  turfStatusEdit: document.querySelector('#turfStatusEdit')
 };
 
 let properties = [];
 let propertiesById = new Map();
 let propertyMarkers = [];
+let mafiaTurfs = [];
 let directoryRecords = {
   businesses: [],
   mafias: [],
@@ -70,10 +94,15 @@ let directoryRecords = {
 };
 let activeMarker = null;
 let selectedMarkerId = null;
+let activeTurf = null;
+let selectedTurfId = null;
 let zoom = 1;
+let turfZoom = 1;
 let editMode = false;
 let dragState = null;
+let turfDragState = null;
 let undoStack = [];
+let turfUndoStack = [];
 let editSessionPassword = '';
 let cloudSaveTimeout = null;
 let cloudSaveInFlight = false;
@@ -108,6 +137,11 @@ function setActiveView(view) {
   if (view === 'propertyMap') {
     renderMarkers();
   }
+
+  if (view === 'mafiaTurfMap') {
+    renderTurfs();
+    renderTurfKey();
+  }
 }
 
 function unlockEditMode() {
@@ -120,6 +154,7 @@ function clearStoredEditorState() {
   localStorage.removeItem(PROPERTY_STORAGE_KEY);
   localStorage.removeItem(CUSTOM_PROPERTY_STORAGE_KEY);
   localStorage.removeItem(ORG_STORAGE_KEY);
+  localStorage.removeItem(TURF_STORAGE_KEY);
 }
 
 function buildExportData() {
@@ -146,12 +181,14 @@ function buildExportData() {
         custom: Boolean(region.custom)
       }))
     ,
-    orgs: getDirectoryExportData()
+    orgs: getDirectoryExportData(),
+    turfs: getTurfExportData()
   };
 }
 
 function setPublishStatus(message) {
   elements.publishStatus.textContent = message;
+  elements.turfPublishStatus.textContent = message;
 }
 
 function isLocalHostPreview() {
@@ -170,7 +207,8 @@ function currentDataSignature() {
   return JSON.stringify({
     properties: buildExportData().properties,
     markers: buildExportData().markers,
-    orgs: getDirectoryExportData()
+    orgs: getDirectoryExportData(),
+    turfs: getTurfExportData()
   });
 }
 
@@ -203,10 +241,12 @@ function applyLiveDataset(liveData, statusMessage = 'Synced live') {
   const nextProperties = liveData.properties || [];
   const nextMarkers = liveData.markers || [];
   const nextOrgs = liveData.orgs || {};
+  const nextTurfs = Array.isArray(liveData.turfs) ? liveData.turfs.map(normalizeTurfRecord) : [];
   const nextSignature = JSON.stringify({
     properties: nextProperties,
     markers: nextMarkers,
-    orgs: nextOrgs
+    orgs: nextOrgs,
+    turfs: nextTurfs
   });
 
   if (liveData.updatedBy === clientId) {
@@ -232,6 +272,7 @@ function applyLiveDataset(liveData, statusMessage = 'Synced live') {
 
   properties = nextProperties;
   propertyMarkers = nextMarkers;
+  mafiaTurfs = nextTurfs;
     directoryRecords = {
       businesses: Array.isArray(nextOrgs.businesses) ? nextOrgs.businesses.map(normalizeDirectoryRecord) : [],
       mafias: Array.isArray(nextOrgs.mafias) ? nextOrgs.mafias.map(normalizeDirectoryRecord) : [],
@@ -247,6 +288,8 @@ function applyLiveDataset(liveData, statusMessage = 'Synced live') {
   clearStoredEditorState();
   renderOptions();
   renderMarkers();
+  renderTurfs();
+  renderTurfOptions();
   renderDirectoryLists();
 
   if (selectedMarkerId && propertiesById.has(selectedMarkerId)) {
@@ -260,6 +303,34 @@ function applyLiveDataset(liveData, statusMessage = 'Synced live') {
 function startLiveDataSync() {
   remoteDataSignature = currentDataSignature();
   lastSavedDataSignature = remoteDataSignature;
+}
+
+function normalizeTurfRecord(record) {
+  const rect = Array.isArray(record.rect) && record.rect.length === 4
+    ? record.rect.map(value => Math.round(Number(value) || 0))
+    : [1200, 1200, 1380, 1320];
+
+  return {
+    id: String(record.id || `turf-${Date.now()}`),
+    number: String(record.number || ''),
+    owner: String(record.owner || 'Unclaimed'),
+    status: String(record.status || 'Unclaimed'),
+    rect,
+    rotation: Number(record.rotation || 0)
+  };
+}
+
+function getTurfExportData() {
+  return mafiaTurfs
+    .filter(turf => !turf.removed)
+    .map(turf => ({
+      id: turf.id,
+      number: turf.number,
+      owner: turf.owner,
+      status: turf.status,
+      rect: turf.rect,
+      rotation: Number(turf.rotation || 0)
+    }));
 }
 
 function getDirectoryExportData() {
@@ -495,6 +566,175 @@ function renderDirectoryLists() {
   renderRegulationList('billingRegulations');
   renderRegulationList('businessRegulations');
   renderRegulationList('mafiaRegulations');
+  renderTurfKey();
+  renderTurfs();
+}
+
+function hashColor(value) {
+  const text = String(value || 'Unclaimed');
+  let hash = 0;
+
+  for (let index = 0; index < text.length; index++) {
+    hash = (hash * 31 + text.charCodeAt(index)) >>> 0;
+  }
+
+  const hue = hash % 360;
+  return `hsl(${hue} 78% 52%)`;
+}
+
+function turfColorFor(owner) {
+  const text = String(owner || '').trim();
+
+  if (!text || text.toLowerCase() === 'unclaimed' || text.toLowerCase() === 'n/a') {
+    return '#7a828a';
+  }
+
+  return hashColor(text.toLowerCase());
+}
+
+function renderTurfKey() {
+  if (!elements.turfKeyList) {
+    return;
+  }
+
+  elements.turfKeyList.textContent = '';
+  const mafias = Array.isArray(directoryRecords.mafias) ? directoryRecords.mafias : [];
+
+  if (!mafias.length) {
+    const empty = document.createElement('div');
+    empty.className = 'empty-state';
+    empty.innerHTML = '<h2>No mafias listed yet</h2><p>Unlock edit mode and add mafias to build the key.</p>';
+    elements.turfKeyList.append(empty);
+    return;
+  }
+
+  for (const mafia of mafias) {
+    const item = document.createElement('div');
+    item.className = 'turf-key-item';
+    const swatch = document.createElement('span');
+    swatch.className = 'turf-key-swatch';
+    swatch.style.background = turfColorFor(mafia.name);
+    const label = document.createElement('span');
+    label.textContent = mafia.name || 'Unnamed mafia';
+    item.append(swatch, label);
+    elements.turfKeyList.append(item);
+  }
+}
+
+function saveTurfRecords() {
+  localStorage.setItem(TURF_STORAGE_KEY, JSON.stringify(getTurfExportData()));
+  scheduleCloudSave();
+}
+
+function applyStoredTurfRecords() {
+  const stored = JSON.parse(localStorage.getItem(TURF_STORAGE_KEY) || 'null');
+
+  if (Array.isArray(stored)) {
+    mafiaTurfs = stored.map(normalizeTurfRecord);
+  }
+}
+
+function turfLabel(turf) {
+  return `Turf ${turf.number || turf.id}`;
+}
+
+function renderTurfOptions() {
+  elements.turfDatalist.textContent = '';
+
+  for (const turf of mafiaTurfs.filter(turf => !turf.removed)) {
+    const option = document.createElement('option');
+    option.value = `${turfLabel(turf)} - ${turf.owner} - ${turf.status}`;
+    option.dataset.id = turf.id;
+    elements.turfDatalist.append(option);
+  }
+}
+
+function selectTurf(id) {
+  const turf = mafiaTurfs.find(entry => entry.id === id);
+
+  if (!turf) {
+    return;
+  }
+
+  elements.turfName.textContent = turfLabel(turf);
+  elements.turfNumber.textContent = turf.number || '-';
+  elements.turfNumberEdit.value = turf.number || '';
+  elements.turfOwner.textContent = turf.owner || 'Unclaimed';
+  elements.turfOwnerEdit.value = turf.owner || '';
+  elements.turfStatus.textContent = turf.status || 'Unclaimed';
+  elements.turfStatusEdit.value = turf.status || 'Unclaimed';
+  elements.turfSearch.value = `${turfLabel(turf)} - ${turf.owner} - ${turf.status}`;
+  setTurfEditorsDisabled(!editMode);
+
+  if (activeTurf) {
+    activeTurf.classList.remove('active');
+  }
+
+  activeTurf = document.querySelector(`.turf-marker[data-id="${turf.id}"]`);
+  selectedTurfId = turf.id;
+
+  if (activeTurf) {
+    activeTurf.classList.add('active');
+    activeTurf.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' });
+  }
+}
+
+function setTurfEditorsDisabled(disabled) {
+  elements.turfNumberEdit.disabled = disabled;
+  elements.turfOwnerEdit.disabled = disabled;
+  elements.turfStatusEdit.disabled = disabled;
+}
+
+function updateSelectedTurfField(field, value) {
+  if (!editMode || !selectedTurfId) {
+    return;
+  }
+
+  const turf = mafiaTurfs.find(entry => entry.id === selectedTurfId);
+
+  if (!turf) {
+    return;
+  }
+
+  turf[field] = String(value || '').trim() || (field === 'owner' ? 'Unclaimed' : '');
+  saveTurfRecords();
+  renderTurfOptions();
+  renderTurfs();
+  selectTurf(turf.id);
+}
+
+function createNewTurf() {
+  if (!editMode) {
+    openPasswordDialog();
+    return;
+  }
+
+  const number = window.prompt('Turf number:');
+
+  if (!number?.trim()) {
+    return;
+  }
+
+  const scale = getTurfScale();
+  const centerX = clamp((elements.turfMapWrap.scrollLeft + elements.turfMapWrap.clientWidth / 2) / scale, 0, MAP_SIZE);
+  const centerY = clamp((elements.turfMapWrap.scrollTop + elements.turfMapWrap.clientHeight / 2) / scale, 0, MAP_SIZE);
+  const width = 180;
+  const height = 130;
+  const left = clamp(centerX - width / 2, 0, MAP_SIZE - width);
+  const top = clamp(centerY - height / 2, 0, MAP_SIZE - height);
+  const turf = normalizeTurfRecord({
+    id: `turf-${Date.now()}`,
+    number: number.trim(),
+    owner: 'Unclaimed',
+    status: 'Unclaimed',
+    rect: [left, top, left + width, top + height]
+  });
+
+  mafiaTurfs.push(turf);
+  saveTurfRecords();
+  renderTurfOptions();
+  renderTurfs();
+  selectTurf(turf.id);
 }
 
 function addRegulationRecord(key) {
@@ -725,6 +965,10 @@ function resetStoredEditorStateForImportedData() {
 
 function getMarkerScale() {
   return elements.markers.getBoundingClientRect().width / MAP_SIZE;
+}
+
+function getTurfScale() {
+  return elements.turfMarkers.getBoundingClientRect().width / MAP_SIZE;
 }
 
 function clamp(value, min, max) {
@@ -1082,10 +1326,44 @@ function undoLastEdit() {
   const entry = undoStack.pop();
 
   if (!entry) {
+    undoLastTurfEdit();
     return;
   }
 
   restoreMarkerSnapshot(entry.id, entry.before);
+}
+
+function turfSnapshot(turf) {
+  return {
+    rect: [...turf.rect],
+    rotation: Number(turf.rotation || 0),
+    removed: Boolean(turf.removed)
+  };
+}
+
+function restoreTurfSnapshot(id, snapshot) {
+  const turf = mafiaTurfs.find(entry => entry.id === id);
+
+  if (!turf) {
+    return;
+  }
+
+  turf.rect = [...snapshot.rect];
+  turf.rotation = snapshot.rotation || 0;
+  turf.removed = Boolean(snapshot.removed);
+  saveTurfRecords();
+  renderTurfs();
+  selectTurf(id);
+}
+
+function undoLastTurfEdit() {
+  const entry = turfUndoStack.pop();
+
+  if (!entry) {
+    return;
+  }
+
+  restoreTurfSnapshot(entry.id, entry.before);
 }
 
 function applyMarkerElementStyle(markerElement, rect, rotation = 0) {
@@ -1131,6 +1409,196 @@ function updateMarkerRotation(id, rotation) {
   }
 }
 
+function renderTurfs() {
+  elements.turfMarkers.textContent = '';
+
+  for (const turf of mafiaTurfs) {
+    if (turf.removed) {
+      continue;
+    }
+
+    const [left, top, right, bottom] = turf.rect;
+    const marker = document.createElement('button');
+    marker.type = 'button';
+    marker.className = 'turf-marker';
+    marker.dataset.id = turf.id;
+    marker.style.setProperty('--marker-color', turfColorFor(turf.owner));
+    marker.style.setProperty('--turf-color', turfColorFor(turf.owner));
+    applyMarkerElementStyle(marker, [left, top, right, bottom], Number(turf.rotation || 0));
+    marker.setAttribute('aria-label', `${turfLabel(turf)} ${turf.owner} ${turf.status}`);
+    marker.addEventListener('pointerdown', event => startTurfEdit(event, turf));
+    marker.addEventListener('click', event => {
+      if (editMode) {
+        event.preventDefault();
+      }
+
+      selectTurf(turf.id);
+    });
+
+    for (const handleName of ['nw', 'ne', 'sw', 'se']) {
+      const handle = document.createElement('span');
+      handle.className = `resize-handle ${handleName}`;
+      handle.dataset.handle = handleName;
+      marker.append(handle);
+    }
+
+    const rotateHandle = document.createElement('span');
+    rotateHandle.className = 'rotate-handle';
+    rotateHandle.dataset.handle = 'rotate';
+    marker.append(rotateHandle);
+    elements.turfMarkers.append(marker);
+  }
+}
+
+function updateTurfRect(id, rect) {
+  const turf = mafiaTurfs.find(entry => entry.id === id);
+
+  if (!turf) {
+    return;
+  }
+
+  turf.rect = rect.map(value => Math.round(value));
+
+  const turfElement = document.querySelector(`.turf-marker[data-id="${id}"]`);
+  if (turfElement) {
+    applyMarkerElementStyle(turfElement, turf.rect, Number(turf.rotation || 0));
+    turfElement.classList.add('active');
+    activeTurf = turfElement;
+  }
+}
+
+function updateTurfRotation(id, rotation) {
+  const turf = mafiaTurfs.find(entry => entry.id === id);
+
+  if (!turf) {
+    return;
+  }
+
+  turf.rotation = normalizeDegrees(rotation);
+
+  const turfElement = document.querySelector(`.turf-marker[data-id="${id}"]`);
+  if (turfElement) {
+    turfElement.style.transform = `rotate(${turf.rotation}deg)`;
+    turfElement.classList.add('active');
+    activeTurf = turfElement;
+  }
+}
+
+function startTurfEdit(event, turf) {
+  if (!editMode) {
+    return;
+  }
+
+  event.preventDefault();
+  event.stopPropagation();
+  const handle = event.target.dataset.handle || 'move';
+  const rect = turf.rect;
+  const scale = getTurfScale();
+  const [left, top, right, bottom] = rect;
+  const centerX = elements.turfMarkers.getBoundingClientRect().left + ((left + right) / 2) * scale;
+  const centerY = elements.turfMarkers.getBoundingClientRect().top + ((top + bottom) / 2) * scale;
+  selectTurf(turf.id);
+  turfDragState = {
+    handle,
+    id: turf.id,
+    rect: [...rect],
+    before: turfSnapshot(turf),
+    centerX,
+    centerY,
+    startAngle: Math.atan2(event.clientY - centerY, event.clientX - centerX) * 180 / Math.PI,
+    startRotation: Number(turf.rotation || 0),
+    moved: false,
+    startX: event.clientX,
+    startY: event.clientY,
+    scale
+  };
+
+  event.currentTarget.setPointerCapture(event.pointerId);
+}
+
+function moveTurfEdit(event) {
+  if (!turfDragState) {
+    return;
+  }
+
+  const dx = (event.clientX - turfDragState.startX) / turfDragState.scale;
+  const dy = (event.clientY - turfDragState.startY) / turfDragState.scale;
+
+  if (!turfDragState.moved && (Math.abs(dx) >= 1 || Math.abs(dy) >= 1)) {
+    turfUndoStack.push({
+      id: turfDragState.id,
+      before: turfDragState.before
+    });
+
+    if (turfUndoStack.length > 100) {
+      turfUndoStack.shift();
+    }
+
+    turfDragState.moved = true;
+  }
+
+  let [left, top, right, bottom] = turfDragState.rect;
+
+  if (turfDragState.handle === 'rotate') {
+    const angle = Math.atan2(event.clientY - turfDragState.centerY, event.clientX - turfDragState.centerX) * 180 / Math.PI;
+    updateTurfRotation(turfDragState.id, turfDragState.startRotation + angle - turfDragState.startAngle);
+    return;
+  }
+
+  if (turfDragState.handle === 'move') {
+    left += dx;
+    right += dx;
+    top += dy;
+    bottom += dy;
+  } else {
+    if (turfDragState.handle.includes('w')) {
+      left += dx;
+    }
+    if (turfDragState.handle.includes('e')) {
+      right += dx;
+    }
+    if (turfDragState.handle.includes('n')) {
+      top += dy;
+    }
+    if (turfDragState.handle.includes('s')) {
+      bottom += dy;
+    }
+  }
+
+  if (right - left < MIN_MARKER_SIZE) {
+    if (turfDragState.handle.includes('w')) {
+      left = right - MIN_MARKER_SIZE;
+    } else {
+      right = left + MIN_MARKER_SIZE;
+    }
+  }
+
+  if (bottom - top < MIN_MARKER_SIZE) {
+    if (turfDragState.handle.includes('n')) {
+      top = bottom - MIN_MARKER_SIZE;
+    } else {
+      bottom = top + MIN_MARKER_SIZE;
+    }
+  }
+
+  const width = right - left;
+  const height = bottom - top;
+  left = clamp(left, 0, MAP_SIZE - width);
+  top = clamp(top, 0, MAP_SIZE - height);
+  right = left + width;
+  bottom = top + height;
+
+  updateTurfRect(turfDragState.id, [left, top, right, bottom]);
+}
+
+function stopTurfEdit() {
+  if (turfDragState?.moved) {
+    saveTurfRecords();
+  }
+
+  turfDragState = null;
+}
+
 function setZoom(nextZoom, keepCenter = true) {
   const previousScale = getMarkerScale();
   const centerX = elements.mapWrap.scrollLeft + elements.mapWrap.clientWidth / 2;
@@ -1151,16 +1619,41 @@ function setZoom(nextZoom, keepCenter = true) {
   }
 }
 
+function setTurfZoom(nextZoom, keepCenter = true) {
+  const previousScale = getTurfScale();
+  const centerX = elements.turfMapWrap.scrollLeft + elements.turfMapWrap.clientWidth / 2;
+  const centerY = elements.turfMapWrap.scrollTop + elements.turfMapWrap.clientHeight / 2;
+  const mapX = centerX / previousScale;
+  const mapY = centerY / previousScale;
+
+  turfZoom = Math.min(6, Math.max(0.45, nextZoom));
+  const displaySize = Math.round(BASE_DISPLAY_SIZE * turfZoom);
+  elements.turfMapSurface.style.setProperty('--map-width', `${displaySize}px`);
+  elements.turfZoomRange.value = String(turfZoom);
+  elements.turfZoomValue.textContent = `${Math.round(turfZoom * 100)}%`;
+
+  if (keepCenter) {
+    const nextScale = getTurfScale();
+    elements.turfMapWrap.scrollLeft = mapX * nextScale - elements.turfMapWrap.clientWidth / 2;
+    elements.turfMapWrap.scrollTop = mapY * nextScale - elements.turfMapWrap.clientHeight / 2;
+  }
+}
+
 function setEditMode(enabled) {
   editMode = enabled;
   elements.editModeLock.setAttribute('aria-pressed', String(editMode));
   elements.editModeLock.setAttribute('aria-label', editMode ? 'Lock edit mode' : 'Unlock edit mode');
   elements.markers.classList.toggle('editing', editMode);
-  document.querySelector('.status-panel').classList.toggle('editing', editMode);
+  elements.turfMarkers.classList.toggle('editing', editMode);
+  for (const panel of document.querySelectorAll('.status-panel')) {
+    panel.classList.toggle('editing', editMode);
+  }
   document.body.classList.toggle('editing', editMode);
   elements.addBox.disabled = !editMode;
   elements.exportBoxes.disabled = !editMode;
   elements.undoEdit.disabled = !editMode;
+  elements.addTurf.disabled = !editMode;
+  elements.undoTurfEdit.disabled = !editMode;
   for (const button of elements.directoryAddButtons) {
     button.disabled = !editMode;
   }
@@ -1169,6 +1662,7 @@ function setEditMode(enabled) {
   }
   setPublishStatus(editMode ? 'Live save ready' : 'Live save locked');
   setPropertyEditorsDisabled(!editMode || !selectedMarkerId);
+  setTurfEditorsDisabled(!editMode || !selectedTurfId);
 }
 
 function openPasswordDialog() {
@@ -1513,6 +2007,7 @@ function stopMarkerEdit() {
 
 function removeSelectedMarker() {
   if (!editMode || !selectedMarkerId) {
+    removeSelectedTurf();
     return;
   }
 
@@ -1528,6 +2023,29 @@ function removeSelectedMarker() {
   selectedMarkerId = null;
   activeMarker = null;
   renderMarkers();
+}
+
+function removeSelectedTurf() {
+  if (!editMode || !selectedTurfId) {
+    return;
+  }
+
+  const turf = mafiaTurfs.find(entry => entry.id === selectedTurfId);
+
+  if (!turf || turf.removed) {
+    return;
+  }
+
+  turfUndoStack.push({
+    id: turf.id,
+    before: turfSnapshot(turf)
+  });
+  turf.removed = true;
+  saveTurfRecords();
+  selectedTurfId = null;
+  activeTurf = null;
+  renderTurfs();
+  renderTurfOptions();
 }
 
 function handleKeyboardEdit(event) {
@@ -1546,6 +2064,11 @@ function handleKeyboardEdit(event) {
 
   if (event.key === 'Backspace' || event.key === 'Delete') {
     event.preventDefault();
+    if (selectedTurfId && document.querySelector('#mafiaTurfMapView').classList.contains('active')) {
+      removeSelectedTurf();
+      return;
+    }
+
     removeSelectedMarker();
   }
 }
@@ -1591,12 +2114,14 @@ async function init() {
   }
 
   if (!loadedLiveData) {
-    const [propertiesResponse, markersResponse] = await Promise.all([
+    const [propertiesResponse, markersResponse, turfResponse] = await Promise.all([
       fetch('/properties.json'),
-      fetch('/property-markers.json')
+      fetch('/property-markers.json'),
+      fetch('/mafia-turfs.json')
     ]);
     properties = await propertiesResponse.json();
     propertyMarkers = await markersResponse.json();
+    mafiaTurfs = await turfResponse.json();
     try {
       const orgsResponse = await fetch('/orgs.json');
       directoryRecords = await orgsResponse.json();
@@ -1611,6 +2136,7 @@ async function init() {
       };
     }
     applyStoredDirectoryRecords();
+    applyStoredTurfRecords();
     applyStoredCustomProperties();
     applyStoredPropertyEdits();
     applyStoredMarkerEdits();
@@ -1619,10 +2145,14 @@ async function init() {
 
   renderOptions();
   renderMarkers();
+  renderTurfOptions();
+  renderTurfs();
   renderDirectoryLists();
   elements.addBox.disabled = true;
   elements.exportBoxes.disabled = true;
   elements.undoEdit.disabled = true;
+  elements.addTurf.disabled = true;
+  elements.undoTurfEdit.disabled = true;
   for (const button of elements.directoryAddButtons) {
     button.disabled = true;
     button.addEventListener('click', () => addDirectoryRecord(button.dataset.directoryAdd));
@@ -1643,6 +2173,9 @@ async function init() {
   elements.zoomIn.addEventListener('click', () => setZoom(zoom + 0.5));
   elements.zoomOut.addEventListener('click', () => setZoom(zoom - 0.35));
   elements.zoomRange.addEventListener('input', event => setZoom(Number(event.target.value)));
+  elements.turfZoomIn.addEventListener('click', () => setTurfZoom(turfZoom + 0.5));
+  elements.turfZoomOut.addEventListener('click', () => setTurfZoom(turfZoom - 0.35));
+  elements.turfZoomRange.addEventListener('input', event => setTurfZoom(Number(event.target.value)));
   elements.mapWrap.addEventListener('wheel', event => {
     if (!event.ctrlKey && !event.metaKey) {
       return;
@@ -1650,6 +2183,14 @@ async function init() {
 
     event.preventDefault();
     setZoom(zoom + (event.deltaY < 0 ? 0.35 : -0.25));
+  }, { passive: false });
+  elements.turfMapWrap.addEventListener('wheel', event => {
+    if (!event.ctrlKey && !event.metaKey) {
+      return;
+    }
+
+    event.preventDefault();
+    setTurfZoom(turfZoom + (event.deltaY < 0 ? 0.35 : -0.25));
   }, { passive: false });
   elements.editModeLock.addEventListener('click', () => {
     if (editMode) {
@@ -1689,6 +2230,25 @@ async function init() {
   });
   elements.undoEdit.addEventListener('click', undoLastEdit);
   elements.addBox.addEventListener('click', createNewBox);
+  elements.undoTurfEdit.addEventListener('click', undoLastTurfEdit);
+  elements.addTurf.addEventListener('click', createNewTurf);
+  elements.toggleTurfKey.addEventListener('click', () => {
+    const isOpen = !elements.turfKeyPanel.hidden;
+    elements.turfKeyPanel.hidden = isOpen;
+    elements.toggleTurfKey.setAttribute('aria-expanded', String(!isOpen));
+  });
+  elements.turfSearch.addEventListener('change', () => {
+    const value = elements.turfSearch.value.trim().toLowerCase();
+    const match = mafiaTurfs.find(turf => {
+      return `${turfLabel(turf)} - ${turf.owner} - ${turf.status}`.toLowerCase() === value ||
+        turf.number.toLowerCase() === value ||
+        turf.owner.toLowerCase() === value;
+    });
+
+    if (match) {
+      selectTurf(match.id);
+    }
+  });
   elements.exportBoxes.addEventListener('click', () => {
     exportBoxes().catch(() => {
       elements.exportBoxes.textContent = 'Download Ready';
@@ -1704,10 +2264,16 @@ async function init() {
     }
   }
   elements.buildingTypeEdit.addEventListener('change', updateSelectedBuildingType);
+  elements.turfNumberEdit.addEventListener('input', event => updateSelectedTurfField('number', event.currentTarget.value));
+  elements.turfOwnerEdit.addEventListener('input', event => updateSelectedTurfField('owner', event.currentTarget.value));
+  elements.turfStatusEdit.addEventListener('change', event => updateSelectedTurfField('status', event.currentTarget.value));
   window.addEventListener('keydown', handleKeyboardEdit);
   window.addEventListener('pointermove', moveMarkerEdit);
+  window.addEventListener('pointermove', moveTurfEdit);
   window.addEventListener('pointerup', stopMarkerEdit);
+  window.addEventListener('pointerup', stopTurfEdit);
   setZoom(1, false);
+  setTurfZoom(1, false);
   startLiveDataSync();
 }
 

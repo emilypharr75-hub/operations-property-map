@@ -71,7 +71,8 @@ function versionFor(data) {
     .update(JSON.stringify({
       properties: data.properties || [],
       markers: data.markers || [],
-      orgs: data.orgs || {}
+      orgs: data.orgs || {},
+      turfs: data.turfs || []
     }))
     .digest('hex');
 }
@@ -152,6 +153,7 @@ function compactLiveData(data) {
     properties: Array.isArray(data.properties) ? data.properties : [],
     markers: Array.isArray(data.markers) ? data.markers : [],
     orgs: compactOrgs(data.orgs),
+    turfs: Array.isArray(data.turfs) ? data.turfs : [],
     updatedBy: data.updatedBy || '',
     updatedAt: data.updatedAt,
     version: data.version
@@ -236,16 +238,18 @@ module.exports = async function handler(request, response) {
       return;
     }
 
-    const [properties, markers, orgs] = await Promise.all([
+    const [properties, markers, orgs, turfs] = await Promise.all([
       fetchRepoJson('public/properties.json', ref),
       fetchRepoJson('public/property-markers.json', ref),
-      fetchRepoJson('public/orgs.json', ref)
+      fetchRepoJson('public/orgs.json', ref),
+      fetchRepoJson('public/mafia-turfs.json', ref).catch(() => [])
     ]);
 
     jsonResponse(response, 200, {
       properties,
       markers,
       orgs: compactOrgs(orgs),
+      turfs,
       version: ref,
       source: 'github',
       checkedAt: new Date().toISOString()
