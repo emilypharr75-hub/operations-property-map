@@ -302,8 +302,7 @@ body {
   box-shadow: none;
 }
 
-.markers.editing .marker,
-.turf-markers.editing .turf-marker {
+.markers.editing .marker {
   cursor: move;
   pointer-events: auto;
 }
@@ -320,10 +319,13 @@ body {
 }
 
 .markers.editing .resize-handle,
-.markers.editing .rotate-handle,
-.turf-markers.editing .resize-handle,
-.turf-markers.editing .rotate-handle {
+.markers.editing .rotate-handle {
   display: block;
+}
+
+.turf-marker.active .resize-handle,
+.turf-marker.active .rotate-handle {
+  display: none;
 }
 
 .rotate-handle {

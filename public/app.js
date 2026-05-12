@@ -835,7 +835,7 @@ function buildOutsideMask(lineData) {
   return outside;
 }
 
-function drawTurfFallbackRegion(output, hitMap, outsideMask, turf, turfIndex) {
+function drawTurfFallbackRegion(output, hitMap, turf, turfIndex) {
   const [left, top, right, bottom] = turf.rect.map(value => Math.round((value / MAP_SIZE) * TURF_CANVAS_SIZE));
   const [red, green, blue] = parseHslColor(turfColorFor(turf.owner));
   const alpha = turfFillAlpha(turf);
@@ -843,11 +843,6 @@ function drawTurfFallbackRegion(output, hitMap, outsideMask, turf, turfIndex) {
   for (let y = Math.max(0, top); y < Math.min(TURF_CANVAS_SIZE, bottom); y++) {
     for (let x = Math.max(0, left); x < Math.min(TURF_CANVAS_SIZE, right); x++) {
       const index = y * TURF_CANVAS_SIZE + x;
-
-      if (outsideMask?.[index]) {
-        continue;
-      }
-
       const offset = (y * TURF_CANVAS_SIZE + x) * 4;
       output[offset] = red;
       output[offset + 1] = green;
@@ -858,94 +853,138 @@ function drawTurfFallbackRegion(output, hitMap, outsideMask, turf, turfIndex) {
   }
 }
 
-function floodFillTurfRegion(lineData, output, hitMap, outsideMask, turf, turfIndex) {
+function detectTurfRegions(lineData, outsideMask) {
   const width = TURF_CANVAS_SIZE;
   const height = TURF_CANVAS_SIZE;
-  const [seedX, seedY] = turfSeedPoint(turf);
-  const [boundLeft, boundTop, boundRight, boundBottom] = turf.rect.map(value => Math.round((value / MAP_SIZE) * TURF_CANVAS_SIZE));
-  const minX = clamp(boundLeft - 3, 0, width - 1);
-  const minY = clamp(boundTop - 3, 0, height - 1);
-  const maxX = clamp(boundRight + 3, 0, width - 1);
-  const maxY = clamp(boundBottom + 3, 0, height - 1);
-
-  if (seedX < 0 || seedY < 0 || seedX >= width || seedY >= height) {
-    return false;
-  }
-
-  if (seedX < minX || seedX > maxX || seedY < minY || seedY > maxY) {
-    return false;
-  }
-
-  const startIndex = seedY * width + seedX;
-
-  if (outsideMask?.[startIndex]) {
-    return false;
-  }
-
-  if (hitMap[startIndex]) {
-    return true;
-  }
-
   const visited = new Uint8Array(width * height);
-  const queue = [startIndex];
-  const filled = [];
-  const [red, green, blue] = parseHslColor(turfColorFor(turf.owner));
-  const alpha = turfFillAlpha(turf);
-  visited[startIndex] = 1;
+  const componentMap = new Uint16Array(width * height);
+  const regions = [];
 
-  for (let cursor = 0; cursor < queue.length; cursor++) {
-    const index = queue[cursor];
-
-    if (isLinePixel(lineData, index) || outsideMask?.[index]) {
+  for (let start = 0; start < visited.length; start++) {
+    if (visited[start] || outsideMask[start] || isLinePixel(lineData, start)) {
       continue;
     }
 
-    filled.push(index);
-    const x = index % width;
-    const y = Math.floor(index / width);
+    const queue = [start];
+    const pixels = [];
+    let minX = width;
+    let minY = height;
+    let maxX = 0;
+    let maxY = 0;
+    let sumX = 0;
+    let sumY = 0;
+    visited[start] = 1;
 
-    if (x > minX) {
-      const next = index - 1;
-      if (!visited[next]) {
-        visited[next] = 1;
-        queue.push(next);
+    for (let cursor = 0; cursor < queue.length; cursor++) {
+      const index = queue[cursor];
+
+      if (outsideMask[index] || isLinePixel(lineData, index)) {
+        continue;
+      }
+
+      const x = index % width;
+      const y = Math.floor(index / width);
+      pixels.push(index);
+      sumX += x;
+      sumY += y;
+      minX = Math.min(minX, x);
+      minY = Math.min(minY, y);
+      maxX = Math.max(maxX, x);
+      maxY = Math.max(maxY, y);
+
+      if (x > 0) {
+        const next = index - 1;
+        if (!visited[next]) {
+          visited[next] = 1;
+          queue.push(next);
+        }
+      }
+
+      if (x < width - 1) {
+        const next = index + 1;
+        if (!visited[next]) {
+          visited[next] = 1;
+          queue.push(next);
+        }
+      }
+
+      if (y > 0) {
+        const next = index - width;
+        if (!visited[next]) {
+          visited[next] = 1;
+          queue.push(next);
+        }
+      }
+
+      if (y < height - 1) {
+        const next = index + width;
+        if (!visited[next]) {
+          visited[next] = 1;
+          queue.push(next);
+        }
       }
     }
 
-    if (x < maxX) {
-      const next = index + 1;
-      if (!visited[next]) {
-        visited[next] = 1;
-        queue.push(next);
-      }
+    if (pixels.length < 450) {
+      continue;
     }
 
-    if (y > minY) {
-      const next = index - width;
-      if (!visited[next]) {
-        visited[next] = 1;
-        queue.push(next);
-      }
+    const region = {
+      id: regions.length + 1,
+      pixels,
+      minX,
+      minY,
+      maxX,
+      maxY,
+      centerX: sumX / pixels.length,
+      centerY: sumY / pixels.length
+    };
+
+    for (const index of pixels) {
+      componentMap[index] = region.id;
     }
 
-    if (y < maxY) {
-      const next = index + width;
-      if (!visited[next]) {
-        visited[next] = 1;
-        queue.push(next);
-      }
+    regions.push(region);
+  }
+
+  return { regions, componentMap };
+}
+
+function regionForTurf(turf, regions, componentMap, usedRegions) {
+  const [seedX, seedY] = turfSeedPoint(turf);
+  const seedIndex = seedY * TURF_CANVAS_SIZE + seedX;
+  const seededRegionId = componentMap[seedIndex];
+
+  if (seededRegionId && !usedRegions.has(seededRegionId)) {
+    return regions.find(region => region.id === seededRegionId) || null;
+  }
+
+  let bestRegion = null;
+  let bestDistance = Infinity;
+
+  for (const region of regions) {
+    if (usedRegions.has(region.id)) {
+      continue;
     }
 
-    if (queue.length > (maxX - minX + 1) * (maxY - minY + 1) * 0.95) {
-      return false;
+    const dx = region.centerX - seedX;
+    const dy = region.centerY - seedY;
+    const distance = dx * dx + dy * dy;
+
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      bestRegion = region;
     }
   }
 
-  if (filled.length < 200) {
-    return false;
-  }
+  return bestRegion;
+}
 
-  for (const index of filled) {
+function drawTurfRegion(output, hitMap, turf, turfIndex, region) {
+  const [red, green, blue] = parseHslColor(turfColorFor(turf.owner));
+  const alpha = turfFillAlpha(turf);
+
+  for (const index of region.pixels) {
     const offset = index * 4;
     output[offset] = red;
     output[offset + 1] = green;
@@ -953,8 +992,6 @@ function floodFillTurfRegion(lineData, output, hitMap, outsideMask, turf, turfIn
     output[offset + 3] = alpha;
     hitMap[index] = turfIndex + 1;
   }
-
-  return true;
 }
 
 function drawTurfLineImage(context, image) {
@@ -964,6 +1001,27 @@ function drawTurfLineImage(context, image) {
   context.shadowColor = '#000000';
   context.shadowBlur = 4;
   context.drawImage(image, placement.x, placement.y, placement.width, placement.height);
+  context.restore();
+}
+
+function drawTurfNumbers(context, assignments) {
+  context.save();
+  context.textAlign = 'center';
+  context.textBaseline = 'middle';
+  context.font = 'bold 24px Arial, Helvetica, sans-serif';
+  context.lineWidth = 5;
+  context.strokeStyle = '#000000';
+  context.fillStyle = '#ffffff';
+
+  for (const { turf, region } of assignments) {
+    if (!turf.number) {
+      continue;
+    }
+
+    context.strokeText(turf.number, region.centerX, region.centerY);
+    context.fillText(turf.number, region.centerX, region.centerY);
+  }
+
   context.restore();
 }
 
@@ -1000,18 +1058,28 @@ function renderTurfShapeCanvas() {
     const activeTurfs = mafiaTurfs.filter(entry => !entry.removed);
     const hitMap = new Uint16Array(TURF_CANVAS_SIZE * TURF_CANVAS_SIZE);
     const outsideMask = buildOutsideMask(lineImage.data);
+    const { regions, componentMap } = detectTurfRegions(lineImage.data, outsideMask);
+    const usedRegions = new Set();
+    const assignments = [];
 
     turfHitIds = activeTurfs.map(turf => turf.id);
 
     activeTurfs.forEach((turf, index) => {
-      if (!floodFillTurfRegion(lineImage.data, fillImage.data, hitMap, outsideMask, turf, index)) {
-        drawTurfFallbackRegion(fillImage.data, hitMap, outsideMask, turf, index);
+      const region = regionForTurf(turf, regions, componentMap, usedRegions);
+
+      if (region) {
+        usedRegions.add(region.id);
+        assignments.push({ turf, region });
+        drawTurfRegion(fillImage.data, hitMap, turf, index, region);
+      } else {
+        drawTurfFallbackRegion(fillImage.data, hitMap, turf, index);
       }
     });
 
     context.clearRect(0, 0, TURF_CANVAS_SIZE, TURF_CANVAS_SIZE);
     context.putImageData(fillImage, 0, 0);
     drawTurfLineImage(context, image);
+    drawTurfNumbers(context, assignments);
     turfHitMap = hitMap;
     turfOutsideMask = outsideMask;
   };
@@ -1021,7 +1089,7 @@ function renderTurfShapeCanvas() {
     const hitMap = new Uint16Array(TURF_CANVAS_SIZE * TURF_CANVAS_SIZE);
     turfHitIds = activeTurfs.map(turf => turf.id);
 
-    activeTurfs.forEach((turf, index) => drawTurfFallbackRegion(fillImage.data, hitMap, null, turf, index));
+    activeTurfs.forEach((turf, index) => drawTurfFallbackRegion(fillImage.data, hitMap, turf, index));
     context.clearRect(0, 0, TURF_CANVAS_SIZE, TURF_CANVAS_SIZE);
     context.putImageData(fillImage, 0, 0);
     turfHitMap = hitMap;
