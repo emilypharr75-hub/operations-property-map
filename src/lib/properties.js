@@ -95,6 +95,10 @@ function normalizeBuildingType(value) {
     return 'House';
   }
 
+  if (text === 'mafia') {
+    return 'Mafia';
+  }
+
   return text ? text.replace(/\b\w/g, letter => letter.toUpperCase()) : 'Building';
 }
 

@@ -758,6 +758,10 @@ function normalizeBuildingType(value) {
     return 'government';
   }
 
+  if (normalized === 'mafia') {
+    return 'mafia';
+  }
+
   return 'building';
 }
 
@@ -784,6 +788,10 @@ function formatBuildingType(type) {
     return 'House';
   }
 
+  if (normalized === 'mafia') {
+    return 'Mafia';
+  }
+
   return 'Building';
 }
 
@@ -800,6 +808,10 @@ function markerColorFor(property) {
 
   if (type === 'government') {
     return '#050505';
+  }
+
+  if (type === 'mafia') {
+    return '#d92323';
   }
 
   return '#f28c28';
