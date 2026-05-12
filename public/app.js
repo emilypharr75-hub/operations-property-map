@@ -744,7 +744,7 @@ function isSelectableProperty(property) {
 }
 
 function normalizeBuildingType(value) {
-  const normalized = value.toLowerCase();
+  const normalized = String(value || '').trim().toLowerCase();
 
   if (normalized === 'office building') {
     return 'office building';
@@ -766,11 +766,17 @@ function normalizeBuildingType(value) {
 }
 
 function inferBuildingType(property) {
+  const explicitType = normalizeBuildingType(property.buildingType);
+
+  if (['government', 'house', 'mafia', 'office building'].includes(explicitType)) {
+    return explicitType;
+  }
+
   if (property.name.toLowerCase().includes('office building')) {
     return 'office building';
   }
 
-  return normalizeBuildingType(property.buildingType);
+  return explicitType;
 }
 
 function formatBuildingType(type) {
