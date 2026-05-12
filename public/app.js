@@ -31,6 +31,7 @@ const elements = {
   turfDatalist: document.querySelector('#turfOptions'),
   turfMapSurface: document.querySelector('#turfMapSurface'),
   turfMapWrap: document.querySelector('#turfMapWrap'),
+  turfReferenceCanvas: document.querySelector('#turfReferenceCanvas'),
   turfMarkers: document.querySelector('#turfMarkers'),
   turfSearch: document.querySelector('#turfSearch'),
   turfZoomIn: document.querySelector('#turfZoomIn'),
@@ -647,6 +648,59 @@ function renderTurfOptions() {
     option.dataset.id = turf.id;
     elements.turfDatalist.append(option);
   }
+}
+
+function drawTurfFallbackOutlines(context) {
+  context.save();
+  context.clearRect(0, 0, MAP_SIZE, MAP_SIZE);
+  context.lineWidth = 7;
+  context.strokeStyle = '#ffffff';
+  context.shadowColor = '#000000';
+  context.shadowBlur = 8;
+
+  for (const turf of mafiaTurfs.filter(entry => !entry.removed)) {
+    const [left, top, right, bottom] = turf.rect;
+    context.strokeRect(left, top, right - left, bottom - top);
+  }
+
+  context.restore();
+}
+
+function renderTurfReferenceCanvas() {
+  const canvas = elements.turfReferenceCanvas;
+
+  if (!canvas) {
+    return;
+  }
+
+  const context = canvas.getContext('2d');
+
+  if (!context) {
+    return;
+  }
+
+  canvas.width = MAP_SIZE;
+  canvas.height = MAP_SIZE;
+  const image = new Image();
+  image.onload = () => {
+    context.clearRect(0, 0, MAP_SIZE, MAP_SIZE);
+    context.drawImage(image, 0, 0, MAP_SIZE, MAP_SIZE);
+    context.save();
+    context.globalAlpha = 0.95;
+    context.lineWidth = 8;
+    context.strokeStyle = '#ffffff';
+    context.shadowColor = '#000000';
+    context.shadowBlur = 7;
+
+    for (const turf of mafiaTurfs.filter(entry => !entry.removed)) {
+      const [left, top, right, bottom] = turf.rect;
+      context.strokeRect(left, top, right - left, bottom - top);
+    }
+
+    context.restore();
+  };
+  image.onerror = () => drawTurfFallbackOutlines(context);
+  image.src = `/assets/mafia-turf-lines-v3.png?v=4`;
 }
 
 function selectTurf(id) {
@@ -1411,6 +1465,7 @@ function updateMarkerRotation(id, rotation) {
 
 function renderTurfs() {
   elements.turfMarkers.textContent = '';
+  renderTurfReferenceCanvas();
 
   for (const turf of mafiaTurfs) {
     if (turf.removed) {
