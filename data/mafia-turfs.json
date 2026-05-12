@@ -1,2 +1,392 @@
-[]
-
+[
+  {
+    "id": "turf-01",
+    "number": "1",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
+    "rect": [
+      698,
+      9,
+      1676,
+      714
+    ],
+    "rotation": 0
+  },
+  {
+    "id": "turf-02",
+    "number": "2",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
+    "rect": [
+      1252,
+      60,
+      2050,
+      831
+    ],
+    "rotation": 0
+  },
+  {
+    "id": "turf-03",
+    "number": "3",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
+    "rect": [
+      2048,
+      179,
+      2993,
+      1100
+    ],
+    "rotation": 0
+  },
+  {
+    "id": "turf-04",
+    "number": "4",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
+    "rect": [
+      1775,
+      320,
+      2268,
+      985
+    ],
+    "rotation": 0
+  },
+  {
+    "id": "turf-05",
+    "number": "5",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
+    "rect": [
+      26,
+      324,
+      695,
+      1511
+    ],
+    "rotation": 0
+  },
+  {
+    "id": "turf-06",
+    "number": "6",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
+    "rect": [
+      966,
+      324,
+      1691,
+      1240
+    ],
+    "rotation": 0
+  },
+  {
+    "id": "turf-07",
+    "number": "7",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
+    "rect": [
+      698,
+      460,
+      1165,
+      1511
+    ],
+    "rotation": 0
+  },
+  {
+    "id": "turf-08",
+    "number": "8",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
+    "rect": [
+      2254,
+      737,
+      2509,
+      1468
+    ],
+    "rotation": 0
+  },
+  {
+    "id": "turf-09",
+    "number": "9",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
+    "rect": [
+      2513,
+      737,
+      2803,
+      1358
+    ],
+    "rotation": 0
+  },
+  {
+    "id": "turf-10",
+    "number": "10",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
+    "rect": [
+      1693,
+      835,
+      2106,
+      1170
+    ],
+    "rotation": 0
+  },
+  {
+    "id": "turf-11",
+    "number": "11",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
+    "rect": [
+      333,
+      867,
+      695,
+      1511
+    ],
+    "rotation": 0
+  },
+  {
+    "id": "turf-12",
+    "number": "12",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
+    "rect": [
+      1545,
+      989,
+      2266,
+      1724
+    ],
+    "rotation": 0
+  },
+  {
+    "id": "turf-13",
+    "number": "13",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
+    "rect": [
+      2482,
+      1102,
+      2984,
+      1877
+    ],
+    "rotation": 0
+  },
+  {
+    "id": "turf-14",
+    "number": "14",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
+    "rect": [
+      2605,
+      1132,
+      3108,
+      2174
+    ],
+    "rotation": 0
+  },
+  {
+    "id": "turf-15",
+    "number": "15",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
+    "rect": [
+      1163,
+      1243,
+      1533,
+      1860
+    ],
+    "rotation": 0
+  },
+  {
+    "id": "turf-16",
+    "number": "16",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
+    "rect": [
+      1376,
+      1253,
+      1808,
+      1861
+    ],
+    "rotation": 0
+  },
+  {
+    "id": "turf-17",
+    "number": "17",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
+    "rect": [
+      2244,
+      1285,
+      2554,
+      2116
+    ],
+    "rotation": 0
+  },
+  {
+    "id": "turf-18",
+    "number": "18",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
+    "rect": [
+      15,
+      1515,
+      695,
+      2027
+    ],
+    "rotation": 0
+  },
+  {
+    "id": "turf-19",
+    "number": "19",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
+    "rect": [
+      698,
+      1515,
+      1172,
+      2052
+    ],
+    "rotation": 0
+  },
+  {
+    "id": "turf-20",
+    "number": "20",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
+    "rect": [
+      1638,
+      1592,
+      2149,
+      2274
+    ],
+    "rotation": 0
+  },
+  {
+    "id": "turf-21",
+    "number": "21",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
+    "rect": [
+      2151,
+      1724,
+      2544,
+      2979
+    ],
+    "rotation": 0
+  },
+  {
+    "id": "turf-22",
+    "number": "22",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
+    "rect": [
+      2334,
+      1858,
+      3108,
+      2461
+    ],
+    "rotation": 0
+  },
+  {
+    "id": "turf-23",
+    "number": "23",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
+    "rect": [
+      1173,
+      1863,
+      1660,
+      2517
+    ],
+    "rotation": 0
+  },
+  {
+    "id": "turf-24",
+    "number": "24",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
+    "rect": [
+      566,
+      1912,
+      1172,
+      2395
+    ],
+    "rotation": 0
+  },
+  {
+    "id": "turf-25",
+    "number": "25",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
+    "rect": [
+      10,
+      2023,
+      564,
+      2988
+    ],
+    "rotation": 0
+  },
+  {
+    "id": "turf-26",
+    "number": "26",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
+    "rect": [
+      1492,
+      2042,
+      2247,
+      2949
+    ],
+    "rotation": 0
+  },
+  {
+    "id": "turf-27",
+    "number": "27",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
+    "rect": [
+      532,
+      2265,
+      1172,
+      2707
+    ],
+    "rotation": 0
+  },
+  {
+    "id": "turf-28",
+    "number": "28",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
+    "rect": [
+      2515,
+      2316,
+      3072,
+      2988
+    ],
+    "rotation": 0
+  },
+  {
+    "id": "turf-29",
+    "number": "29",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
+    "rect": [
+      1031,
+      2410,
+      1544,
+      3024
+    ],
+    "rotation": 0
+  },
+  {
+    "id": "turf-30",
+    "number": "30",
+    "owner": "Unclaimed",
+    "status": "Unclaimed",
+    "rect": [
+      364,
+      2594,
+      1027,
+      3107
+    ],
+    "rotation": 0
+  }
+]

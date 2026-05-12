@@ -213,8 +213,15 @@ module.exports = async function handler(request, response) {
           return;
         }
 
+        const compactedLiveData = compactLiveData(liveData);
+
+        if (!compactedLiveData.turfs.length) {
+          const ref = await fetchGithubRef();
+          compactedLiveData.turfs = await fetchRepoJson('public/mafia-turfs.json', ref).catch(() => []);
+        }
+
         jsonResponse(response, 200, {
-          ...compactLiveData(liveData),
+          ...compactedLiveData,
           version,
           source: 'live-store',
           checkedAt: new Date().toISOString()
