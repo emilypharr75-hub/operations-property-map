@@ -1,6 +1,7 @@
 const MAP_SIZE = 3120;
 const BASE_DISPLAY_SIZE = 1800;
 const DEFAULT_MARKER_COLOR = '#ff3535';
+const TURF_CANVAS_SIZE = 1040;
 const DATA_VERSION = 'imported-boxes-2026-05-03-clean';
 const DATA_VERSION_STORAGE_KEY = 'erlcPropertyMapDataVersion';
 const MARKER_STORAGE_KEY = 'erlcPropertyMarkerEdits';
@@ -31,7 +32,7 @@ const elements = {
   turfDatalist: document.querySelector('#turfOptions'),
   turfMapSurface: document.querySelector('#turfMapSurface'),
   turfMapWrap: document.querySelector('#turfMapWrap'),
-  turfReferenceCanvas: document.querySelector('#turfReferenceCanvas'),
+  turfShapeCanvas: document.querySelector('#turfShapeCanvas'),
   turfMarkers: document.querySelector('#turfMarkers'),
   turfSearch: document.querySelector('#turfSearch'),
   turfZoomIn: document.querySelector('#turfZoomIn'),
@@ -102,6 +103,8 @@ let turfZoom = 1;
 let editMode = false;
 let dragState = null;
 let turfDragState = null;
+let turfHitMap = null;
+let turfHitIds = [];
 let undoStack = [];
 let turfUndoStack = [];
 let editSessionPassword = '';
@@ -593,6 +596,13 @@ function turfColorFor(owner) {
   return hashColor(text.toLowerCase());
 }
 
+function isUnclaimedTurf(turf) {
+  const owner = String(turf.owner || '').trim().toLowerCase();
+  const status = String(turf.status || '').trim().toLowerCase();
+
+  return !owner || owner === 'unclaimed' || owner === 'n/a' || status === 'unclaimed';
+}
+
 function renderTurfKey() {
   if (!elements.turfKeyList) {
     return;
@@ -650,24 +660,208 @@ function renderTurfOptions() {
   }
 }
 
-function drawTurfFallbackOutlines(context) {
-  context.save();
-  context.clearRect(0, 0, MAP_SIZE, MAP_SIZE);
-  context.lineWidth = 7;
-  context.strokeStyle = '#ffffff';
-  context.shadowColor = '#000000';
-  context.shadowBlur = 8;
+function parseHexColor(value) {
+  const fallback = [122, 130, 138];
+  const match = String(value || '').match(/^#([a-f0-9]{6})$/i);
 
-  for (const turf of mafiaTurfs.filter(entry => !entry.removed)) {
-    const [left, top, right, bottom] = turf.rect;
-    context.strokeRect(left, top, right - left, bottom - top);
+  if (!match) {
+    return fallback;
   }
 
+  const hex = match[1];
+  return [
+    Number.parseInt(hex.slice(0, 2), 16),
+    Number.parseInt(hex.slice(2, 4), 16),
+    Number.parseInt(hex.slice(4, 6), 16)
+  ];
+}
+
+function parseHslColor(value) {
+  const match = String(value || '').match(/^hsl\((\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)%\s+(\d+(?:\.\d+)?)%\)$/i);
+
+  if (!match) {
+    return parseHexColor(value);
+  }
+
+  const hue = Number(match[1]) / 360;
+  const saturation = Number(match[2]) / 100;
+  const lightness = Number(match[3]) / 100;
+  const helper = (p, q, t) => {
+    let next = t;
+
+    if (next < 0) {
+      next += 1;
+    }
+
+    if (next > 1) {
+      next -= 1;
+    }
+
+    if (next < 1 / 6) {
+      return p + (q - p) * 6 * next;
+    }
+
+    if (next < 1 / 2) {
+      return q;
+    }
+
+    if (next < 2 / 3) {
+      return p + (q - p) * (2 / 3 - next) * 6;
+    }
+
+    return p;
+  };
+
+  if (saturation === 0) {
+    const gray = Math.round(lightness * 255);
+    return [gray, gray, gray];
+  }
+
+  const q = lightness < 0.5
+    ? lightness * (1 + saturation)
+    : lightness + saturation - lightness * saturation;
+  const p = 2 * lightness - q;
+
+  return [
+    Math.round(helper(p, q, hue + 1 / 3) * 255),
+    Math.round(helper(p, q, hue) * 255),
+    Math.round(helper(p, q, hue - 1 / 3) * 255)
+  ];
+}
+
+function turfSeedPoint(turf) {
+  const [left, top, right, bottom] = turf.rect;
+
+  return [
+    Math.round(((left + right) / 2 / MAP_SIZE) * TURF_CANVAS_SIZE),
+    Math.round(((top + bottom) / 2 / MAP_SIZE) * TURF_CANVAS_SIZE)
+  ];
+}
+
+function drawTurfFallbackRegion(output, hitMap, turf, turfIndex) {
+  const [left, top, right, bottom] = turf.rect.map(value => Math.round((value / MAP_SIZE) * TURF_CANVAS_SIZE));
+  const [red, green, blue] = parseHslColor(turfColorFor(turf.owner));
+  const alpha = isUnclaimedTurf(turf) ? 0 : 76;
+
+  for (let y = Math.max(0, top); y < Math.min(TURF_CANVAS_SIZE, bottom); y++) {
+    for (let x = Math.max(0, left); x < Math.min(TURF_CANVAS_SIZE, right); x++) {
+      const offset = (y * TURF_CANVAS_SIZE + x) * 4;
+      output[offset] = red;
+      output[offset + 1] = green;
+      output[offset + 2] = blue;
+      output[offset + 3] = alpha;
+      hitMap[y * TURF_CANVAS_SIZE + x] = turfIndex + 1;
+    }
+  }
+}
+
+function floodFillTurfRegion(lineData, output, hitMap, turf, turfIndex) {
+  const width = TURF_CANVAS_SIZE;
+  const height = TURF_CANVAS_SIZE;
+  const [seedX, seedY] = turfSeedPoint(turf);
+  const [boundLeft, boundTop, boundRight, boundBottom] = turf.rect.map(value => Math.round((value / MAP_SIZE) * TURF_CANVAS_SIZE));
+  const minX = clamp(boundLeft - 3, 0, width - 1);
+  const minY = clamp(boundTop - 3, 0, height - 1);
+  const maxX = clamp(boundRight + 3, 0, width - 1);
+  const maxY = clamp(boundBottom + 3, 0, height - 1);
+
+  if (seedX < 0 || seedY < 0 || seedX >= width || seedY >= height) {
+    return false;
+  }
+
+  if (seedX < minX || seedX > maxX || seedY < minY || seedY > maxY) {
+    return false;
+  }
+
+  const startIndex = seedY * width + seedX;
+
+  if (hitMap[startIndex]) {
+    return true;
+  }
+
+  const isBlocked = index => lineData[index * 4 + 3] > 20;
+  const visited = new Uint8Array(width * height);
+  const queue = [startIndex];
+  const filled = [];
+  const [red, green, blue] = parseHslColor(turfColorFor(turf.owner));
+  const alpha = isUnclaimedTurf(turf) ? 0 : 76;
+  visited[startIndex] = 1;
+
+  for (let cursor = 0; cursor < queue.length; cursor++) {
+    const index = queue[cursor];
+
+    if (isBlocked(index)) {
+      continue;
+    }
+
+    filled.push(index);
+    const x = index % width;
+    const y = Math.floor(index / width);
+
+    if (x > minX) {
+      const next = index - 1;
+      if (!visited[next]) {
+        visited[next] = 1;
+        queue.push(next);
+      }
+    }
+
+    if (x < maxX) {
+      const next = index + 1;
+      if (!visited[next]) {
+        visited[next] = 1;
+        queue.push(next);
+      }
+    }
+
+    if (y > minY) {
+      const next = index - width;
+      if (!visited[next]) {
+        visited[next] = 1;
+        queue.push(next);
+      }
+    }
+
+    if (y < maxY) {
+      const next = index + width;
+      if (!visited[next]) {
+        visited[next] = 1;
+        queue.push(next);
+      }
+    }
+
+    if (queue.length > (maxX - minX + 1) * (maxY - minY + 1) * 0.95) {
+      return false;
+    }
+  }
+
+  if (filled.length < 200) {
+    return false;
+  }
+
+  for (const index of filled) {
+    const offset = index * 4;
+    output[offset] = red;
+    output[offset + 1] = green;
+    output[offset + 2] = blue;
+    output[offset + 3] = alpha;
+    hitMap[index] = turfIndex + 1;
+  }
+
+  return true;
+}
+
+function drawTurfLineImage(context, image) {
+  context.save();
+  context.globalAlpha = 0.95;
+  context.shadowColor = '#000000';
+  context.shadowBlur = 4;
+  context.drawImage(image, 0, 0, TURF_CANVAS_SIZE, TURF_CANVAS_SIZE);
   context.restore();
 }
 
-function renderTurfReferenceCanvas() {
-  const canvas = elements.turfReferenceCanvas;
+function renderTurfShapeCanvas() {
+  const canvas = elements.turfShapeCanvas;
 
   if (!canvas) {
     return;
@@ -679,28 +873,70 @@ function renderTurfReferenceCanvas() {
     return;
   }
 
-  canvas.width = MAP_SIZE;
-  canvas.height = MAP_SIZE;
+  canvas.width = TURF_CANVAS_SIZE;
+  canvas.height = TURF_CANVAS_SIZE;
   const image = new Image();
   image.onload = () => {
-    context.clearRect(0, 0, MAP_SIZE, MAP_SIZE);
-    context.drawImage(image, 0, 0, MAP_SIZE, MAP_SIZE);
-    context.save();
-    context.globalAlpha = 0.95;
-    context.lineWidth = 8;
-    context.strokeStyle = '#ffffff';
-    context.shadowColor = '#000000';
-    context.shadowBlur = 7;
+    const lineCanvas = document.createElement('canvas');
+    lineCanvas.width = TURF_CANVAS_SIZE;
+    lineCanvas.height = TURF_CANVAS_SIZE;
+    const lineContext = lineCanvas.getContext('2d', { willReadFrequently: true });
 
-    for (const turf of mafiaTurfs.filter(entry => !entry.removed)) {
-      const [left, top, right, bottom] = turf.rect;
-      context.strokeRect(left, top, right - left, bottom - top);
+    if (!lineContext) {
+      return;
     }
 
-    context.restore();
+    lineContext.drawImage(image, 0, 0, TURF_CANVAS_SIZE, TURF_CANVAS_SIZE);
+    const lineImage = lineContext.getImageData(0, 0, TURF_CANVAS_SIZE, TURF_CANVAS_SIZE);
+    const fillImage = context.createImageData(TURF_CANVAS_SIZE, TURF_CANVAS_SIZE);
+    const activeTurfs = mafiaTurfs.filter(entry => !entry.removed);
+    const hitMap = new Uint16Array(TURF_CANVAS_SIZE * TURF_CANVAS_SIZE);
+
+    turfHitIds = activeTurfs.map(turf => turf.id);
+
+    activeTurfs.forEach((turf, index) => {
+      if (!floodFillTurfRegion(lineImage.data, fillImage.data, hitMap, turf, index)) {
+        drawTurfFallbackRegion(fillImage.data, hitMap, turf, index);
+      }
+    });
+
+    context.clearRect(0, 0, TURF_CANVAS_SIZE, TURF_CANVAS_SIZE);
+    context.putImageData(fillImage, 0, 0);
+    drawTurfLineImage(context, image);
+    turfHitMap = hitMap;
   };
-  image.onerror = () => drawTurfFallbackOutlines(context);
-  image.src = `/assets/mafia-turf-lines-v3.png?v=4`;
+  image.onerror = () => {
+    const activeTurfs = mafiaTurfs.filter(entry => !entry.removed);
+    const fillImage = context.createImageData(TURF_CANVAS_SIZE, TURF_CANVAS_SIZE);
+    const hitMap = new Uint16Array(TURF_CANVAS_SIZE * TURF_CANVAS_SIZE);
+    turfHitIds = activeTurfs.map(turf => turf.id);
+
+    activeTurfs.forEach((turf, index) => drawTurfFallbackRegion(fillImage.data, hitMap, turf, index));
+    context.clearRect(0, 0, TURF_CANVAS_SIZE, TURF_CANVAS_SIZE);
+    context.putImageData(fillImage, 0, 0);
+    turfHitMap = hitMap;
+  };
+  image.src = `/assets/mafia-turf-lines-v3.png?v=6`;
+}
+
+function selectTurfFromCanvas(event) {
+  if (!turfHitMap?.length) {
+    return;
+  }
+
+  const rect = elements.turfShapeCanvas.getBoundingClientRect();
+  const x = Math.floor(((event.clientX - rect.left) / rect.width) * TURF_CANVAS_SIZE);
+  const y = Math.floor(((event.clientY - rect.top) / rect.height) * TURF_CANVAS_SIZE);
+
+  if (x < 0 || y < 0 || x >= TURF_CANVAS_SIZE || y >= TURF_CANVAS_SIZE) {
+    return;
+  }
+
+  const turfId = turfHitIds[turfHitMap[y * TURF_CANVAS_SIZE + x] - 1];
+
+  if (turfId) {
+    selectTurf(turfId);
+  }
 }
 
 function selectTurf(id) {
@@ -1465,7 +1701,7 @@ function updateMarkerRotation(id, rotation) {
 
 function renderTurfs() {
   elements.turfMarkers.textContent = '';
-  renderTurfReferenceCanvas();
+  renderTurfShapeCanvas();
 
   for (const turf of mafiaTurfs) {
     if (turf.removed) {
@@ -2231,6 +2467,7 @@ async function init() {
   elements.turfZoomIn.addEventListener('click', () => setTurfZoom(turfZoom + 0.5));
   elements.turfZoomOut.addEventListener('click', () => setTurfZoom(turfZoom - 0.35));
   elements.turfZoomRange.addEventListener('input', event => setTurfZoom(Number(event.target.value)));
+  elements.turfShapeCanvas.addEventListener('click', selectTurfFromCanvas);
   elements.mapWrap.addEventListener('wheel', event => {
     if (!event.ctrlKey && !event.metaKey) {
       return;

@@ -240,24 +240,13 @@ body {
   height: auto;
 }
 
-.turf-reference-overlay {
+.turf-shape-canvas {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: fill;
-  opacity: 1;
-  pointer-events: none;
-  z-index: 2;
-}
-
-.turf-reference-canvas {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 5;
+  cursor: pointer;
+  z-index: 3;
 }
 
 .markers,
@@ -284,11 +273,9 @@ body {
 }
 
 .turf-marker {
-  border-color: #ffffff;
-  outline: 6px solid #ffffff;
-  outline-offset: -3px;
-  background: color-mix(in srgb, var(--turf-color) 20%, transparent);
-  box-shadow: 0 0 0 1px #000000, inset 0 0 0 1px rgba(255, 255, 255, 0.55);
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
 }
 
 .marker:hover,
@@ -301,7 +288,8 @@ body {
 
 .turf-marker:hover,
 .turf-marker.active {
-  background: color-mix(in srgb, var(--turf-color) 44%, transparent);
+  background: transparent;
+  box-shadow: none;
 }
 
 .markers.editing .marker,

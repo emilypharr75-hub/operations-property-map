@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Liberty County Property Map</title>
-    <link rel="stylesheet" href="/styles.css?v=5">
+    <link rel="stylesheet" href="/styles.css?v=6">
   </head>
   <body>
     <main class="shell">
@@ -128,8 +128,7 @@
             <div class="map-wrap" id="turfMapWrap">
               <div class="map-surface" id="turfMapSurface">
                 <img src="/assets/erlc-map.png" alt="Emergency Response Liberty County map" id="turfMapImage">
-                <img src="/assets/mafia-turf-lines-v3.png" alt="" class="turf-reference-overlay">
-                <canvas class="turf-reference-canvas" id="turfReferenceCanvas" width="3120" height="3120" aria-hidden="true"></canvas>
+                <canvas class="turf-shape-canvas" id="turfShapeCanvas" width="1040" height="1040" aria-label="Mafia turf regions"></canvas>
                 <div class="turf-markers" id="turfMarkers" aria-label="Editable mafia turf markers"></div>
               </div>
             </div>
@@ -251,6 +250,6 @@
         </div>
       </form>
     </dialog>
-    <script src="/app.js?v=5"></script>
+    <script src="/app.js?v=6"></script>
   </body>
 </html>
