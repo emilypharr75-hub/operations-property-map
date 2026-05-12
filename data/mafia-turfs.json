@@ -175,9 +175,9 @@
     "status": "Unclaimed",
     "rect": [
       2605,
-      1132,
+      1134,
       3108,
-      2174
+      2176
     ],
     "rotation": 0
   },
@@ -210,13 +210,13 @@
   {
     "id": "turf-17",
     "number": "17",
-    "owner": "Unclaimed",
-    "status": "Unclaimed",
+    "owner": "West Side Hustlers",
+    "status": "Claimed",
     "rect": [
-      2244,
-      1285,
-      2554,
-      2116
+      2253,
+      1287,
+      2563,
+      2118
     ],
     "rotation": 0
   },
