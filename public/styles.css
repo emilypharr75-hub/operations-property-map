@@ -253,6 +253,14 @@ body {
   cursor: move;
 }
 
+.turf-shape-canvas.editing-blacklist {
+  cursor: grab;
+}
+
+.turf-shape-canvas.editing-blacklist:active {
+  cursor: grabbing;
+}
+
 .toolbar select {
   border: 1px solid var(--line);
   border-radius: 6px;

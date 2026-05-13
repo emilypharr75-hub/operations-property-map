@@ -10,10 +10,21 @@ const CUSTOM_PROPERTY_STORAGE_KEY = 'erlcCustomProperties';
 const ORG_STORAGE_KEY = 'erlcDirectoryRecords';
 const TURF_STORAGE_KEY = 'erlcMafiaTurfEdits';
 const TURF_ALIGNMENT_STORAGE_KEY = 'erlcMafiaTurfAlignment';
+const BLACKLIST_REGIONS_STORAGE_KEY = 'erlcMafiaBlacklistRegions';
 const CLIENT_ID_STORAGE_KEY = 'erlcPropertyMapClientId';
 const LIVE_DATA_URL = 'https://floridaoperationshub.vercel.app/api/live-data';
 const MIN_MARKER_SIZE = 18;
 const EDIT_PASSWORD = 'MoreBusinesses';
+const BLACKLIST_IMAGE_SRC = '/assets/mafia-turf-blacklist.png?v=2';
+const DEFAULT_BLACKLIST_REGIONS = [
+  { id: 'blacklist-1', sourceRect: [1083, 577, 1352, 772], offsetX: 0, offsetY: 0, scale: 1 },
+  { id: 'blacklist-2', sourceRect: [577, 1031, 754, 1282], offsetX: 0, offsetY: 0, scale: 1 },
+  { id: 'blacklist-3', sourceRect: [1118, 1189, 1175, 1286], offsetX: 0, offsetY: 0, scale: 1 },
+  { id: 'blacklist-4', sourceRect: [877, 1269, 990, 1394], offsetX: 0, offsetY: 0, scale: 1 },
+  { id: 'blacklist-5', sourceRect: [477, 1407, 535, 1471], offsetX: 0, offsetY: 0, scale: 1 },
+  { id: 'blacklist-6', sourceRect: [1127, 1417, 1211, 1508], offsetX: 0, offsetY: 0, scale: 1 },
+  { id: 'blacklist-7', sourceRect: [955, 1584, 1085, 1653], offsetX: 0, offsetY: 0, scale: 1 }
+];
 
 const elements = {
   navLinks: document.querySelectorAll('.nav-link'),
@@ -46,6 +57,10 @@ const elements = {
   turfScaleDown: document.querySelector('#turfScaleDown'),
   turfScaleUp: document.querySelector('#turfScaleUp'),
   resetTurfAlignment: document.querySelector('#resetTurfAlignment'),
+  editBlacklistRegions: document.querySelector('#editBlacklistRegions'),
+  blacklistScaleDown: document.querySelector('#blacklistScaleDown'),
+  blacklistScaleUp: document.querySelector('#blacklistScaleUp'),
+  resetBlacklistRegions: document.querySelector('#resetBlacklistRegions'),
   toggleTurfKey: document.querySelector('#toggleTurfKey'),
   turfKeyPanel: document.querySelector('#turfKeyPanel'),
   turfKeyList: document.querySelector('#turfKeyList'),
@@ -114,6 +129,13 @@ let turfOutsideMask = null;
 let turfAlignment = { scale: 0.94, offsetX: 0, offsetY: 0 };
 let turfAlignmentMode = false;
 let turfAlignmentDrag = null;
+let blacklistRegions = getDefaultBlacklistRegions();
+let blacklistHitMap = null;
+let blacklistHitIds = [];
+let blacklistRegionMode = false;
+let blacklistRegionDrag = null;
+let selectedBlacklistRegionId = null;
+let blacklistImageCache = null;
 let undoStack = [];
 let turfUndoStack = [];
 let editSessionPassword = '';
@@ -169,6 +191,7 @@ function clearStoredEditorState() {
   localStorage.removeItem(ORG_STORAGE_KEY);
   localStorage.removeItem(TURF_STORAGE_KEY);
   localStorage.removeItem(TURF_ALIGNMENT_STORAGE_KEY);
+  localStorage.removeItem(BLACKLIST_REGIONS_STORAGE_KEY);
 }
 
 function buildExportData() {
@@ -197,7 +220,8 @@ function buildExportData() {
     ,
     orgs: getDirectoryExportData(),
     turfs: getTurfExportData(),
-    turfAlignment: getTurfAlignmentExportData()
+    turfAlignment: getTurfAlignmentExportData(),
+    blacklistRegions: getBlacklistRegionsExportData()
   };
 }
 
@@ -224,7 +248,8 @@ function currentDataSignature() {
     markers: buildExportData().markers,
     orgs: getDirectoryExportData(),
     turfs: getTurfExportData(),
-    turfAlignment: getTurfAlignmentExportData()
+    turfAlignment: getTurfAlignmentExportData(),
+    blacklistRegions: getBlacklistRegionsExportData()
   });
 }
 
@@ -259,12 +284,14 @@ function applyLiveDataset(liveData, statusMessage = 'Synced live') {
   const nextOrgs = liveData.orgs || {};
   const nextTurfs = Array.isArray(liveData.turfs) ? liveData.turfs.map(normalizeTurfRecord) : [];
   const nextTurfAlignment = normalizeTurfAlignment(liveData.turfAlignment);
+  const nextBlacklistRegions = normalizeBlacklistRegions(liveData.blacklistRegions);
   const nextSignature = JSON.stringify({
     properties: nextProperties,
     markers: nextMarkers,
     orgs: nextOrgs,
     turfs: nextTurfs,
-    turfAlignment: nextTurfAlignment
+    turfAlignment: nextTurfAlignment,
+    blacklistRegions: nextBlacklistRegions
   });
 
   if (liveData.updatedBy === clientId) {
@@ -292,6 +319,7 @@ function applyLiveDataset(liveData, statusMessage = 'Synced live') {
   propertyMarkers = nextMarkers;
   mafiaTurfs = nextTurfs;
   turfAlignment = nextTurfAlignment;
+  blacklistRegions = nextBlacklistRegions;
     directoryRecords = {
       businesses: Array.isArray(nextOrgs.businesses) ? nextOrgs.businesses.map(normalizeDirectoryRecord) : [],
       mafias: Array.isArray(nextOrgs.mafias) ? nextOrgs.mafias.map(normalizeDirectoryRecord) : [],
@@ -332,6 +360,37 @@ function normalizeTurfAlignment(record) {
   };
 }
 
+function getDefaultBlacklistRegions() {
+  return DEFAULT_BLACKLIST_REGIONS.map((region, index) => normalizeBlacklistRegion(region, index));
+}
+
+function normalizeBlacklistRegion(record, index = 0) {
+  const fallback = DEFAULT_BLACKLIST_REGIONS[index] || DEFAULT_BLACKLIST_REGIONS[0];
+  const sourceRect = Array.isArray(record?.sourceRect) && record.sourceRect.length === 4
+    ? record.sourceRect.map(value => Math.round(Number(value) || 0))
+    : [...fallback.sourceRect];
+
+  return {
+    id: String(record?.id || fallback.id || `blacklist-${index + 1}`),
+    sourceRect,
+    offsetX: Math.min(260, Math.max(-260, Number(record?.offsetX) || 0)),
+    offsetY: Math.min(260, Math.max(-260, Number(record?.offsetY) || 0)),
+    scale: Math.min(2, Math.max(0.25, Number(record?.scale) || 1))
+  };
+}
+
+function normalizeBlacklistRegions(records) {
+  if (!Array.isArray(records) || !records.length) {
+    return getDefaultBlacklistRegions();
+  }
+
+  const byId = new Map(records.map(record => [String(record?.id || ''), record]));
+
+  return DEFAULT_BLACKLIST_REGIONS.map((fallback, index) => {
+    return normalizeBlacklistRegion(byId.get(fallback.id) || records[index] || fallback, index);
+  });
+}
+
 function normalizeTurfRecord(record) {
   const rect = Array.isArray(record.rect) && record.rect.length === 4
     ? record.rect.map(value => Math.round(Number(value) || 0))
@@ -349,6 +408,10 @@ function normalizeTurfRecord(record) {
 
 function getTurfAlignmentExportData() {
   return normalizeTurfAlignment(turfAlignment);
+}
+
+function getBlacklistRegionsExportData() {
+  return normalizeBlacklistRegions(blacklistRegions);
 }
 
 function getTurfExportData() {
@@ -721,6 +784,21 @@ function applyStoredTurfAlignment() {
   }
 }
 
+function saveBlacklistRegions() {
+  blacklistRegions = normalizeBlacklistRegions(blacklistRegions);
+  localStorage.setItem(BLACKLIST_REGIONS_STORAGE_KEY, JSON.stringify(blacklistRegions));
+  renderTurfs();
+  scheduleCloudSave();
+}
+
+function applyStoredBlacklistRegions() {
+  const stored = JSON.parse(localStorage.getItem(BLACKLIST_REGIONS_STORAGE_KEY) || 'null');
+
+  if (Array.isArray(stored)) {
+    blacklistRegions = normalizeBlacklistRegions(stored);
+  }
+}
+
 function turfLabel(turf) {
   return `Turf ${turf.number || turf.id}`;
 }
@@ -1086,6 +1164,91 @@ function drawTurfBlacklistImage(context, image, placement) {
   context.restore();
 }
 
+function blacklistRegionDrawRect(region, image, placement) {
+  const [sourceLeft, sourceTop, sourceRight, sourceBottom] = region.sourceRect;
+  const sourceWidth = Math.max(1, sourceRight - sourceLeft);
+  const sourceHeight = Math.max(1, sourceBottom - sourceTop);
+  const baseLeft = placement.x + (sourceLeft / image.width) * placement.width;
+  const baseTop = placement.y + (sourceTop / image.height) * placement.height;
+  const baseWidth = (sourceWidth / image.width) * placement.width;
+  const baseHeight = (sourceHeight / image.height) * placement.height;
+  const scale = Number(region.scale) || 1;
+  const width = baseWidth * scale;
+  const height = baseHeight * scale;
+  const left = baseLeft + Number(region.offsetX || 0) - (width - baseWidth) / 2;
+  const top = baseTop + Number(region.offsetY || 0) - (height - baseHeight) / 2;
+
+  return {
+    sourceLeft,
+    sourceTop,
+    sourceWidth,
+    sourceHeight,
+    left,
+    top,
+    width,
+    height
+  };
+}
+
+function markBlacklistHitRegion(hitMap, regionIndex, drawRect) {
+  const left = Math.max(0, Math.floor(drawRect.left));
+  const top = Math.max(0, Math.floor(drawRect.top));
+  const right = Math.min(TURF_CANVAS_SIZE, Math.ceil(drawRect.left + drawRect.width));
+  const bottom = Math.min(TURF_CANVAS_SIZE, Math.ceil(drawRect.top + drawRect.height));
+
+  for (let y = top; y < bottom; y++) {
+    for (let x = left; x < right; x++) {
+      hitMap[y * TURF_CANVAS_SIZE + x] = regionIndex + 1;
+    }
+  }
+}
+
+function drawBlacklistRegions(context, image, placement) {
+  blacklistHitMap = new Uint16Array(TURF_CANVAS_SIZE * TURF_CANVAS_SIZE);
+  blacklistHitIds = [];
+
+  if (!image) {
+    return;
+  }
+
+  context.save();
+  context.globalAlpha = 0.92;
+
+  const activeRegions = normalizeBlacklistRegions(blacklistRegions);
+  activeRegions.forEach((region, index) => {
+    const rect = blacklistRegionDrawRect(region, image, placement);
+    context.drawImage(
+      image,
+      rect.sourceLeft,
+      rect.sourceTop,
+      rect.sourceWidth,
+      rect.sourceHeight,
+      rect.left,
+      rect.top,
+      rect.width,
+      rect.height
+    );
+    blacklistHitIds.push(region.id);
+    markBlacklistHitRegion(blacklistHitMap, index, rect);
+  });
+
+  context.restore();
+
+  if (editMode && blacklistRegionMode && selectedBlacklistRegionId) {
+    const selected = activeRegions.find(region => region.id === selectedBlacklistRegionId);
+
+    if (selected) {
+      const rect = blacklistRegionDrawRect(selected, image, placement);
+      context.save();
+      context.setLineDash([8, 5]);
+      context.lineWidth = 3;
+      context.strokeStyle = '#ffffff';
+      context.strokeRect(rect.left, rect.top, rect.width, rect.height);
+      context.restore();
+    }
+  }
+}
+
 function drawTurfNumbers(context, assignments) {
   context.save();
   context.textAlign = 'center';
@@ -1162,16 +1325,24 @@ function renderTurfShapeCanvas() {
 
     context.clearRect(0, 0, TURF_CANVAS_SIZE, TURF_CANVAS_SIZE);
     context.putImageData(fillImage, 0, 0);
-    drawTurfBlacklistImage(context, blacklistImage, placement);
+    drawBlacklistRegions(context, blacklistImage, placement);
     drawTurfLineImage(context, image);
     drawTurfNumbers(context, assignments);
     turfHitMap = hitMap;
     turfOutsideMask = outsideMask;
     };
+    if (blacklistImageCache?.complete) {
+      draw(blacklistImageCache);
+      return;
+    }
+
     const blacklistImage = new Image();
-    blacklistImage.onload = () => draw(blacklistImage);
+    blacklistImage.onload = () => {
+      blacklistImageCache = blacklistImage;
+      draw(blacklistImage);
+    };
     blacklistImage.onerror = () => draw(null);
-    blacklistImage.src = '/assets/mafia-turf-blacklist.png?v=1';
+    blacklistImage.src = BLACKLIST_IMAGE_SRC;
   };
   image.onerror = () => {
     const activeTurfs = mafiaTurfs.filter(entry => !entry.removed);
@@ -1190,6 +1361,10 @@ function renderTurfShapeCanvas() {
 
 function selectTurfFromCanvas(event) {
   if (editMode && turfAlignmentMode) {
+    return;
+  }
+
+  if (editMode && blacklistRegionMode && selectBlacklistRegionFromCanvas(event)) {
     return;
   }
 
@@ -1220,6 +1395,24 @@ function setTurfAlignmentMode(enabled) {
   turfAlignmentMode = Boolean(enabled);
   elements.alignTurfs.setAttribute('aria-pressed', String(turfAlignmentMode));
   elements.turfShapeCanvas.classList.toggle('aligning', turfAlignmentMode && editMode);
+
+  if (turfAlignmentMode) {
+    setBlacklistRegionMode(false);
+  }
+}
+
+function setBlacklistRegionMode(enabled) {
+  blacklistRegionMode = Boolean(enabled);
+  elements.editBlacklistRegions.setAttribute('aria-pressed', String(blacklistRegionMode));
+  elements.turfShapeCanvas.classList.toggle('editing-blacklist', blacklistRegionMode && editMode);
+
+  if (blacklistRegionMode) {
+    setTurfAlignmentMode(false);
+  } else {
+    selectedBlacklistRegionId = null;
+  }
+
+  renderTurfs();
 }
 
 function startTurfAlignmentDrag(event) {
@@ -1237,6 +1430,102 @@ function startTurfAlignmentDrag(event) {
     scale
   };
   elements.turfShapeCanvas.setPointerCapture(event.pointerId);
+}
+
+function canvasPointFromEvent(event) {
+  const rect = elements.turfShapeCanvas.getBoundingClientRect();
+
+  return {
+    x: Math.floor(((event.clientX - rect.left) / rect.width) * TURF_CANVAS_SIZE),
+    y: Math.floor(((event.clientY - rect.top) / rect.height) * TURF_CANVAS_SIZE)
+  };
+}
+
+function blacklistRegionAtPoint(event) {
+  if (!blacklistHitMap?.length) {
+    return null;
+  }
+
+  const { x, y } = canvasPointFromEvent(event);
+
+  if (x < 0 || y < 0 || x >= TURF_CANVAS_SIZE || y >= TURF_CANVAS_SIZE) {
+    return null;
+  }
+
+  const regionId = blacklistHitIds[blacklistHitMap[y * TURF_CANVAS_SIZE + x] - 1];
+
+  return regionId || null;
+}
+
+function selectBlacklistRegionFromCanvas(event) {
+  const regionId = blacklistRegionAtPoint(event);
+
+  if (!regionId) {
+    return false;
+  }
+
+  selectedBlacklistRegionId = regionId;
+  renderTurfs();
+  return true;
+}
+
+function startBlacklistRegionDrag(event) {
+  if (!editMode || !blacklistRegionMode) {
+    return;
+  }
+
+  const regionId = blacklistRegionAtPoint(event);
+
+  if (!regionId) {
+    return;
+  }
+
+  const region = blacklistRegions.find(entry => entry.id === regionId);
+
+  if (!region) {
+    return;
+  }
+
+  event.preventDefault();
+  event.stopPropagation();
+  selectedBlacklistRegionId = regionId;
+  const scale = elements.turfShapeCanvas.getBoundingClientRect().width / TURF_CANVAS_SIZE;
+  blacklistRegionDrag = {
+    id: regionId,
+    startX: event.clientX,
+    startY: event.clientY,
+    offsetX: region.offsetX,
+    offsetY: region.offsetY,
+    scale
+  };
+  elements.turfShapeCanvas.setPointerCapture(event.pointerId);
+  renderTurfs();
+}
+
+function moveBlacklistRegionDrag(event) {
+  if (!blacklistRegionDrag) {
+    return;
+  }
+
+  const region = blacklistRegions.find(entry => entry.id === blacklistRegionDrag.id);
+
+  if (!region) {
+    return;
+  }
+
+  region.offsetX = blacklistRegionDrag.offsetX + (event.clientX - blacklistRegionDrag.startX) / blacklistRegionDrag.scale;
+  region.offsetY = blacklistRegionDrag.offsetY + (event.clientY - blacklistRegionDrag.startY) / blacklistRegionDrag.scale;
+  blacklistRegions = normalizeBlacklistRegions(blacklistRegions);
+  renderTurfs();
+}
+
+function stopBlacklistRegionDrag() {
+  if (!blacklistRegionDrag) {
+    return;
+  }
+
+  blacklistRegionDrag = null;
+  saveBlacklistRegions();
 }
 
 function moveTurfAlignmentDrag(event) {
@@ -1257,6 +1546,38 @@ function stopTurfAlignmentDrag() {
 
   turfAlignmentDrag = null;
   saveTurfAlignment();
+}
+
+function scaleSelectedBlacklistRegion(delta) {
+  if (!editMode) {
+    openPasswordDialog();
+    return;
+  }
+
+  if (!selectedBlacklistRegionId) {
+    setPublishStatus('Select a red region');
+    return;
+  }
+
+  const region = blacklistRegions.find(entry => entry.id === selectedBlacklistRegionId);
+
+  if (!region) {
+    return;
+  }
+
+  region.scale = Number(region.scale || 1) + delta;
+  saveBlacklistRegions();
+}
+
+function resetBlacklistRegions() {
+  if (!editMode) {
+    openPasswordDialog();
+    return;
+  }
+
+  blacklistRegions = getDefaultBlacklistRegions();
+  selectedBlacklistRegionId = null;
+  saveBlacklistRegions();
 }
 
 function scaleTurfAlignment(delta) {
@@ -2298,8 +2619,13 @@ function setEditMode(enabled) {
   elements.turfScaleDown.disabled = !editMode;
   elements.turfScaleUp.disabled = !editMode;
   elements.resetTurfAlignment.disabled = !editMode;
+  elements.editBlacklistRegions.disabled = !editMode;
+  elements.blacklistScaleDown.disabled = !editMode;
+  elements.blacklistScaleUp.disabled = !editMode;
+  elements.resetBlacklistRegions.disabled = !editMode;
   if (!editMode) {
     setTurfAlignmentMode(false);
+    setBlacklistRegionMode(false);
   }
   for (const button of elements.directoryAddButtons) {
     button.disabled = !editMode;
@@ -2761,14 +3087,18 @@ async function init() {
   }
 
   if (!loadedLiveData) {
-    const [propertiesResponse, markersResponse, turfResponse] = await Promise.all([
+    const [propertiesResponse, markersResponse, turfResponse, blacklistRegionsResponse] = await Promise.all([
       fetch('/properties.json'),
       fetch('/property-markers.json'),
-      fetch('/mafia-turfs.json')
+      fetch('/mafia-turfs.json'),
+      fetch('/blacklist-regions.json').catch(() => null)
     ]);
     properties = await propertiesResponse.json();
     propertyMarkers = await markersResponse.json();
     mafiaTurfs = await turfResponse.json();
+    blacklistRegions = blacklistRegionsResponse?.ok
+      ? normalizeBlacklistRegions(await blacklistRegionsResponse.json())
+      : getDefaultBlacklistRegions();
     try {
       const turfAlignmentResponse = await fetch('/turf-alignment.json');
       turfAlignment = normalizeTurfAlignment(await turfAlignmentResponse.json());
@@ -2791,6 +3121,7 @@ async function init() {
     applyStoredDirectoryRecords();
     applyStoredTurfRecords();
     applyStoredTurfAlignment();
+    applyStoredBlacklistRegions();
     applyStoredCustomProperties();
     applyStoredPropertyEdits();
     applyStoredMarkerEdits();
@@ -2811,6 +3142,10 @@ async function init() {
   elements.turfScaleDown.disabled = true;
   elements.turfScaleUp.disabled = true;
   elements.resetTurfAlignment.disabled = true;
+  elements.editBlacklistRegions.disabled = true;
+  elements.blacklistScaleDown.disabled = true;
+  elements.blacklistScaleUp.disabled = true;
+  elements.resetBlacklistRegions.disabled = true;
   for (const button of elements.directoryAddButtons) {
     button.disabled = true;
     button.addEventListener('click', () => addDirectoryRecord(button.dataset.directoryAdd));
@@ -2845,8 +3180,22 @@ async function init() {
   elements.turfScaleDown.addEventListener('click', () => scaleTurfAlignment(-0.02));
   elements.turfScaleUp.addEventListener('click', () => scaleTurfAlignment(0.02));
   elements.resetTurfAlignment.addEventListener('click', resetTurfAlignment);
+  elements.editBlacklistRegions.addEventListener('click', () => {
+    if (!editMode) {
+      openPasswordDialog();
+      return;
+    }
+
+    setBlacklistRegionMode(!blacklistRegionMode);
+  });
+  elements.blacklistScaleDown.addEventListener('click', () => scaleSelectedBlacklistRegion(-0.04));
+  elements.blacklistScaleUp.addEventListener('click', () => scaleSelectedBlacklistRegion(0.04));
+  elements.resetBlacklistRegions.addEventListener('click', resetBlacklistRegions);
+  elements.turfShapeCanvas.addEventListener('pointerdown', startBlacklistRegionDrag);
   elements.turfShapeCanvas.addEventListener('pointerdown', startTurfAlignmentDrag);
+  window.addEventListener('pointermove', moveBlacklistRegionDrag);
   window.addEventListener('pointermove', moveTurfAlignmentDrag);
+  window.addEventListener('pointerup', stopBlacklistRegionDrag);
   window.addEventListener('pointerup', stopTurfAlignmentDrag);
   elements.turfShapeCanvas.addEventListener('click', selectTurfFromCanvas);
   elements.mapWrap.addEventListener('wheel', event => {

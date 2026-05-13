@@ -69,6 +69,34 @@ function normalizeTurfAlignment(record) {
   };
 }
 
+function normalizeBlacklistRegion(record, index = 0) {
+  const defaultRects = [
+    [1083, 577, 1352, 772],
+    [577, 1031, 754, 1282],
+    [1118, 1189, 1175, 1286],
+    [877, 1269, 990, 1394],
+    [477, 1407, 535, 1471],
+    [1127, 1417, 1211, 1508],
+    [955, 1584, 1085, 1653]
+  ];
+
+  return {
+    id: String(record?.id || `blacklist-${index + 1}`),
+    sourceRect: Array.isArray(record?.sourceRect) && record.sourceRect.length === 4
+      ? record.sourceRect.map(value => Math.round(Number(value) || 0))
+      : defaultRects[index] || defaultRects[0],
+    offsetX: Math.min(260, Math.max(-260, Number(record?.offsetX) || 0)),
+    offsetY: Math.min(260, Math.max(-260, Number(record?.offsetY) || 0)),
+    scale: Math.min(2, Math.max(0.25, Number(record?.scale) || 1))
+  };
+}
+
+function normalizeBlacklistRegions(records) {
+  return Array.isArray(records) && records.length
+    ? records.map(normalizeBlacklistRegion)
+    : [];
+}
+
 function normalizeProperty(property) {
   return {
     id: String(property.id),
@@ -203,6 +231,7 @@ module.exports = async function handler(request, response) {
     const markers = body.markers.map(normalizeMarker);
     const turfs = Array.isArray(body.turfs) ? body.turfs.map(normalizeTurf) : [];
     const turfAlignment = normalizeTurfAlignment(body.turfAlignment);
+    const blacklistRegions = normalizeBlacklistRegions(body.blacklistRegions);
     const normalizedOrgs = normalizeDirectories(body.orgs);
     const { orgs, pdfFiles } = prepareDirectoriesForSave(normalizedOrgs);
     let liveData = null;
@@ -213,6 +242,7 @@ module.exports = async function handler(request, response) {
         markers,
         turfs,
         turfAlignment,
+        blacklistRegions,
         orgs,
         updatedBy: clientId
       });
@@ -223,11 +253,13 @@ module.exports = async function handler(request, response) {
       'data/property-markers.json': { content: `${JSON.stringify(markers, null, 2)}\n`, encoding: 'utf-8' },
       'data/mafia-turfs.json': { content: `${JSON.stringify(turfs, null, 2)}\n`, encoding: 'utf-8' },
       'data/turf-alignment.json': { content: `${JSON.stringify(turfAlignment, null, 2)}\n`, encoding: 'utf-8' },
+      'data/blacklist-regions.json': { content: `${JSON.stringify(blacklistRegions, null, 2)}\n`, encoding: 'utf-8' },
       'data/orgs.json': { content: `${JSON.stringify(orgs, null, 2)}\n`, encoding: 'utf-8' },
       'public/properties.json': { content: `${JSON.stringify(properties, null, 2)}\n`, encoding: 'utf-8' },
       'public/property-markers.json': { content: `${JSON.stringify(markers, null, 2)}\n`, encoding: 'utf-8' },
       'public/mafia-turfs.json': { content: `${JSON.stringify(turfs, null, 2)}\n`, encoding: 'utf-8' },
       'public/turf-alignment.json': { content: `${JSON.stringify(turfAlignment, null, 2)}\n`, encoding: 'utf-8' },
+      'public/blacklist-regions.json': { content: `${JSON.stringify(blacklistRegions, null, 2)}\n`, encoding: 'utf-8' },
       'public/orgs.json': { content: `${JSON.stringify(orgs, null, 2)}\n`, encoding: 'utf-8' }
     };
 

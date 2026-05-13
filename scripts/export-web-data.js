@@ -10,6 +10,8 @@ const turfSourcePath = path.join(__dirname, '..', 'data', 'mafia-turfs.json');
 const turfOutputPath = path.join(__dirname, '..', 'public', 'mafia-turfs.json');
 const turfAlignmentSourcePath = path.join(__dirname, '..', 'data', 'turf-alignment.json');
 const turfAlignmentOutputPath = path.join(__dirname, '..', 'public', 'turf-alignment.json');
+const blacklistRegionsSourcePath = path.join(__dirname, '..', 'data', 'blacklist-regions.json');
+const blacklistRegionsOutputPath = path.join(__dirname, '..', 'public', 'blacklist-regions.json');
 const orgsSourcePath = path.join(__dirname, '..', 'data', 'orgs.json');
 const orgsOutputPath = path.join(__dirname, '..', 'public', 'orgs.json');
 
@@ -44,6 +46,11 @@ if (fs.existsSync(turfAlignmentSourcePath)) {
 } else {
   fs.writeFileSync(turfAlignmentOutputPath, `${JSON.stringify({ scale: 0.94, offsetX: 0, offsetY: 0 }, null, 2)}\n`);
   console.log(`Created default turf alignment at ${turfAlignmentOutputPath}`);
+}
+
+if (fs.existsSync(blacklistRegionsSourcePath)) {
+  fs.copyFileSync(blacklistRegionsSourcePath, blacklistRegionsOutputPath);
+  console.log(`Copied blacklist regions to ${blacklistRegionsOutputPath}`);
 }
 
 if (fs.existsSync(orgsSourcePath)) {

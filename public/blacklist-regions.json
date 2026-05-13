@@ -1,0 +1,86 @@
+[
+  {
+    "id": "blacklist-1",
+    "sourceRect": [
+      1083,
+      577,
+      1352,
+      772
+    ],
+    "offsetX": 0,
+    "offsetY": 0,
+    "scale": 1
+  },
+  {
+    "id": "blacklist-2",
+    "sourceRect": [
+      577,
+      1031,
+      754,
+      1282
+    ],
+    "offsetX": 0,
+    "offsetY": 0,
+    "scale": 1
+  },
+  {
+    "id": "blacklist-3",
+    "sourceRect": [
+      1118,
+      1189,
+      1175,
+      1286
+    ],
+    "offsetX": 0,
+    "offsetY": 0,
+    "scale": 1
+  },
+  {
+    "id": "blacklist-4",
+    "sourceRect": [
+      877,
+      1269,
+      990,
+      1394
+    ],
+    "offsetX": 0,
+    "offsetY": 0,
+    "scale": 1
+  },
+  {
+    "id": "blacklist-5",
+    "sourceRect": [
+      477,
+      1407,
+      535,
+      1471
+    ],
+    "offsetX": 0,
+    "offsetY": 0,
+    "scale": 1
+  },
+  {
+    "id": "blacklist-6",
+    "sourceRect": [
+      1127,
+      1417,
+      1211,
+      1508
+    ],
+    "offsetX": 0,
+    "offsetY": 0,
+    "scale": 1
+  },
+  {
+    "id": "blacklist-7",
+    "sourceRect": [
+      955,
+      1584,
+      1085,
+      1653
+    ],
+    "offsetX": 0,
+    "offsetY": 0,
+    "scale": 1
+  }
+]

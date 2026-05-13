@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Liberty County Property Map</title>
-    <link rel="stylesheet" href="/styles.css?v=9">
+    <link rel="stylesheet" href="/styles.css?v=10">
   </head>
   <body>
     <main class="shell">
@@ -122,6 +122,10 @@
               <button type="button" class="edit-toggle" id="turfScaleDown" aria-label="Scale turf layer down">Scale -</button>
               <button type="button" class="edit-toggle" id="turfScaleUp" aria-label="Scale turf layer up">Scale +</button>
               <button type="button" class="edit-toggle" id="resetTurfAlignment">Reset Align</button>
+              <button type="button" class="edit-toggle" id="editBlacklistRegions" aria-pressed="false">Edit Blacklist</button>
+              <button type="button" class="edit-toggle" id="blacklistScaleDown" aria-label="Scale selected blacklist region down">BL Scale -</button>
+              <button type="button" class="edit-toggle" id="blacklistScaleUp" aria-label="Scale selected blacklist region up">BL Scale +</button>
+              <button type="button" class="edit-toggle" id="resetBlacklistRegions">Reset Blacklist</button>
               <button type="button" class="edit-toggle" id="toggleTurfKey" aria-expanded="false">Key</button>
               <span class="publish-status" id="turfPublishStatus" aria-live="polite">Live save locked</span>
             </div>
@@ -256,6 +260,6 @@
         </div>
       </form>
     </dialog>
-    <script src="/app.js?v=11"></script>
+    <script src="/app.js?v=12"></script>
   </body>
 </html>

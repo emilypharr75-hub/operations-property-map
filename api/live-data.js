@@ -73,7 +73,8 @@ function versionFor(data) {
       markers: data.markers || [],
       orgs: data.orgs || {},
       turfs: data.turfs || [],
-      turfAlignment: data.turfAlignment || {}
+      turfAlignment: data.turfAlignment || {},
+      blacklistRegions: data.blacklistRegions || []
     }))
     .digest('hex');
 }
@@ -156,6 +157,7 @@ function compactLiveData(data) {
     orgs: compactOrgs(data.orgs),
     turfs: Array.isArray(data.turfs) ? data.turfs : [],
     turfAlignment: data.turfAlignment || { scale: 0.94, offsetX: 0, offsetY: 0 },
+    blacklistRegions: Array.isArray(data.blacklistRegions) ? data.blacklistRegions : [],
     updatedBy: data.updatedBy || '',
     updatedAt: data.updatedAt,
     version: data.version
@@ -217,10 +219,15 @@ module.exports = async function handler(request, response) {
 
         const compactedLiveData = compactLiveData(liveData);
 
-        if (!compactedLiveData.turfs.length) {
+        if (!compactedLiveData.turfs.length || !compactedLiveData.blacklistRegions.length) {
           const ref = await fetchGithubRef();
-          compactedLiveData.turfs = await fetchRepoJson('public/mafia-turfs.json', ref).catch(() => []);
-          compactedLiveData.turfAlignment = await fetchRepoJson('public/turf-alignment.json', ref).catch(() => compactedLiveData.turfAlignment);
+          if (!compactedLiveData.turfs.length) {
+            compactedLiveData.turfs = await fetchRepoJson('public/mafia-turfs.json', ref).catch(() => []);
+            compactedLiveData.turfAlignment = await fetchRepoJson('public/turf-alignment.json', ref).catch(() => compactedLiveData.turfAlignment);
+          }
+          if (!compactedLiveData.blacklistRegions.length) {
+            compactedLiveData.blacklistRegions = await fetchRepoJson('public/blacklist-regions.json', ref).catch(() => compactedLiveData.blacklistRegions);
+          }
         }
 
         jsonResponse(response, 200, {
@@ -248,12 +255,13 @@ module.exports = async function handler(request, response) {
       return;
     }
 
-    const [properties, markers, orgs, turfs, turfAlignment] = await Promise.all([
+    const [properties, markers, orgs, turfs, turfAlignment, blacklistRegions] = await Promise.all([
       fetchRepoJson('public/properties.json', ref),
       fetchRepoJson('public/property-markers.json', ref),
       fetchRepoJson('public/orgs.json', ref),
       fetchRepoJson('public/mafia-turfs.json', ref).catch(() => []),
-      fetchRepoJson('public/turf-alignment.json', ref).catch(() => ({ scale: 0.94, offsetX: 0, offsetY: 0 }))
+      fetchRepoJson('public/turf-alignment.json', ref).catch(() => ({ scale: 0.94, offsetX: 0, offsetY: 0 })),
+      fetchRepoJson('public/blacklist-regions.json', ref).catch(() => [])
     ]);
 
     jsonResponse(response, 200, {
@@ -262,6 +270,7 @@ module.exports = async function handler(request, response) {
       orgs: compactOrgs(orgs),
       turfs,
       turfAlignment,
+      blacklistRegions,
       version: ref,
       source: 'github',
       checkedAt: new Date().toISOString()
