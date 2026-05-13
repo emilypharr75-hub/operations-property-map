@@ -139,5 +139,13 @@
       "pdfPath": "/assets/regulations/businessRegulations-1778109699873-Company-Regulations.pdf"
     }
   ],
-  "mafiaRegulations": []
+  "mafiaRegulations": [
+    {
+      "id": "mafiaRegulations-1778639875531",
+      "name": "New mafia regulation",
+      "regulations": "",
+      "pdfName": "",
+      "pdfPath": ""
+    }
+  ]
 }
