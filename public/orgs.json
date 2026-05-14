@@ -63,6 +63,14 @@
       "type": "Towing",
       "server": "https://discord.gg/ubtsAeP2Y",
       "logo": "https://cdn.discordapp.com/attachments/1503063358411247651/1503083011258712104/Your_paragraph_text_14_-removebg-preview.png?ex=6a020ea3&is=6a00bd23&hm=07851b74b0fb0e2b75f0d4ab7d0858e538ad7aed869ba2bcb20f7812a123547c&"
+    },
+    {
+      "id": "businesses-1778767168387",
+      "name": "New business",
+      "owner": "N/A",
+      "type": "Business",
+      "server": "",
+      "logo": ""
     }
   ],
   "mafias": [
