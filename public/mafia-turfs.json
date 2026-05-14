@@ -117,19 +117,6 @@
     "rotation": 0
   },
   {
-    "id": "turf-10",
-    "number": "10",
-    "owner": "Unclaimed",
-    "status": "Unclaimed",
-    "rect": [
-      1693,
-      835,
-      2106,
-      1170
-    ],
-    "rotation": 0
-  },
-  {
     "id": "turf-11",
     "number": "11",
     "owner": "Unclaimed",

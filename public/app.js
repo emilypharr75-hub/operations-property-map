@@ -1356,7 +1356,7 @@ function renderTurfShapeCanvas() {
     turfHitMap = hitMap;
     turfOutsideMask = null;
   };
-  image.src = `/assets/mafia-turf-lines-v3.png?v=8`;
+  image.src = `/assets/mafia-turf-lines-v3.png?v=9`;
 }
 
 function selectTurfFromCanvas(event) {
