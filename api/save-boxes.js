@@ -111,13 +111,35 @@ function normalizeProperty(property) {
 }
 
 function normalizeDirectoryRecord(record) {
+  const ownerParts = splitOwnerLabelAndId(record.owner, record.ownerId);
+
   return {
     id: String(record.id),
     name: String(record.name || ''),
-    owner: String(record.owner || ''),
+    owner: ownerParts.owner,
+    ownerId: ownerParts.ownerId,
     type: String(record.type || ''),
     server: String(record.server || ''),
-    logo: String(record.logo || '')
+    logo: String(record.logo || ''),
+    registeredAt: String(record.registeredAt || record.createdAt || '')
+  };
+}
+
+function splitOwnerLabelAndId(owner, ownerId = '') {
+  const text = String(owner || '').trim();
+  const explicitId = String(ownerId || '').trim();
+  const match = text.match(/^(.*?)\s*\((\d{17,20})\)\s*$/);
+
+  if (!match) {
+    return {
+      owner: text,
+      ownerId: explicitId
+    };
+  }
+
+  return {
+    owner: match[1].trim(),
+    ownerId: explicitId || match[2]
   };
 }
 

@@ -5,8 +5,9 @@ const { logger } = require('./logger');
 
 const CHECK_PROPERTY_CHANNEL_ID = '1491639237693673593';
 const PROPERTY_MOVEMENT_LOG_CHANNEL_ID = '1501750254125580430';
-const WEBSITE_BASE_URL = process.env.PROPERTY_WEBSITE_URL || 'https://floridaoperationshub.vercel.app';
-const EDIT_PASSWORD = 'MoreBusinesses';
+const DEFAULT_WEBSITE_BASE_URL = 'https://floridastateoperations.vercel.app';
+const WEBSITE_BASE_URL = String(process.env.PROPERTY_WEBSITE_URL || DEFAULT_WEBSITE_BASE_URL).replace(/\/+$/u, '');
+const EDIT_PASSWORD = process.env.PROPERTY_EDIT_PASSWORD || 'MoreBusinesses';
 const CACHE_MS = 300000;
 const FETCH_TIMEOUT_MS = 10000;
 
@@ -68,7 +69,14 @@ async function fetchJson(url, options = {}) {
         ...(options.headers || {})
       }
     });
-    const data = await response.json();
+    const text = await response.text();
+    let data = {};
+
+    try {
+      data = text ? JSON.parse(text) : {};
+    } catch {
+      data = { error: text.slice(0, 240) || `Request failed with ${response.status}` };
+    }
 
     if (!response.ok) {
       throw new Error(data.error || `Request failed with ${response.status}`);
@@ -118,11 +126,54 @@ function normalizeProperty(property) {
   };
 }
 
+function splitOwnerLabelAndId(owner, ownerId = '') {
+  const text = String(owner || '').trim();
+  const explicitId = String(ownerId || '').trim();
+  const match = text.match(/^(.*?)\s*\((\d{17,20})\)\s*$/);
+
+  if (!match) {
+    return {
+      owner: text,
+      ownerId: explicitId
+    };
+  }
+
+  return {
+    owner: match[1].trim(),
+    ownerId: explicitId || match[2]
+  };
+}
+
+function normalizeDirectoryRecord(record) {
+  const ownerParts = splitOwnerLabelAndId(record.owner, record.ownerId);
+
+  return {
+    ...record,
+    id: String(record.id || ''),
+    name: String(record.name || ''),
+    owner: ownerParts.owner,
+    ownerId: ownerParts.ownerId,
+    type: String(record.type || ''),
+    server: String(record.server || ''),
+    logo: String(record.logo || ''),
+    registeredAt: String(record.registeredAt || record.createdAt || '')
+  };
+}
+
 function normalizeDataset(data) {
+  const orgs = data.orgs || {};
+
   return {
     properties: Array.isArray(data.properties) ? data.properties.map(normalizeProperty) : [],
     markers: Array.isArray(data.markers) ? data.markers : [],
-    orgs: data.orgs || { businesses: [], mafias: [], businessRegulations: [], mafiaRegulations: [] }
+    orgs: {
+      ...orgs,
+      businesses: Array.isArray(orgs.businesses) ? orgs.businesses.map(normalizeDirectoryRecord) : [],
+      mafias: Array.isArray(orgs.mafias) ? orgs.mafias.map(normalizeDirectoryRecord) : []
+    },
+    turfs: Array.isArray(data.turfs) ? data.turfs : [],
+    turfAlignment: data.turfAlignment || { scale: 0.94, offsetX: 0, offsetY: 0 },
+    blacklistRegions: Array.isArray(data.blacklistRegions) ? data.blacklistRegions : []
   };
 }
 
@@ -144,6 +195,10 @@ function writeLocalDataset(data) {
 }
 
 async function fetchWebsiteDataset() {
+  if (!WEBSITE_BASE_URL) {
+    throw new Error('PROPERTY_WEBSITE_URL is not configured');
+  }
+
   const data = await fetchJson(`${WEBSITE_BASE_URL}/api/live-data?full=1&t=${Date.now()}`, {
     headers: {
       'Cache-Control': 'no-store'
@@ -309,6 +364,7 @@ async function getBusinessAutocompleteChoices(focusedValue) {
       const searchableText = [
         business.name,
         business.owner,
+        business.ownerId,
         business.type,
         business.id
       ].join(' ').toLowerCase();
@@ -359,6 +415,10 @@ async function updatePropertyField(id, field, value) {
 }
 
 async function syncPropertyDataset(data) {
+  if (!WEBSITE_BASE_URL) {
+    throw new Error('PROPERTY_WEBSITE_URL is not configured');
+  }
+
   writeLocalDataset(data);
   cachedData = data;
   cachedAt = Date.now();
@@ -428,7 +488,7 @@ async function setPropertyOwner({ action = 'owner-update', actorId, id, ownerId 
   return { ok: true, property, previousOwner };
 }
 
-async function upsertBusiness({ actorId, logo, name, owner, server, type }) {
+async function upsertBusiness({ actorId, logo, name, owner, ownerId, server, type }) {
   const data = await getPropertyDataset({ forceRefresh: true });
   data.orgs = data.orgs || {};
   data.orgs.businesses = Array.isArray(data.orgs.businesses) ? data.orgs.businesses : [];
@@ -443,14 +503,18 @@ async function upsertBusiness({ actorId, logo, name, owner, server, type }) {
     String(business.name || '').toLowerCase() === businessName.toLowerCase()
   );
   const business = existing || {
-    id: `businesses-${Date.now()}`
+    id: `businesses-${Date.now()}`,
+    registeredAt: new Date().toISOString()
   };
 
   business.name = businessName;
-  business.owner = String(owner || 'N/A').trim() || 'N/A';
+  const ownerParts = splitOwnerLabelAndId(owner, ownerId);
+  business.owner = ownerParts.owner || 'N/A';
+  business.ownerId = ownerParts.ownerId;
   business.type = String(type || 'General').trim() || 'General';
   business.server = String(server || '').trim();
   business.logo = String(logo || '').trim();
+  business.registeredAt = business.registeredAt || business.createdAt || new Date().toISOString();
 
   if (!existing) {
     data.orgs.businesses.push(business);
@@ -462,6 +526,33 @@ async function upsertBusiness({ actorId, logo, name, owner, server, type }) {
     business,
     created: !existing,
     ok: true,
+    updatedBy: actorId
+  };
+}
+
+async function setBusinessOwner({ actorId, name, owner, ownerId }) {
+  const data = await getPropertyDataset({ forceRefresh: true });
+  data.orgs = data.orgs || {};
+  data.orgs.businesses = Array.isArray(data.orgs.businesses) ? data.orgs.businesses : [];
+
+  const business = data.orgs.businesses.find(entry => entry.name === name);
+
+  if (!business) {
+    return { ok: false, reason: 'not_found' };
+  }
+
+  const previousOwner = business.ownerId
+    ? `${business.owner || 'N/A'} (${business.ownerId})`
+    : business.owner || 'N/A';
+  business.owner = String(owner || business.owner || 'N/A').trim() || 'N/A';
+  business.ownerId = String(ownerId || '').trim();
+
+  await syncPropertyDataset(data);
+
+  return {
+    business,
+    ok: true,
+    previousOwner,
     updatedBy: actorId
   };
 }
@@ -519,6 +610,7 @@ module.exports = {
   logPropertyMovement,
   replacePropertyOwners,
   setPropertyOwner,
+  setBusinessOwner,
   transferPropertyOwnership,
   upsertBusiness,
   updatePropertyField

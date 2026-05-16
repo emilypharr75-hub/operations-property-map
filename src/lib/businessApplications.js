@@ -25,6 +25,37 @@ const QUESTIONS = [
   'Send your Discord link. (Must have Civilian Admin Role with Admin perms.)'
 ];
 
+const APPLICATION_TYPES = {
+  custom_business: {
+    button: 'Custom Business Application',
+    title: 'Custom Business Application'
+  },
+  operations_management: {
+    button: 'Operations Management Application',
+    title: 'Operations Management Application'
+  },
+  business_administrator: {
+    button: 'Business Administrator Application',
+    title: 'Business Administrator Application'
+  },
+  property_management: {
+    button: 'Property Management Application',
+    title: 'Property Management Application'
+  },
+  property_purchase: {
+    button: 'Property Purchase Application',
+    title: 'Property Purchase Application'
+  },
+  business_suspension_appeal: {
+    button: 'Business Suspension Appeal',
+    title: 'Business Suspension Appeal'
+  },
+  mafia_administrator: {
+    button: 'Mafia Administrator Application',
+    title: 'Mafia Administrator Application'
+  }
+};
+
 const activeApplications = new Map();
 
 function buildApplicationPanelEmbed() {
@@ -45,20 +76,31 @@ function buildApplicationPanelEmbed() {
 }
 
 function buildApplicationPanelRows() {
-  return [
-    new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId('business_application:open')
-        .setLabel('Custom Business Application')
-        .setStyle(ButtonStyle.Primary)
-    )
-  ];
+  const buttons = Object.entries(APPLICATION_TYPES).map(([key, type]) =>
+    new ButtonBuilder()
+      .setCustomId(`business_application:open:${key}`)
+      .setLabel(type.button)
+      .setStyle(ButtonStyle.Primary)
+  );
+  const rows = [];
+
+  for (let index = 0; index < buttons.length; index += 5) {
+    rows.push(new ActionRowBuilder().addComponents(buttons.slice(index, index + 5)));
+  }
+
+  return rows;
 }
 
-function buildConfirmationEmbed() {
+function getApplicationType(typeKey) {
+  return APPLICATION_TYPES[typeKey] || APPLICATION_TYPES.custom_business;
+}
+
+function buildConfirmationEmbed(typeKey = 'custom_business') {
+  const type = getApplicationType(typeKey);
+
   return {
     color: BUSINESS_APPLICATION_COLOR,
-    title: 'Custom Business Application',
+    title: type.title,
     description: [
       'Are you sure you want to apply?',
       '',
@@ -67,11 +109,11 @@ function buildConfirmationEmbed() {
   };
 }
 
-function buildConfirmationRows(userId, guildId) {
+function buildConfirmationRows(userId, guildId, typeKey = 'custom_business') {
   return [
     new ActionRowBuilder().addComponents(
       new ButtonBuilder()
-        .setCustomId(`business_application:start:${userId}:${guildId}`)
+        .setCustomId(`business_application:start:${userId}:${guildId}:${typeKey}`)
         .setLabel('Start application')
         .setStyle(ButtonStyle.Success),
       new ButtonBuilder()
@@ -83,9 +125,11 @@ function buildConfirmationRows(userId, guildId) {
 }
 
 function buildQuestionEmbed(session) {
+  const type = getApplicationType(session.typeKey);
+
   return {
     color: BUSINESS_APPLICATION_COLOR,
-    title: 'Custom Business Application',
+    title: type.title,
     description: [
       `${session.currentQuestionIndex + 1}/${QUESTIONS.length}. ${QUESTIONS[session.currentQuestionIndex]}`,
       '',
@@ -96,10 +140,11 @@ function buildQuestionEmbed(session) {
 
 function buildQuestionEditEmbed(session) {
   const questionIndex = session.editingQuestionIndex;
+  const type = getApplicationType(session.typeKey);
 
   return {
     color: BUSINESS_APPLICATION_COLOR,
-    title: 'Custom Business Application',
+    title: type.title,
     description: [
       `Changing ${questionIndex + 1}/${QUESTIONS.length}. ${QUESTIONS[questionIndex]}`,
       '',
@@ -109,13 +154,14 @@ function buildQuestionEditEmbed(session) {
 }
 
 function buildReviewEmbed(session) {
+  const type = getApplicationType(session.typeKey);
   const answerLines = session.answers.map((answer, index) =>
     `### ${index + 1}. ${answer.question}\n${answer.attachmentUrl ? `[View attachment](${answer.attachmentUrl})` : answer.value}`
   );
 
   return {
     color: BUSINESS_APPLICATION_COLOR,
-    title: 'Custom Business Application',
+    title: type.title,
     description: [
       'Review your answers before submitting.',
       answerLines.join('\n')
@@ -165,7 +211,7 @@ function getActiveApplication(userId) {
   return activeApplications.get(userId) ?? null;
 }
 
-function startApplication({ channelId, guildId, messageId, userId }) {
+function startApplication({ channelId, guildId, messageId, typeKey = 'custom_business', userId }) {
   const session = {
     answers: [],
     channelId,
@@ -176,6 +222,7 @@ function startApplication({ channelId, guildId, messageId, userId }) {
     messageId,
     reviewing: false,
     startedAt: Date.now(),
+    typeKey,
     userId
   };
 
@@ -231,13 +278,14 @@ function formatJoinedGuild(member) {
 
 function buildSubmissionEmbed({ member, session, user }) {
   const duration = formatDuration(Date.now() - session.startedAt);
+  const type = getApplicationType(session.typeKey);
   const answerLines = session.answers.map((answer, index) =>
     `### ${index + 1}. ${answer.question}\n${answer.attachmentUrl ? `[View attachment](${answer.attachmentUrl})` : answer.value}`
   );
 
   return {
     color: BUSINESS_APPLICATION_COLOR,
-    title: `${user.username}'s 'Custom Business Application' Application Submitted`,
+    title: `${user.username}'s '${type.title}' Application Submitted`,
     description: [
       answerLines.join('\n'),
       '',
@@ -251,15 +299,17 @@ function buildSubmissionEmbed({ member, session, user }) {
     thumbnail: {
       url: user.displayAvatarURL({ size: 128 })
     },
-    footer: { text: `Applicant ID: ${user.id}` }
+    footer: { text: `Applicant ID: ${user.id} | Application Type: ${session.typeKey}` }
   };
 }
 
-function buildSubmittedConfirmationEmbed() {
+function buildSubmittedConfirmationEmbed(session) {
+  const type = getApplicationType(session?.typeKey);
+
   return {
     color: BUSINESS_APPLICATION_SUBMITTED_COLOR,
     title: 'Application Submitted',
-    description: 'Your Custom Business Application has been submitted.'
+    description: `Your ${type.title} has been submitted.`
   };
 }
 
@@ -349,6 +399,21 @@ function getApplicantIdFromEmbed(embed) {
   return match?.[1] || null;
 }
 
+function getApplicantUsernameFromEmbed(embed) {
+  const data = embed.toJSON ? embed.toJSON() : embed;
+  const match = String(data.description || '').match(/^Username:\s*(.+)$/m);
+
+  return match?.[1]?.trim() || null;
+}
+
+function getApplicationTypeKeyFromEmbed(embed) {
+  const data = embed.toJSON ? embed.toJSON() : embed;
+  const footerText = data.footer?.text || '';
+  const match = footerText.match(/Application Type:\s*([a-z0-9_]+)/);
+
+  return match?.[1] || 'custom_business';
+}
+
 function cleanApplicationAnswer(value) {
   const attachmentMatch = String(value || '').match(/\[View attachment\]\(([^)]+)\)/);
 
@@ -386,15 +451,17 @@ function getApplicationAnswersFromEmbed(embed) {
   return answers;
 }
 
-function buildBusinessFromApplicationEmbed(embed) {
+function buildBusinessFromApplicationEmbed(embed, overrides = {}) {
   const answers = getApplicationAnswersFromEmbed(embed);
+  const applicantId = getApplicantIdFromEmbed(embed);
 
   return {
     logo: answers[6]?.value || '',
     name: answers[4]?.value || '',
-    owner: answers[2]?.value || answers[1]?.value || 'N/A',
+    owner: overrides.owner || getApplicantUsernameFromEmbed(embed) || answers[2]?.value || answers[1]?.value || 'N/A',
+    ownerId: overrides.ownerId || applicantId || '',
     server: answers[7]?.value || '',
-    type: answers[5]?.value || 'General'
+    type: overrides.type || answers[5]?.value || 'General'
   };
 }
 
@@ -405,8 +472,8 @@ function buildApplicationResultEmbed(action, reason = null) {
     ? 'Application Voided'
     : `Application ${accepted ? 'Accepted' : 'Denied'}`;
   const description = reason
-    ? `Your Custom Business Application was ${accepted ? 'accepted' : 'denied'}.\n\nReason: ${reason}`
-    : `Your Custom Business Application was ${voided ? 'voided' : accepted ? 'accepted' : 'denied'}.`;
+    ? `Your application was ${accepted ? 'accepted' : 'denied'}.\n\nReason: ${reason}`
+    : `Your application was ${voided ? 'voided' : accepted ? 'accepted' : 'denied'}.`;
 
   return {
     color: accepted ? BUSINESS_APPLICATION_ACCEPTED_COLOR : voided ? BUSINESS_APPLICATION_VOID_COLOR : BUSINESS_APPLICATION_DENIED_COLOR,
@@ -425,6 +492,7 @@ module.exports = {
   BUSINESS_APPLICATION_CHANNEL_ID,
   BUSINESS_APPLICATION_LOG_CHANNEL_ID,
   BUSINESS_APPLICATION_TIMEOUT_MS,
+  APPLICATION_TYPES,
   buildApplicationDecisionRows,
   buildApplicationPanelEmbed,
   buildApplicationPanelRows,
@@ -443,6 +511,9 @@ module.exports = {
   findBusinessOperationsRole,
   getActiveApplication,
   getApplicantIdFromEmbed,
+  getApplicantUsernameFromEmbed,
+  getApplicationType,
+  getApplicationTypeKeyFromEmbed,
   buildBusinessFromApplicationEmbed,
   recordAnswer,
   startAnswerEdits,
