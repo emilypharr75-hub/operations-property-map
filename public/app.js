@@ -324,8 +324,8 @@ function applyLiveDataset(liveData, statusMessage = 'Synced live') {
   turfAlignment = nextTurfAlignment;
   blacklistRegions = nextBlacklistRegions;
     directoryRecords = {
-      businesses: Array.isArray(nextOrgs.businesses) ? nextOrgs.businesses.map(normalizeDirectoryRecord) : [],
-      mafias: Array.isArray(nextOrgs.mafias) ? nextOrgs.mafias.map(normalizeDirectoryRecord) : [],
+      businesses: Array.isArray(nextOrgs.businesses) ? nextOrgs.businesses.map(record => normalizeDirectoryRecord(record)) : [],
+      mafias: Array.isArray(nextOrgs.mafias) ? nextOrgs.mafias.map(record => normalizeDirectoryRecord(record, 'Tier 1')) : [],
       generalRegulations: Array.isArray(nextOrgs.generalRegulations) ? nextOrgs.generalRegulations.map(normalizeRegulationRecord) : [],
       billingRegulations: Array.isArray(nextOrgs.billingRegulations) ? nextOrgs.billingRegulations.map(normalizeRegulationRecord) : [],
       businessRegulations: Array.isArray(nextOrgs.businessRegulations) ? nextOrgs.businessRegulations.map(normalizeRegulationRecord) : [],
@@ -432,8 +432,8 @@ function getTurfExportData() {
 
 function getDirectoryExportData() {
   return {
-    businesses: directoryRecords.businesses.map(normalizeDirectoryRecord),
-    mafias: directoryRecords.mafias.map(normalizeDirectoryRecord),
+    businesses: directoryRecords.businesses.map(record => normalizeDirectoryRecord(record)),
+    mafias: directoryRecords.mafias.map(record => normalizeDirectoryRecord(record, 'Tier 1')),
     generalRegulations: directoryRecords.generalRegulations.map(normalizeRegulationRecord),
     billingRegulations: directoryRecords.billingRegulations.map(normalizeRegulationRecord),
     businessRegulations: directoryRecords.businessRegulations.map(normalizeRegulationRecord),
@@ -441,8 +441,9 @@ function getDirectoryExportData() {
   };
 }
 
-function normalizeDirectoryRecord(record) {
+function normalizeDirectoryRecord(record, defaultTier = '') {
   const ownerParts = splitOwnerLabelAndId(record.owner, record.ownerId);
+  const tierValue = record.tier || defaultTier;
 
   return {
     id: String(record.id),
@@ -450,10 +451,25 @@ function normalizeDirectoryRecord(record) {
     owner: ownerParts.owner,
     ownerId: ownerParts.ownerId,
     type: String(record.type || ''),
+    tier: tierValue ? normalizeMafiaTier(tierValue) : '',
     server: String(record.server || ''),
     logo: String(record.logo || ''),
     registeredAt: String(record.registeredAt || record.createdAt || '')
   };
+}
+
+function normalizeMafiaTier(value) {
+  const normalized = String(value || '').trim().toLowerCase().replace(/[-_]+/g, ' ');
+
+  if (normalized === 'tier 2' || normalized === '2') {
+    return 'Tier 2';
+  }
+
+  if (normalized === 'tier 3' || normalized === '3') {
+    return 'Tier 3';
+  }
+
+  return 'Tier 1';
 }
 
 function splitOwnerLabelAndId(owner, ownerId = '') {
@@ -498,8 +514,8 @@ function applyStoredDirectoryRecords() {
   }
 
     directoryRecords = {
-      businesses: Array.isArray(stored.businesses) ? stored.businesses.map(normalizeDirectoryRecord) : [],
-      mafias: Array.isArray(stored.mafias) ? stored.mafias.map(normalizeDirectoryRecord) : [],
+      businesses: Array.isArray(stored.businesses) ? stored.businesses.map(record => normalizeDirectoryRecord(record)) : [],
+      mafias: Array.isArray(stored.mafias) ? stored.mafias.map(record => normalizeDirectoryRecord(record, 'Tier 1')) : [],
       generalRegulations: Array.isArray(stored.generalRegulations) ? stored.generalRegulations.map(normalizeRegulationRecord) : [],
       billingRegulations: Array.isArray(stored.billingRegulations) ? stored.billingRegulations.map(normalizeRegulationRecord) : [],
       businessRegulations: Array.isArray(stored.businessRegulations) ? stored.businessRegulations.map(normalizeRegulationRecord) : [],
@@ -561,6 +577,7 @@ function addDirectoryRecord(key) {
     owner: 'N/A',
     ownerId: '',
     type: config.title === 'mafia' ? 'Mafia' : 'Business',
+    tier: config.title === 'mafia' ? 'Tier 1' : '',
     server: '',
     logo: ''
   };
@@ -617,6 +634,7 @@ function createDirectoryCard(key, record) {
       ${directoryFieldHtml('Owner', 'owner', record.owner)}
       ${directoryFieldHtml('Owner ID', 'ownerId', record.ownerId)}
       ${directoryFieldHtml('Type', 'type', record.type)}
+      ${key === 'mafias' ? directoryTierFieldHtml(record.tier) : ''}
       ${directoryFieldHtml('Discord Server', 'server', record.server)}
       ${directoryFieldHtml('Logo URL', 'logo', record.logo)}
     </div>
@@ -625,13 +643,28 @@ function createDirectoryCard(key, record) {
     </div>
   `;
 
-  for (const input of card.querySelectorAll('input[data-field]')) {
+  for (const input of card.querySelectorAll('input[data-field], select[data-field]')) {
     input.addEventListener('change', () => updateDirectoryRecord(key, record.id, input.dataset.field, input.value));
   }
 
   card.querySelector('[data-remove-record]').addEventListener('click', () => removeDirectoryRecord(key, record.id));
 
   return card;
+}
+
+function directoryTierFieldHtml(value) {
+  const tier = normalizeMafiaTier(value);
+  const options = ['Tier 1', 'Tier 2', 'Tier 3']
+    .map(option => `<option value="${option}"${option === tier ? ' selected' : ''}>${option}</option>`)
+    .join('');
+
+  return `
+    <div class="org-field">
+      <label>Tier</label>
+      <span class="org-display">${tier}</span>
+      <select data-field="tier">${options}</select>
+    </div>
+  `;
 }
 
 function directoryFieldHtml(label, field, value) {

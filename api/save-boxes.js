@@ -116,8 +116,9 @@ function normalizeSaleStatus(value) {
   return normalized === 'off sale' ? 'Off Sale' : 'On Sale';
 }
 
-function normalizeDirectoryRecord(record) {
+function normalizeDirectoryRecord(record, defaultTier = '') {
   const ownerParts = splitOwnerLabelAndId(record.owner, record.ownerId);
+  const tierValue = record.tier || defaultTier;
 
   return {
     id: String(record.id),
@@ -125,10 +126,25 @@ function normalizeDirectoryRecord(record) {
     owner: ownerParts.owner,
     ownerId: ownerParts.ownerId,
     type: String(record.type || ''),
+    tier: tierValue ? normalizeMafiaTier(tierValue) : '',
     server: String(record.server || ''),
     logo: String(record.logo || ''),
     registeredAt: String(record.registeredAt || record.createdAt || '')
   };
+}
+
+function normalizeMafiaTier(value) {
+  const normalized = String(value || '').trim().toLowerCase().replace(/[-_]+/g, ' ');
+
+  if (normalized === 'tier 2' || normalized === '2') {
+    return 'Tier 2';
+  }
+
+  if (normalized === 'tier 3' || normalized === '3') {
+    return 'Tier 3';
+  }
+
+  return 'Tier 1';
 }
 
 function splitOwnerLabelAndId(owner, ownerId = '') {
@@ -151,8 +167,8 @@ function splitOwnerLabelAndId(owner, ownerId = '') {
 
 function normalizeDirectories(orgs) {
   return {
-    businesses: Array.isArray(orgs?.businesses) ? orgs.businesses.map(normalizeDirectoryRecord) : [],
-    mafias: Array.isArray(orgs?.mafias) ? orgs.mafias.map(normalizeDirectoryRecord) : [],
+    businesses: Array.isArray(orgs?.businesses) ? orgs.businesses.map(record => normalizeDirectoryRecord(record)) : [],
+    mafias: Array.isArray(orgs?.mafias) ? orgs.mafias.map(record => normalizeDirectoryRecord(record, 'Tier 1')) : [],
     generalRegulations: Array.isArray(orgs?.generalRegulations) ? orgs.generalRegulations.map(normalizeRegulationRecord) : [],
     billingRegulations: Array.isArray(orgs?.billingRegulations) ? orgs.billingRegulations.map(normalizeRegulationRecord) : [],
     businessRegulations: Array.isArray(orgs?.businessRegulations) ? orgs.businessRegulations.map(normalizeRegulationRecord) : [],

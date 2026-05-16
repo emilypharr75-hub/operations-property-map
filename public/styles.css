@@ -699,7 +699,8 @@ dd {
 }
 
 .org-field input,
-.org-field textarea {
+.org-field textarea,
+.org-field select {
   width: 100%;
   border: 1px solid var(--line);
   border-radius: 6px;
@@ -728,6 +729,10 @@ body:not(.editing) .org-field input {
 }
 
 body:not(.editing) .org-field textarea {
+  display: none;
+}
+
+body:not(.editing) .org-field select {
   display: none;
 }
 
