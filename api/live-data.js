@@ -174,7 +174,7 @@ function compactOrgs(orgs = {}) {
 
 function compactLiveData(data) {
   return {
-    properties: Array.isArray(data.properties) ? data.properties : [],
+    properties: Array.isArray(data.properties) ? data.properties.map(compactPropertyRecord) : [],
     markers: Array.isArray(data.markers) ? data.markers : [],
     orgs: compactOrgs(data.orgs),
     turfs: Array.isArray(data.turfs) ? data.turfs : [],
@@ -183,6 +183,18 @@ function compactLiveData(data) {
     updatedBy: data.updatedBy || '',
     updatedAt: data.updatedAt,
     version: data.version
+  };
+}
+
+function normalizeSaleStatus(value) {
+  const normalized = String(value || '').trim().toLowerCase().replace(/[-_]+/g, ' ');
+  return normalized === 'off sale' ? 'Off Sale' : 'On Sale';
+}
+
+function compactPropertyRecord(record) {
+  return {
+    ...record,
+    saleStatus: normalizeSaleStatus(record.saleStatus)
   };
 }
 

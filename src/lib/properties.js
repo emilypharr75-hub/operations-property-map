@@ -120,10 +120,16 @@ function normalizeProperty(property) {
     number: String(property.number || 'N/A'),
     buildingType: normalizeBuildingType(property.buildingType),
     owner: String(property.owner || 'N/A'),
+    saleStatus: normalizeSaleStatus(property.saleStatus),
     price: price.toLowerCase() === 'n/a' ? 'Not for sale' : price,
     tax: tax.toLowerCase() === 'n/a' ? 'Not for sale' : tax,
     custom: Boolean(property.custom)
   };
+}
+
+function normalizeSaleStatus(value) {
+  const normalized = String(value || '').trim().toLowerCase().replace(/[-_]+/g, ' ');
+  return normalized === 'off sale' ? 'Off Sale' : 'On Sale';
 }
 
 function splitOwnerLabelAndId(owner, ownerId = '') {

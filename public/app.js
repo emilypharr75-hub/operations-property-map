@@ -89,6 +89,8 @@ const elements = {
   propertyNumberEdit: document.querySelector('#propertyNumberEdit'),
   propertyOwner: document.querySelector('#propertyOwner'),
   propertyOwnerEdit: document.querySelector('#propertyOwnerEdit'),
+  propertySaleStatus: document.querySelector('#propertySaleStatus'),
+  propertySaleStatusEdit: document.querySelector('#propertySaleStatusEdit'),
   propertyPrice: document.querySelector('#propertyPrice'),
   propertyPriceEdit: document.querySelector('#propertyPriceEdit'),
   propertyTax: document.querySelector('#propertyTax'),
@@ -204,6 +206,7 @@ function buildExportData() {
         number: property.number,
         buildingType: property.buildingType,
         owner: property.owner,
+        saleStatus: normalizeSaleStatus(property.saleStatus),
         price: property.price,
         tax: property.tax,
         custom: Boolean(property.custom)
@@ -279,7 +282,7 @@ function applyLiveDataset(liveData, statusMessage = 'Synced live') {
     return false;
   }
 
-  const nextProperties = liveData.properties || [];
+  const nextProperties = Array.isArray(liveData.properties) ? liveData.properties.map(normalizePropertyRecord) : [];
   const nextMarkers = liveData.markers || [];
   const nextOrgs = liveData.orgs || {};
   const nextTurfs = Array.isArray(liveData.turfs) ? liveData.turfs.map(normalizeTurfRecord) : [];
@@ -1993,6 +1996,26 @@ function normalizeBuildingType(value) {
   return 'building';
 }
 
+function normalizeSaleStatus(value) {
+  const normalized = String(value || '').trim().toLowerCase().replace(/[-_]+/g, ' ');
+  return normalized === 'off sale' ? 'Off Sale' : 'On Sale';
+}
+
+function normalizePropertyRecord(property) {
+  return {
+    ...property,
+    id: String(property.id),
+    name: String(property.name || property.number || property.id),
+    number: String(property.number || 'N/A'),
+    buildingType: normalizeBuildingType(property.buildingType),
+    owner: String(property.owner || 'N/A'),
+    saleStatus: normalizeSaleStatus(property.saleStatus),
+    price: String(property.price || 'Not for sale'),
+    tax: String(property.tax || 'Not for sale'),
+    custom: Boolean(property.custom)
+  };
+}
+
 function inferBuildingType(property) {
   const explicitType = normalizeBuildingType(property.buildingType);
 
@@ -2113,6 +2136,7 @@ function editablePropertyFields() {
     ['buildingType', elements.buildingTypeEdit],
     ['number', elements.propertyNumberEdit],
     ['owner', elements.propertyOwnerEdit],
+    ['saleStatus', elements.propertySaleStatusEdit],
     ['price', elements.propertyPriceEdit],
     ['tax', elements.propertyTaxEdit]
   ];
@@ -2137,6 +2161,7 @@ function saveCustomProperties() {
           number: property.number,
           buildingType: property.buildingType,
           owner: property.owner,
+          saleStatus: normalizeSaleStatus(property.saleStatus),
           price: property.price,
           tax: property.tax,
           custom: true
@@ -2236,6 +2261,7 @@ function savePropertyEdits() {
         name: property.name,
         number: property.number,
         owner: property.owner,
+        saleStatus: normalizeSaleStatus(property.saleStatus),
         price: property.price,
         tax: property.tax
       };
@@ -2258,6 +2284,7 @@ function applyStoredPropertyEdits() {
       property.number = edit.number || property.number;
       property.buildingType = edit.buildingType ? normalizeBuildingType(edit.buildingType) : property.buildingType;
       property.owner = edit.owner || property.owner;
+      property.saleStatus = normalizeSaleStatus(edit.saleStatus || property.saleStatus);
       property.price = edit.price || property.price;
       property.tax = edit.tax || property.tax;
       property.localEdited = true;
@@ -2685,6 +2712,9 @@ function selectProperty(id) {
   elements.propertyNumberEdit.value = property.number;
   elements.propertyOwner.textContent = property.owner;
   elements.propertyOwnerEdit.value = property.owner;
+  property.saleStatus = normalizeSaleStatus(property.saleStatus);
+  elements.propertySaleStatus.textContent = property.saleStatus;
+  elements.propertySaleStatusEdit.value = property.saleStatus;
   elements.propertyPrice.textContent = property.price;
   elements.propertyPriceEdit.value = property.price;
   elements.propertyTax.textContent = property.tax;
@@ -2718,6 +2748,9 @@ function updateSelectedPropertyField(field, value) {
   }
 
   property[field] = field === 'buildingType' ? normalizeBuildingType(nextValue) : nextValue;
+  if (field === 'saleStatus') {
+    property.saleStatus = normalizeSaleStatus(nextValue);
+  }
   property.buildingType = inferBuildingType(property);
   property.localEdited = true;
   elements.propertyName.textContent = labelFor(property);
@@ -2725,6 +2758,9 @@ function updateSelectedPropertyField(field, value) {
   elements.buildingTypeEdit.value = normalizeBuildingType(property.buildingType);
   elements.propertyNumber.textContent = property.number;
   elements.propertyOwner.textContent = property.owner;
+  property.saleStatus = normalizeSaleStatus(property.saleStatus);
+  elements.propertySaleStatus.textContent = property.saleStatus;
+  elements.propertySaleStatusEdit.value = property.saleStatus;
   elements.propertyPrice.textContent = property.price;
   elements.propertyTax.textContent = property.tax;
   elements.search.value = labelFor(property);
@@ -2792,6 +2828,7 @@ function createNewBox() {
     number: number.trim(),
     buildingType: 'building',
     owner: 'N/A',
+    saleStatus: 'On Sale',
     price: 'Not for sale',
     tax: 'Not for sale',
     custom: true,
@@ -3117,7 +3154,7 @@ async function init() {
       fetch('/mafia-turfs.json'),
       fetch('/blacklist-regions.json').catch(() => null)
     ]);
-    properties = await propertiesResponse.json();
+    properties = (await propertiesResponse.json()).map(normalizePropertyRecord);
     propertyMarkers = await markersResponse.json();
     mafiaTurfs = await turfResponse.json();
     blacklistRegions = blacklistRegionsResponse?.ok
@@ -3305,11 +3342,12 @@ async function init() {
   });
   for (const [field, element] of editablePropertyFields()) {
     element.dataset.field = field;
-    if (field !== 'buildingType') {
+    if (!['buildingType', 'saleStatus'].includes(field)) {
       element.addEventListener('input', updateSelectedPropertyFromInput);
     }
   }
   elements.buildingTypeEdit.addEventListener('change', updateSelectedBuildingType);
+  elements.propertySaleStatusEdit.addEventListener('change', updateSelectedPropertyFromInput);
   elements.turfNumberEdit.addEventListener('input', event => updateSelectedTurfField('number', event.currentTarget.value));
   elements.turfOwnerEdit.addEventListener('change', event => updateSelectedTurfField('owner', event.currentTarget.value));
   elements.turfStatusEdit.addEventListener('change', event => updateSelectedTurfField('status', event.currentTarget.value));

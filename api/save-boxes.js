@@ -104,10 +104,16 @@ function normalizeProperty(property) {
     number: String(property.number),
     buildingType: String(property.buildingType),
     owner: String(property.owner),
+    saleStatus: normalizeSaleStatus(property.saleStatus),
     price: String(property.price),
     tax: String(property.tax),
     custom: Boolean(property.custom)
   };
+}
+
+function normalizeSaleStatus(value) {
+  const normalized = String(value || '').trim().toLowerCase().replace(/[-_]+/g, ' ');
+  return normalized === 'off sale' ? 'Off Sale' : 'On Sale';
 }
 
 function normalizeDirectoryRecord(record) {
