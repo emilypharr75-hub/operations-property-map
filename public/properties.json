@@ -713,7 +713,7 @@
     "id": "house-5042",
     "name": "House 5042",
     "number": "5042",
-    "buildingType": "house",
+    "buildingType": "mafia",
     "owner": "N/A",
     "price": "$1,040,000",
     "tax": "$20,000",
