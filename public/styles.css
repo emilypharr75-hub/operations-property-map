@@ -4,6 +4,7 @@
   --panel: #181c20;
   --panel-2: #20262b;
   --text: #f2f4f7;
+  --textbox-text: #80bcff;
   --muted: #aeb7bf;
   --line: #343d45;
   --accent: #e03b3b;
@@ -19,6 +20,12 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+input,
+textarea,
+select {
+  color: var(--textbox-text);
 }
 
 .shell {
@@ -123,7 +130,7 @@ body {
   border: 1px solid var(--line);
   border-radius: 6px;
   background: var(--panel);
-  color: var(--text);
+  color: var(--textbox-text);
   font: inherit;
   padding: 10px 12px;
 }
@@ -265,7 +272,7 @@ body {
   border: 1px solid var(--line);
   border-radius: 6px;
   background: var(--panel);
-  color: var(--text);
+  color: var(--textbox-text);
   font: inherit;
   padding: 10px 12px;
 }
@@ -280,6 +287,15 @@ body {
   z-index: 4;
 }
 
+.marker-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
 .marker,
 .turf-marker {
   position: absolute;
@@ -291,6 +307,66 @@ body {
   transition: background 120ms ease, box-shadow 120ms ease;
   touch-action: none;
   transform-origin: center;
+}
+
+.marker-polygon {
+  fill: color-mix(in srgb, var(--marker-color) 38%, transparent);
+  stroke: var(--outline-color);
+  stroke-width: 7px;
+  vector-effect: non-scaling-stroke;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: fill 120ms ease, filter 120ms ease;
+}
+
+.marker-polygon:hover,
+.marker-polygon.active {
+  fill: color-mix(in srgb, var(--marker-color) 52%, transparent);
+  filter: drop-shadow(0 0 3px #fff);
+}
+
+.marker-vertex,
+.draft-vertex {
+  fill: var(--marker-color, #35a7ff);
+  stroke: #fff;
+  stroke-width: 4px;
+  vector-effect: non-scaling-stroke;
+  cursor: grab;
+  pointer-events: auto;
+}
+
+.marker-vertex:active {
+  cursor: grabbing;
+}
+
+.draft-polygon {
+  fill: color-mix(in srgb, #35a7ff 28%, transparent);
+  stroke: #80bcff;
+  stroke-width: 6px;
+  stroke-dasharray: 14 10;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+
+.markers.drawing {
+  cursor: crosshair;
+  pointer-events: auto;
+}
+
+.markers.drawing .marker-polygon {
+  pointer-events: none;
+}
+
+.marker-owned {
+  border-color: #24d16f;
+}
+
+.marker-off-sale {
+  border-color: #ff3030;
+}
+
+.marker-available {
+  border-color: #ffd43b;
 }
 
 .turf-marker {
@@ -518,7 +594,7 @@ dd {
   border: 1px solid var(--line);
   border-radius: 6px;
   background: var(--panel-2);
-  color: var(--text);
+  color: var(--textbox-text);
   font: inherit;
   padding: 10px 12px;
 }
@@ -581,6 +657,83 @@ dd {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 14px;
+}
+
+.mafia-tier-perks {
+  margin-bottom: 24px;
+}
+
+.mafia-tier-perks-heading {
+  margin-bottom: 14px;
+}
+
+.mafia-tier-perks-heading h2 {
+  margin: 0 0 6px;
+}
+
+.mafia-tier-perks-heading p:last-child {
+  margin: 0;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.mafia-tier-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.mafia-tier-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-top: 4px solid var(--tier-color);
+  border-radius: 6px;
+  background: var(--panel);
+  padding: 18px;
+}
+
+.mafia-tier-card-t1 {
+  --tier-color: #b7c0ca;
+}
+
+.mafia-tier-card-t2 {
+  --tier-color: #4fa8ff;
+}
+
+.mafia-tier-card-t3 {
+  --tier-color: #d8ae4f;
+}
+
+.mafia-tier-title {
+  margin-bottom: 14px;
+}
+
+.mafia-tier-title span {
+  color: var(--tier-color);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.mafia-tier-title h3 {
+  margin: 3px 0 0;
+  font-size: 21px;
+}
+
+.mafia-tier-card ul {
+  display: grid;
+  gap: 9px;
+  margin: 0;
+  padding-left: 19px;
+  color: var(--muted);
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.mafia-tier-card li::marker {
+  color: var(--tier-color);
 }
 
 .regulation-list {
@@ -705,7 +858,7 @@ dd {
   border: 1px solid var(--line);
   border-radius: 6px;
   background: var(--bg);
-  color: var(--text);
+  color: var(--textbox-text);
   font: inherit;
   font-weight: 700;
   padding: 8px 10px;
@@ -803,5 +956,9 @@ body:not(.editing) .regulation-add {
   .zoom-controls {
     width: 100%;
     margin-left: 0;
+  }
+
+  .mafia-tier-grid {
+    grid-template-columns: 1fr;
   }
 }

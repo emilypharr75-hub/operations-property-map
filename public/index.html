@@ -41,8 +41,8 @@
                 <button type="button" id="zoomIn" aria-label="Zoom in">+</button>
                 <output id="zoomValue" for="zoomRange">100%</output>
               </div>
-              <button type="button" class="edit-toggle" id="addBox">Add Box</button>
-              <button type="button" class="edit-toggle" id="exportBoxes">Export Boxes</button>
+              <button type="button" class="edit-toggle" id="addBox" aria-pressed="false">Add Shape</button>
+              <button type="button" class="edit-toggle" id="exportBoxes">Export Shapes</button>
               <button type="button" class="edit-toggle" id="undoEdit">Undo</button>
               <span class="publish-status" id="publishStatus" aria-live="polite">Live save locked</span>
             </div>
@@ -103,7 +103,7 @@
                   <input id="propertyPriceEdit" class="field-editor" type="text" aria-label="Edit property price" disabled>
                 </dd>
               </div>
-              <div>
+              <div hidden>
                 <dt>Property Tax</dt>
                 <dd>
                   <span id="propertyTax">-</span>
@@ -131,11 +131,9 @@
               <button type="button" class="edit-toggle" id="alignTurfs" aria-pressed="false">Align Turfs</button>
               <button type="button" class="edit-toggle" id="turfScaleDown" aria-label="Scale turf layer down">Scale -</button>
               <button type="button" class="edit-toggle" id="turfScaleUp" aria-label="Scale turf layer up">Scale +</button>
-              <button type="button" class="edit-toggle" id="resetTurfAlignment">Reset Align</button>
               <button type="button" class="edit-toggle" id="editBlacklistRegions" aria-pressed="false">Edit Blacklist</button>
               <button type="button" class="edit-toggle" id="blacklistScaleDown" aria-label="Scale selected blacklist region down">BL Scale -</button>
               <button type="button" class="edit-toggle" id="blacklistScaleUp" aria-label="Scale selected blacklist region up">BL Scale +</button>
-              <button type="button" class="edit-toggle" id="resetBlacklistRegions">Reset Blacklist</button>
               <button type="button" class="edit-toggle" id="toggleTurfKey" aria-expanded="false">Key</button>
               <span class="publish-status" id="turfPublishStatus" aria-live="polite">Live save locked</span>
             </div>
@@ -207,6 +205,55 @@
             </div>
             <button type="button" class="edit-toggle directory-add" data-directory-add="mafias" disabled>Add Mafia</button>
           </div>
+          <section class="mafia-tier-perks" aria-labelledby="mafiaTierPerksTitle">
+            <div class="mafia-tier-perks-heading">
+              <p class="eyebrow">Progression</p>
+              <h2 id="mafiaTierPerksTitle">Mafia Tier Perks</h2>
+              <p>Higher tiers include every perk from the tiers below them.</p>
+            </div>
+            <div class="mafia-tier-grid">
+              <article class="mafia-tier-card mafia-tier-card-t1">
+                <div class="mafia-tier-title">
+                  <span>Tier 1</span>
+                  <h3>Gang</h3>
+                </div>
+                <ul>
+                  <li>Official mafia recognition and directory listing</li>
+                  <li>Custom name, logo, and Discord invite displayed</li>
+                  <li>May claim and defend 1 turf</li>
+                  <li>Access to standard mafia services and events</li>
+                  <li>Eligible to form one declared rivalry</li>
+                </ul>
+              </article>
+              <article class="mafia-tier-card mafia-tier-card-t2">
+                <div class="mafia-tier-title">
+                  <span>Tier 2</span>
+                  <h3>Organization</h3>
+                </div>
+                <ul>
+                  <li>All Gang perks</li>
+                  <li>May control up to 2 connected turfs</li>
+                  <li>Eligible to form one official alliance</li>
+                  <li>Priority review for expansion requests</li>
+                  <li>May host 1 staff-supported mafia event per month</li>
+                </ul>
+              </article>
+              <article class="mafia-tier-card mafia-tier-card-t3">
+                <div class="mafia-tier-title">
+                  <span>Tier 3</span>
+                  <h3>Syndicate</h3>
+                </div>
+                <ul>
+                  <li>All Organization perks</li>
+                  <li>May control up to 3 connected turfs</li>
+                  <li>Eligible to form up to 2 official alliances</li>
+                  <li>First consideration when eligible turf becomes vacant</li>
+                  <li>May host 2 staff-supported mafia events per month</li>
+                  <li>Direct input on proposed mafia events and rule changes</li>
+                </ul>
+              </article>
+            </div>
+          </section>
           <div class="directory-grid" id="mafiaList"></div>
         </section>
 
@@ -270,6 +317,6 @@
         </div>
       </form>
     </dialog>
-    <script src="/app.js?v=16"></script>
+    <script src="/app.js?v=27"></script>
   </body>
 </html>

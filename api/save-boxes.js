@@ -1,7 +1,20 @@
 const REPO = process.env.GITHUB_REPO || 'emilypharr75-hub/operations-property-map';
 const BRANCH = process.env.GITHUB_BRANCH || 'main';
-const EDIT_PASSWORD = 'MoreBusinesses';
-const { hasLiveStore, writeLiveData } = require('../lib/live-store');
+const EDIT_PASSWORD = process.env.EDIT_PASSWORD ||
+  process.env.PROPERTY_EDIT_PASSWORD ||
+  'MoreMafiaAdmin';
+const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN || process.env.TOKEN || '';
+const DISCORD_GUILD_ID = process.env.DISCORD_GUILD_ID || process.env.GUILD_ID || '';
+const BUSINESS_OWNER_ROLE_NAME = 'Business Owner';
+const { hasLiveStore, readLiveMeta, writeLiveData } = require('../lib/live-store');
+const SHUTDOWN_ORGANIZATION_OWNERS = new Set([
+  'bm industries',
+  'bp (british petroleum)',
+  'golden harvest farms',
+  'golden harvest farms (676431193276678164)',
+  'srt',
+  'tampa bay channel 5 news'
+]);
 
 function jsonResponse(response, status, body) {
   response.statusCode = status;
@@ -40,11 +53,34 @@ async function githubRequest(path, options = {}) {
   return data;
 }
 
+async function fetchRepoJson(path, ref) {
+  const response = await fetch(`https://raw.githubusercontent.com/${REPO}/${ref}/${path}`, {
+    cache: 'no-store',
+    headers: {
+      Accept: 'application/vnd.github.raw+json',
+      'User-Agent': 'operations-property-map'
+    }
+  });
+  const text = await response.text();
+
+  if (!response.ok) {
+    throw new Error(text || `Could not fetch ${path}`);
+  }
+
+  return JSON.parse(text);
+}
+
 function normalizeMarker(marker) {
   return {
     id: String(marker.id),
     rect: marker.rect,
     buildingRect: marker.buildingRect || marker.rect,
+    points: Array.isArray(marker.points)
+      ? marker.points.map(point => [
+        Math.round(Number(point?.[0]) || 0),
+        Math.round(Number(point?.[1]) || 0)
+      ])
+      : undefined,
     rotation: Number(marker.rotation || 0),
     custom: Boolean(marker.custom)
   };
@@ -98,22 +134,62 @@ function normalizeBlacklistRegions(records) {
 }
 
 function normalizeProperty(property) {
+  const price = String(property.price || 'Not for sale');
+  const tax = String(property.tax || 'Not for sale');
+  const buildingType = String(property.buildingType);
+  const shutdownOwner = isShutdownOrganizationOwner(property.owner);
+  const owner = shutdownOwner ? 'N/A' : String(property.owner || 'N/A');
+  const requestedSaleStatus = shutdownOwner ? 'On Sale' : property.saleStatus;
+  const offSale = shouldBeOffSale({
+    ...property,
+    buildingType,
+    owner,
+    saleStatus: requestedSaleStatus,
+    price,
+    tax
+  });
+
   return {
     id: String(property.id),
     name: String(property.name),
     number: String(property.number),
-    buildingType: String(property.buildingType),
-    owner: String(property.owner),
-    saleStatus: normalizeSaleStatus(property.saleStatus),
-    price: String(property.price),
-    tax: String(property.tax),
+    buildingType,
+    owner,
+    saleStatus: offSale ? 'Off Sale' : normalizeSaleStatus(requestedSaleStatus),
+    price,
+    tax,
     custom: Boolean(property.custom)
   };
+}
+
+function isShutdownOrganizationOwner(value) {
+  const owner = String(value || 'N/A').trim() || 'N/A';
+  return SHUTDOWN_ORGANIZATION_OWNERS.has(owner.toLowerCase());
 }
 
 function normalizeSaleStatus(value) {
   const normalized = String(value || '').trim().toLowerCase().replace(/[-_]+/g, ' ');
   return normalized === 'off sale' ? 'Off Sale' : 'On Sale';
+}
+
+function isPropertyOwned(property) {
+  const owner = String(property.owner || '').trim().toLowerCase();
+  return Boolean(owner && owner !== 'n/a' && owner !== 'none');
+}
+
+function shouldBeOffSale(property) {
+  const buildingType = String(property.buildingType || '').trim().toLowerCase();
+  const saleStatus = normalizeSaleStatus(property.saleStatus).toLowerCase();
+  const price = String(property.price || '').trim().toLowerCase();
+  const tax = String(property.tax || '').trim().toLowerCase();
+
+  return isPropertyOwned(property) ||
+    buildingType === 'government' ||
+    saleStatus === 'off sale' ||
+    price === 'not for sale' ||
+    tax === 'not for sale' ||
+    price === 'n/a' ||
+    tax === 'n/a';
 }
 
 function normalizeDirectoryRecord(record, defaultTier = '') {
@@ -148,21 +224,31 @@ function normalizeMafiaTier(value) {
 }
 
 function splitOwnerLabelAndId(owner, ownerId = '') {
-  const text = String(owner || '').trim();
-  const explicitId = String(ownerId || '').trim();
-  const match = text.match(/^(.*?)\s*\((\d{17,20})\)\s*$/);
+  const ownerEntries = splitCommaSeparatedValues(owner);
+  const explicitIds = splitCommaSeparatedValues(ownerId);
+  const names = [];
+  const embeddedIds = [];
 
-  if (!match) {
-    return {
-      owner: text,
-      ownerId: explicitId
-    };
+  for (const entry of ownerEntries) {
+    const match = entry.match(/^(.*?)\s*\((\d{17,20})\)\s*$/);
+    names.push(match ? match[1].trim() : entry);
+
+    if (match) {
+      embeddedIds.push(match[2]);
+    }
   }
 
   return {
-    owner: match[1].trim(),
-    ownerId: explicitId || match[2]
+    owner: names.join(', '),
+    ownerId: (explicitIds.length ? explicitIds : embeddedIds).join(', ')
   };
+}
+
+function splitCommaSeparatedValues(value) {
+  return String(value || '')
+    .split(',')
+    .map(entry => entry.trim())
+    .filter(Boolean);
 }
 
 function normalizeDirectories(orgs) {
@@ -174,6 +260,164 @@ function normalizeDirectories(orgs) {
     businessRegulations: Array.isArray(orgs?.businessRegulations) ? orgs.businessRegulations.map(normalizeRegulationRecord) : [],
     mafiaRegulations: Array.isArray(orgs?.mafiaRegulations) ? orgs.mafiaRegulations.map(normalizeRegulationRecord) : []
   };
+}
+
+function organizationOwnerKeys(record) {
+  return [record?.name, record?.id]
+    .map(value => String(value || '').trim().toLowerCase())
+    .filter(Boolean);
+}
+
+function businessOwnerIds(orgs) {
+  return new Set((Array.isArray(orgs?.businesses) ? orgs.businesses : [])
+    .flatMap(record => splitCommaSeparatedValues(record.ownerId))
+    .filter(ownerId => /^\d{17,20}$/.test(ownerId)));
+}
+
+function removedBusinessOwnerIds(previousOrgs, nextOrgs) {
+  const nextBusinessIds = new Set((Array.isArray(nextOrgs?.businesses) ? nextOrgs.businesses : [])
+    .map(record => String(record.id || '').trim().toLowerCase())
+    .filter(Boolean));
+  const nextBusinessNames = new Set((Array.isArray(nextOrgs?.businesses) ? nextOrgs.businesses : [])
+    .map(record => String(record.name || '').trim().toLowerCase())
+    .filter(Boolean));
+  const remainingOwnerIds = businessOwnerIds(nextOrgs);
+  const removedOwnerIds = new Set();
+
+  for (const business of Array.isArray(previousOrgs?.businesses) ? previousOrgs.businesses : []) {
+    const id = String(business.id || '').trim().toLowerCase();
+    const name = String(business.name || '').trim().toLowerCase();
+
+    if ((id && nextBusinessIds.has(id)) || (name && nextBusinessNames.has(name))) {
+      continue;
+    }
+
+    for (const ownerId of splitCommaSeparatedValues(business.ownerId)) {
+      if (/^\d{17,20}$/.test(ownerId) && !remainingOwnerIds.has(ownerId)) {
+        removedOwnerIds.add(ownerId);
+      }
+    }
+  }
+
+  return [...removedOwnerIds];
+}
+
+async function discordRequest(path, options = {}) {
+  const discordResponse = await fetch(`https://discord.com/api/v10${path}`, {
+    ...options,
+    headers: {
+      Authorization: `Bot ${DISCORD_BOT_TOKEN}`,
+      'Content-Type': 'application/json',
+      ...(options.headers || {})
+    }
+  });
+
+  if (!discordResponse.ok && discordResponse.status !== 404) {
+    const text = await discordResponse.text();
+    throw new Error(text || `Discord API failed with ${discordResponse.status}`);
+  }
+
+  return discordResponse.status === 204 ? null : discordResponse.json().catch(() => null);
+}
+
+async function removeDeletedBusinessOwnerRoles(ownerIds) {
+  if (!ownerIds.length) {
+    return { configured: true, removed: [], failed: [] };
+  }
+
+  if (!DISCORD_BOT_TOKEN || !DISCORD_GUILD_ID) {
+    return {
+      configured: false,
+      removed: [],
+      failed: ownerIds.map(ownerId => ({ ownerId, reason: 'Discord bot credentials are not configured on Vercel.' }))
+    };
+  }
+
+  const roles = await discordRequest(`/guilds/${DISCORD_GUILD_ID}/roles`);
+  const businessOwnerRole = roles?.find(role =>
+    String(role.name || '').toLowerCase() === BUSINESS_OWNER_ROLE_NAME.toLowerCase()
+  );
+
+  if (!businessOwnerRole) {
+    return {
+      configured: true,
+      removed: [],
+      failed: ownerIds.map(ownerId => ({ ownerId, reason: 'Business Owner role was not found.' }))
+    };
+  }
+
+  const result = { configured: true, removed: [], failed: [] };
+
+  for (const ownerId of ownerIds) {
+    try {
+      await discordRequest(
+        `/guilds/${DISCORD_GUILD_ID}/members/${ownerId}/roles/${businessOwnerRole.id}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'X-Audit-Log-Reason': encodeURIComponent('Business deleted from Operations website')
+          }
+        }
+      );
+      result.removed.push(ownerId);
+    } catch (error) {
+      result.failed.push({ ownerId, reason: error.message });
+    }
+  }
+
+  return result;
+}
+
+function releaseRemovedOrganizationProperties(properties, previousOrgs, nextOrgs) {
+  const previousOrganizations = [
+    ...(Array.isArray(previousOrgs?.businesses) ? previousOrgs.businesses : []),
+    ...(Array.isArray(previousOrgs?.mafias) ? previousOrgs.mafias : [])
+  ];
+  const nextIds = new Set([
+    ...(Array.isArray(nextOrgs?.businesses) ? nextOrgs.businesses : []),
+    ...(Array.isArray(nextOrgs?.mafias) ? nextOrgs.mafias : [])
+  ].map(record => String(record.id || '').trim().toLowerCase()).filter(Boolean));
+  const nextNames = new Set([
+    ...(Array.isArray(nextOrgs?.businesses) ? nextOrgs.businesses : []),
+    ...(Array.isArray(nextOrgs?.mafias) ? nextOrgs.mafias : [])
+  ].map(record => String(record.name || '').trim().toLowerCase()).filter(Boolean));
+  const removedOwnerKeys = new Set();
+
+  for (const organization of previousOrganizations) {
+    const id = String(organization.id || '').trim().toLowerCase();
+    const name = String(organization.name || '').trim().toLowerCase();
+
+    if ((id && nextIds.has(id)) || (name && nextNames.has(name))) {
+      continue;
+    }
+
+    for (const key of organizationOwnerKeys(organization)) {
+      removedOwnerKeys.add(key);
+    }
+  }
+
+  if (!removedOwnerKeys.size) {
+    return [];
+  }
+
+  const released = [];
+
+  for (const property of properties) {
+    const owner = String(property.owner || '').trim().toLowerCase();
+
+    if (!removedOwnerKeys.has(owner)) {
+      continue;
+    }
+
+    released.push({
+      id: property.id,
+      owner: property.owner
+    });
+    property.owner = 'N/A';
+    property.saleStatus = 'On Sale';
+  }
+
+  return released;
 }
 
 function normalizeRegulationRecord(record) {
@@ -279,18 +523,28 @@ module.exports = async function handler(request, response) {
     const normalizedOrgs = normalizeDirectories(body.orgs);
     const { orgs, pdfFiles } = prepareDirectoriesForSave(normalizedOrgs);
     let liveData = null;
+    const [ref, liveMeta] = await Promise.all([
+      githubRequest(`/git/ref/heads/${BRANCH}`),
+      hasLiveStore() ? readLiveMeta() : Promise.resolve(null)
+    ]);
+    const currentVersion = liveMeta?.version || ref.object.sha;
 
-    if (hasLiveStore()) {
-      liveData = await writeLiveData({
-        properties,
-        markers,
-        turfs,
-        turfAlignment,
-        blacklistRegions,
-        orgs,
-        updatedBy: clientId
+    if (body.baseVersion && body.baseVersion !== currentVersion) {
+      jsonResponse(response, 409, {
+        error: 'The website changed since this editor loaded. Reload before saving again.',
+        version: currentVersion
       });
+      return;
     }
+
+    const previousOrgs = await fetchRepoJson('public/orgs.json', ref.object.sha)
+      .catch(() => ({ businesses: [], mafias: [] }));
+    const releasedProperties = releaseRemovedOrganizationProperties(
+      properties,
+      previousOrgs,
+      orgs
+    );
+    const deletedBusinessOwnerIds = removedBusinessOwnerIds(previousOrgs, orgs);
 
     const files = {
       'data/web-properties.json': { content: `${JSON.stringify(properties, null, 2)}\n`, encoding: 'utf-8' },
@@ -311,7 +565,6 @@ module.exports = async function handler(request, response) {
       files[path] = { content, encoding: 'base64' };
     }
 
-    const ref = await githubRequest(`/git/ref/heads/${BRANCH}`);
     const latestCommit = await githubRequest(`/git/commits/${ref.object.sha}`);
     const tree = [];
 
@@ -343,7 +596,7 @@ module.exports = async function handler(request, response) {
     const newCommit = await githubRequest('/git/commits', {
       method: 'POST',
       body: JSON.stringify({
-        message: `Update property boxes from editor ${new Date().toISOString()}`,
+        message: `Update property shapes from editor ${new Date().toISOString()}`,
         tree: newTree.sha,
         parents: [ref.object.sha]
       })
@@ -356,12 +609,28 @@ module.exports = async function handler(request, response) {
       })
     });
 
+    if (hasLiveStore()) {
+      liveData = await writeLiveData({
+        properties,
+        markers,
+        turfs,
+        turfAlignment,
+        blacklistRegions,
+        orgs,
+        updatedBy: clientId
+      });
+    }
+
+    const discordRoleSync = await removeDeletedBusinessOwnerRoles(deletedBusinessOwnerIds);
+
     jsonResponse(response, 200, {
       ok: true,
       commit: newCommit.sha,
       live: Boolean(liveData),
       updatedAt: liveData?.updatedAt || new Date().toISOString(),
       updatedBy: clientId,
+      releasedProperties,
+      discordRoleSync,
       version: liveData?.version || newCommit.sha
     });
   } catch (error) {
@@ -370,3 +639,6 @@ module.exports = async function handler(request, response) {
     });
   }
 };
+
+module.exports.releaseRemovedOrganizationProperties = releaseRemovedOrganizationProperties;
+module.exports.removedBusinessOwnerIds = removedBusinessOwnerIds;

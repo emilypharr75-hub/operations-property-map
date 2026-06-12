@@ -2,7 +2,7 @@ const MAP_SIZE = 3120;
 const BASE_DISPLAY_SIZE = 1800;
 const DEFAULT_MARKER_COLOR = '#ff3535';
 const TURF_CANVAS_SIZE = 1040;
-const DATA_VERSION = 'imported-boxes-2026-05-03-clean';
+const DATA_VERSION = 'property-data-2026-06-06-shutdown-owner-reset';
 const DATA_VERSION_STORAGE_KEY = 'erlcPropertyMapDataVersion';
 const MARKER_STORAGE_KEY = 'erlcPropertyMarkerEdits';
 const PROPERTY_STORAGE_KEY = 'erlcPropertyEdits';
@@ -12,9 +12,9 @@ const TURF_STORAGE_KEY = 'erlcMafiaTurfEdits';
 const TURF_ALIGNMENT_STORAGE_KEY = 'erlcMafiaTurfAlignment';
 const BLACKLIST_REGIONS_STORAGE_KEY = 'erlcMafiaBlacklistRegions';
 const CLIENT_ID_STORAGE_KEY = 'erlcPropertyMapClientId';
-const LIVE_DATA_URL = 'https://floridaoperationshub.vercel.app/api/live-data';
+const LIVE_DATA_URL = 'https://floridastateoperations.vercel.app/api/live-data';
 const MIN_MARKER_SIZE = 18;
-const EDIT_PASSWORD = 'MoreBusinesses';
+const EDIT_PASSWORD = 'MoreMafiaAdmin';
 const BLACKLIST_IMAGE_SRC = '/assets/mafia-turf-blacklist.png?v=2';
 const DEFAULT_BLACKLIST_REGIONS = [
   { id: 'blacklist-1', sourceRect: [1083, 577, 1352, 772], offsetX: 0, offsetY: 0, scale: 1 },
@@ -22,8 +22,7 @@ const DEFAULT_BLACKLIST_REGIONS = [
   { id: 'blacklist-3', sourceRect: [1118, 1189, 1175, 1286], offsetX: 0, offsetY: 0, scale: 1 },
   { id: 'blacklist-4', sourceRect: [877, 1269, 990, 1394], offsetX: 0, offsetY: 0, scale: 1 },
   { id: 'blacklist-5', sourceRect: [477, 1407, 535, 1471], offsetX: 0, offsetY: 0, scale: 1 },
-  { id: 'blacklist-6', sourceRect: [1127, 1417, 1211, 1508], offsetX: 0, offsetY: 0, scale: 1 },
-  { id: 'blacklist-7', sourceRect: [955, 1584, 1085, 1653], offsetX: 0, offsetY: 0, scale: 1 }
+  { id: 'blacklist-6', sourceRect: [1127, 1417, 1211, 1508], offsetX: 0, offsetY: 0, scale: 1 }
 ];
 
 const elements = {
@@ -124,6 +123,7 @@ let zoom = 1;
 let turfZoom = 1;
 let editMode = false;
 let dragState = null;
+let shapeDraft = null;
 let turfDragState = null;
 let turfHitMap = null;
 let turfHitIds = [];
@@ -206,7 +206,7 @@ function buildExportData() {
         number: property.number,
         buildingType: property.buildingType,
         owner: property.owner,
-        saleStatus: normalizeSaleStatus(property.saleStatus),
+        saleStatus: shouldBeOffSale(property) ? 'Off Sale' : normalizeSaleStatus(property.saleStatus),
         price: property.price,
         tax: property.tax,
         custom: Boolean(property.custom)
@@ -217,6 +217,7 @@ function buildExportData() {
         id: region.id,
         rect: region.rect,
         buildingRect: region.buildingRect || region.rect,
+        points: getMarkerPoints(region, propertiesById.get(region.id)),
         rotation: getMarkerRotation(region),
         custom: Boolean(region.custom)
       }))
@@ -242,7 +243,7 @@ function getLiveDataUrl() {
 }
 
 function getSaveBoxesUrl() {
-  return isLocalHostPreview() ? 'https://floridaoperationshub.vercel.app/api/save-boxes' : '/api/save-boxes';
+  return isLocalHostPreview() ? 'https://floridastateoperations.vercel.app/api/save-boxes' : '/api/save-boxes';
 }
 
 function currentDataSignature() {
@@ -473,21 +474,31 @@ function normalizeMafiaTier(value) {
 }
 
 function splitOwnerLabelAndId(owner, ownerId = '') {
-  const text = String(owner || '').trim();
-  const explicitId = String(ownerId || '').trim();
-  const match = text.match(/^(.*?)\s*\((\d{17,20})\)\s*$/);
+  const ownerEntries = splitCommaSeparatedValues(owner);
+  const explicitIds = splitCommaSeparatedValues(ownerId);
+  const names = [];
+  const embeddedIds = [];
 
-  if (!match) {
-    return {
-      owner: text,
-      ownerId: explicitId
-    };
+  for (const entry of ownerEntries) {
+    const match = entry.match(/^(.*?)\s*\((\d{17,20})\)\s*$/);
+    names.push(match ? match[1].trim() : entry);
+
+    if (match) {
+      embeddedIds.push(match[2]);
+    }
   }
 
   return {
-    owner: match[1].trim(),
-    ownerId: explicitId || match[2]
+    owner: names.join(', '),
+    ownerId: (explicitIds.length ? explicitIds : embeddedIds).join(', ')
   };
+}
+
+function splitCommaSeparatedValues(value) {
+  return String(value || '')
+    .split(',')
+    .map(entry => entry.trim())
+    .filter(Boolean);
 }
 
 function normalizeRegulationRecord(record) {
@@ -600,6 +611,30 @@ function updateDirectoryRecord(key, id, field, value) {
   renderDirectoryLists();
 }
 
+function seizePropertiesOwnedByBusiness(business) {
+  const businessOwners = new Set(
+    [business.name, business.id]
+      .map(value => String(value || '').trim().toLowerCase())
+      .filter(Boolean)
+  );
+  let seizedCount = 0;
+
+  for (const property of properties) {
+    const owner = String(property.owner || '').trim().toLowerCase();
+
+    if (!businessOwners.has(owner)) {
+      continue;
+    }
+
+    property.owner = 'N/A';
+    property.saleStatus = 'On Sale';
+    property.localEdited = true;
+    seizedCount += 1;
+  }
+
+  return seizedCount;
+}
+
 function removeDirectoryRecord(key, id) {
   const config = directoryConfig(key);
   const index = config.records.findIndex(item => item.id === id);
@@ -608,7 +643,19 @@ function removeDirectoryRecord(key, id) {
     return;
   }
 
+  const record = config.records[index];
   config.records.splice(index, 1);
+
+  if (key === 'businesses' && seizePropertiesOwnedByBusiness(record)) {
+    savePropertyEdits();
+    renderOptions();
+    renderMarkers();
+
+    if (selectedMarkerId) {
+      selectProperty(selectedMarkerId);
+    }
+  }
+
   saveDirectoryRecords();
   renderDirectoryLists();
 }
@@ -631,8 +678,8 @@ function createDirectoryCard(key, record) {
     </div>
     <div class="org-fields">
       ${directoryFieldHtml('Name', 'name', record.name)}
-      ${directoryFieldHtml('Owner', 'owner', record.owner)}
-      ${directoryFieldHtml('Owner ID', 'ownerId', record.ownerId)}
+      ${directoryFieldHtml('Owner(s)', 'owner', record.owner, 'Separate multiple owner names with commas')}
+      ${directoryFieldHtml('Owner ID(s)', 'ownerId', record.ownerId, 'Separate multiple Discord IDs with commas')}
       ${directoryFieldHtml('Type', 'type', record.type)}
       ${key === 'mafias' ? directoryTierFieldHtml(record.tier) : ''}
       ${directoryFieldHtml('Discord Server', 'server', record.server)}
@@ -667,15 +714,18 @@ function directoryTierFieldHtml(value) {
   `;
 }
 
-function directoryFieldHtml(label, field, value) {
+function directoryFieldHtml(label, field, value, placeholder = '') {
   const escapedValue = escapeHtml(value || '');
   const displayValue = field === 'server' ? linkifyText(value || '') : escapedValue;
+  const placeholderAttribute = placeholder
+    ? ` placeholder="${escapeHtml(placeholder)}"`
+    : '';
 
   return `
     <div class="org-field${field === 'logo' ? ' logo-url-field' : ''}">
       <label>${label}</label>
       <span class="org-display">${displayValue || '-'}</span>
-      <input data-field="${field}" value="${escapedValue}">
+      <input data-field="${field}" value="${escapedValue}"${placeholderAttribute}>
     </div>
   `;
 }
@@ -1948,6 +1998,7 @@ async function saveBoxesToCloud() {
       },
       body: JSON.stringify({
         ...buildExportData(),
+        baseVersion: remoteDataVersion,
         password: editSessionPassword,
         clientId
       })
@@ -1963,7 +2014,11 @@ async function saveBoxesToCloud() {
     remoteDataVersion = result.version || result.updatedAt || remoteDataVersion;
     setPublishStatus(result.live ? 'Live saved' : 'Published');
   } catch (error) {
-    setPublishStatus(error.message.includes('GITHUB_TOKEN') ? 'Missing token' : 'Save failed');
+    setPublishStatus(
+      error.message.includes('changed since this editor loaded')
+        ? 'Reload required'
+        : error.message.includes('GITHUB_TOKEN') ? 'Missing token' : 'Save failed'
+    );
     console.error(error);
   } finally {
     cloudSaveInFlight = false;
@@ -2034,19 +2089,44 @@ function normalizeSaleStatus(value) {
   return normalized === 'off sale' ? 'Off Sale' : 'On Sale';
 }
 
+function isPropertyOwned(property) {
+  const owner = String(property.owner || '').trim().toLowerCase();
+  return Boolean(owner && owner !== 'n/a' && owner !== 'none');
+}
+
 function normalizePropertyRecord(property) {
+  const buildingType = normalizeBuildingType(property.buildingType);
+  const price = String(property.price || 'Not for sale');
+  const tax = String(property.tax || 'Not for sale');
+  const offSale = shouldBeOffSale({ ...property, buildingType, price, tax });
+
   return {
     ...property,
     id: String(property.id),
     name: String(property.name || property.number || property.id),
     number: String(property.number || 'N/A'),
-    buildingType: normalizeBuildingType(property.buildingType),
+    buildingType,
     owner: String(property.owner || 'N/A'),
-    saleStatus: normalizeSaleStatus(property.saleStatus),
-    price: String(property.price || 'Not for sale'),
-    tax: String(property.tax || 'Not for sale'),
+    saleStatus: offSale ? 'Off Sale' : normalizeSaleStatus(property.saleStatus),
+    price,
+    tax,
     custom: Boolean(property.custom)
   };
+}
+
+function shouldBeOffSale(property) {
+  const buildingType = normalizeBuildingType(property.buildingType);
+  const saleStatus = normalizeSaleStatus(property.saleStatus).toLowerCase();
+  const price = String(property.price || '').trim().toLowerCase();
+  const tax = String(property.tax || '').trim().toLowerCase();
+
+  return isPropertyOwned(property) ||
+    buildingType === 'government' ||
+    saleStatus === 'off sale' ||
+    price === 'not for sale' ||
+    tax === 'not for sale' ||
+    price === 'n/a' ||
+    tax === 'n/a';
 }
 
 function inferBuildingType(property) {
@@ -2108,24 +2188,29 @@ function markerColorFor(property) {
 }
 
 function markerOutlineColorFor(property) {
-  const owner = property.owner.trim().toLowerCase();
-  const price = property.price.trim().toLowerCase();
-  const tax = property.tax.trim().toLowerCase();
-  const isOwned = owner && owner !== 'n/a' && owner !== 'none';
-  const isUnavailable = price === 'not for sale' ||
-    tax === 'not for sale' ||
-    price === 'n/a' ||
-    tax === 'n/a';
+  const outlineState = propertyOutlineStateFor(property);
 
-  if (isOwned) {
+  if (outlineState === 'owned') {
     return '#24d16f';
   }
 
-  if (isUnavailable) {
+  if (outlineState === 'off-sale') {
     return '#ff3030';
   }
 
   return '#ffd43b';
+}
+
+function propertyOutlineStateFor(property) {
+  if (isPropertyOwned(property)) {
+    return 'owned';
+  }
+
+  if (shouldBeOffSale(property)) {
+    return 'off-sale';
+  }
+
+  return 'available';
 }
 
 function getBuildingRect(region, property) {
@@ -2152,7 +2237,54 @@ function getBuildingRect(region, property) {
 }
 
 function getMarkerRect(region, property) {
+  if (Array.isArray(region.points) && region.points.length >= 3) {
+    return pointsBounds(region.points);
+  }
+
   return getBuildingRect(region, property);
+}
+
+function pointsBounds(points) {
+  const xs = points.map(point => point[0]);
+  const ys = points.map(point => point[1]);
+  return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
+}
+
+function getMarkerPoints(region, property) {
+  if (Array.isArray(region?.points) && region.points.length >= 3) {
+    return region.points.map(point => [
+      clamp(Number(point[0]) || 0, 0, MAP_SIZE),
+      clamp(Number(point[1]) || 0, 0, MAP_SIZE)
+    ]);
+  }
+
+  const [left, top, right, bottom] = getBuildingRect(region, property);
+  const points = [
+    [left, top],
+    [right, top],
+    [right, bottom],
+    [left, bottom]
+  ];
+  const rotation = getMarkerRotation(region);
+
+  if (!rotation) {
+    return points;
+  }
+
+  const centerX = (left + right) / 2;
+  const centerY = (top + bottom) / 2;
+  const radians = rotation * Math.PI / 180;
+  const cos = Math.cos(radians);
+  const sin = Math.sin(radians);
+
+  return points.map(([x, y]) => {
+    const dx = x - centerX;
+    const dy = y - centerY;
+    return [
+      centerX + dx * cos - dy * sin,
+      centerY + dx * sin + dy * cos
+    ];
+  });
 }
 
 function getMarkerRotation(region) {
@@ -2194,7 +2326,7 @@ function saveCustomProperties() {
           number: property.number,
           buildingType: property.buildingType,
           owner: property.owner,
-          saleStatus: normalizeSaleStatus(property.saleStatus),
+          saleStatus: shouldBeOffSale(property) ? 'Off Sale' : normalizeSaleStatus(property.saleStatus),
           price: property.price,
           tax: property.tax,
           custom: true
@@ -2203,6 +2335,7 @@ function saveCustomProperties() {
           id: marker.id,
           rect: marker.rect,
           buildingRect: marker.buildingRect,
+          points: marker.points,
           removed: Boolean(marker.removed),
           rotation: getMarkerRotation(marker),
           color: marker.color || DEFAULT_MARKER_COLOR,
@@ -2247,9 +2380,10 @@ function saveMarkerEdits() {
       continue;
     }
 
-    if (marker.buildingRect || marker.removed || marker.rotation) {
+    if (marker.buildingRect || marker.points || marker.removed || marker.rotation) {
       editedMarkers[marker.id] = {
         buildingRect: marker.buildingRect,
+        points: marker.points,
         removed: Boolean(marker.removed),
         rotation: getMarkerRotation(marker)
       };
@@ -2274,6 +2408,7 @@ function applyStoredMarkerEdits() {
 
     if (edit) {
       marker.buildingRect = edit.buildingRect;
+      marker.points = edit.points;
       marker.removed = Boolean(edit.removed);
       marker.rotation = Number(edit.rotation || 0);
     }
@@ -2294,7 +2429,7 @@ function savePropertyEdits() {
         name: property.name,
         number: property.number,
         owner: property.owner,
-        saleStatus: normalizeSaleStatus(property.saleStatus),
+        saleStatus: shouldBeOffSale(property) ? 'Off Sale' : normalizeSaleStatus(property.saleStatus),
         price: property.price,
         tax: property.tax
       };
@@ -2324,12 +2459,14 @@ function applyStoredPropertyEdits() {
     }
 
     property.buildingType = inferBuildingType(property);
+    property.saleStatus = shouldBeOffSale(property) ? 'Off Sale' : normalizeSaleStatus(property.saleStatus);
   }
 }
 
 function markerSnapshot(marker) {
   return {
     buildingRect: marker.buildingRect ? [...marker.buildingRect] : undefined,
+    points: marker.points?.map(point => [...point]),
     removed: Boolean(marker.removed),
     rotation: getMarkerRotation(marker)
   };
@@ -2354,6 +2491,7 @@ function restoreMarkerSnapshot(id, snapshot) {
   }
 
   marker.buildingRect = snapshot.buildingRect ? [...snapshot.buildingRect] : undefined;
+  marker.points = snapshot.points?.map(point => [...point]);
   marker.removed = snapshot.removed;
   marker.rotation = snapshot.rotation || 0;
   saveMarkerEdits();
@@ -2434,6 +2572,32 @@ function updateMarkerRect(id, rect) {
     markerElement.classList.add('active');
     activeMarker = markerElement;
   }
+}
+
+function updateMarkerPoints(id, points) {
+  const marker = propertyMarkers.find(region => region.id === id);
+
+  if (!marker) {
+    return;
+  }
+
+  marker.points = points.map(point => point.map(value => Math.round(value)));
+  marker.buildingRect = pointsBounds(marker.points).map(value => Math.round(value));
+  marker.rect = marker.buildingRect;
+  marker.rotation = 0;
+
+  const polygon = document.querySelector(`.marker-polygon[data-id="${id}"]`);
+  if (polygon) {
+    polygon.setAttribute('points', marker.points.map(point => point.join(',')).join(' '));
+    polygon.classList.add('active');
+    activeMarker = polygon;
+  }
+
+  document.querySelectorAll(`.marker-vertex[data-id="${id}"]`).forEach(vertex => {
+    const point = marker.points[Number(vertex.dataset.vertex)];
+    vertex.setAttribute('cx', point[0]);
+    vertex.setAttribute('cy', point[1]);
+  });
 }
 
 function updateMarkerRotation(id, rotation) {
@@ -2702,12 +2866,19 @@ function setEditMode(enabled) {
   elements.alignTurfs.disabled = !editMode;
   elements.turfScaleDown.disabled = !editMode;
   elements.turfScaleUp.disabled = !editMode;
-  elements.resetTurfAlignment.disabled = !editMode;
+  if (elements.resetTurfAlignment) {
+    elements.resetTurfAlignment.disabled = !editMode;
+  }
   elements.editBlacklistRegions.disabled = !editMode;
   elements.blacklistScaleDown.disabled = !editMode;
   elements.blacklistScaleUp.disabled = !editMode;
-  elements.resetBlacklistRegions.disabled = !editMode;
+  if (elements.resetBlacklistRegions) {
+    elements.resetBlacklistRegions.disabled = !editMode;
+  }
   if (!editMode) {
+    if (shapeDraft) {
+      cancelNewShape();
+    }
     setTurfAlignmentMode(false);
     setBlacklistRegionMode(false);
   }
@@ -2745,7 +2916,7 @@ function selectProperty(id) {
   elements.propertyNumberEdit.value = property.number;
   elements.propertyOwner.textContent = property.owner;
   elements.propertyOwnerEdit.value = property.owner;
-  property.saleStatus = normalizeSaleStatus(property.saleStatus);
+  property.saleStatus = shouldBeOffSale(property) ? 'Off Sale' : normalizeSaleStatus(property.saleStatus);
   elements.propertySaleStatus.textContent = property.saleStatus;
   elements.propertySaleStatusEdit.value = property.saleStatus;
   elements.propertyPrice.textContent = property.price;
@@ -2785,13 +2956,16 @@ function updateSelectedPropertyField(field, value) {
     property.saleStatus = normalizeSaleStatus(nextValue);
   }
   property.buildingType = inferBuildingType(property);
+  if (shouldBeOffSale(property)) {
+    property.saleStatus = 'Off Sale';
+  }
   property.localEdited = true;
   elements.propertyName.textContent = labelFor(property);
   elements.buildingType.textContent = formatBuildingType(property.buildingType);
   elements.buildingTypeEdit.value = normalizeBuildingType(property.buildingType);
   elements.propertyNumber.textContent = property.number;
   elements.propertyOwner.textContent = property.owner;
-  property.saleStatus = normalizeSaleStatus(property.saleStatus);
+  property.saleStatus = shouldBeOffSale(property) ? 'Off Sale' : normalizeSaleStatus(property.saleStatus);
   elements.propertySaleStatus.textContent = property.saleStatus;
   elements.propertySaleStatusEdit.value = property.saleStatus;
   elements.propertyPrice.textContent = property.price;
@@ -2828,6 +3002,9 @@ function updateSelectedBuildingType() {
 
   property.buildingType = normalizeBuildingType(elements.buildingTypeEdit.value);
   property.buildingType = inferBuildingType(property);
+  if (shouldBeOffSale(property)) {
+    property.saleStatus = 'Off Sale';
+  }
   property.localEdited = true;
   savePropertyEdits();
   renderOptions();
@@ -2835,30 +3012,90 @@ function updateSelectedBuildingType() {
   selectProperty(property.id);
 }
 
-function createNewBox() {
+function mapPointFromPointer(event) {
+  const bounds = elements.markers.getBoundingClientRect();
+  const scale = bounds.width / MAP_SIZE;
+  return [
+    clamp((event.clientX - bounds.left) / scale, 0, MAP_SIZE),
+    clamp((event.clientY - bounds.top) / scale, 0, MAP_SIZE)
+  ];
+}
+
+function startNewShape() {
   if (!editMode) {
     openPasswordDialog();
     return;
   }
 
-  const number = window.prompt('Postal or building number for the new box:');
+  if (shapeDraft) {
+    finishNewShape();
+    return;
+  }
+
+  const number = window.prompt('Postal or building number for the new shape:');
 
   if (!number?.trim()) {
     return;
   }
 
-  const scale = getMarkerScale();
-  const centerX = clamp((elements.mapWrap.scrollLeft + elements.mapWrap.clientWidth / 2) / scale, 0, MAP_SIZE);
-  const centerY = clamp((elements.mapWrap.scrollTop + elements.mapWrap.clientHeight / 2) / scale, 0, MAP_SIZE);
-  const width = 90;
-  const height = 70;
-  const left = clamp(centerX - width / 2, 0, MAP_SIZE - width);
-  const top = clamp(centerY - height / 2, 0, MAP_SIZE - height);
-  const id = `custom-${Date.now()}`;
+  shapeDraft = {
+    id: `custom-${Date.now()}`,
+    number: number.trim(),
+    points: []
+  };
+  elements.addBox.textContent = 'Finish Shape';
+  elements.addBox.setAttribute('aria-pressed', 'true');
+  elements.markers.classList.add('drawing');
+  setPublishStatus('Place points, then click the first point to finish');
+  renderMarkers();
+}
+
+function addDraftPoint(event) {
+  if (!shapeDraft || !editMode || event.button !== 0) {
+    return;
+  }
+
+  if (event.target.closest('.marker-vertex, .marker-polygon')) {
+    return;
+  }
+
+  event.preventDefault();
+  const point = mapPointFromPointer(event);
+  const previous = shapeDraft.points[shapeDraft.points.length - 1];
+
+  if (previous && Math.hypot(point[0] - previous[0], point[1] - previous[1]) < 8) {
+    return;
+  }
+
+  shapeDraft.points.push(point);
+  renderMarkers();
+}
+
+function cancelNewShape() {
+  shapeDraft = null;
+  elements.addBox.textContent = 'Add Shape';
+  elements.addBox.setAttribute('aria-pressed', 'false');
+  elements.markers.classList.remove('drawing');
+  setPublishStatus('Live save ready');
+  renderMarkers();
+}
+
+function finishNewShape() {
+  if (!shapeDraft) {
+    return;
+  }
+
+  if (shapeDraft.points.length < 3) {
+    window.alert('Place at least three points before finishing the shape.');
+    return;
+  }
+
+  const { id, number, points } = shapeDraft;
+  const bounds = pointsBounds(points);
   const property = {
     id,
-    name: `Property ${number.trim()}`,
-    number: number.trim(),
+    name: `Property ${number}`,
+    number,
     buildingType: 'building',
     owner: 'N/A',
     saleStatus: 'On Sale',
@@ -2869,8 +3106,9 @@ function createNewBox() {
   };
   const marker = {
     id,
-    rect: [left, top, left + width, top + height].map(value => Math.round(value)),
-    buildingRect: [left, top, left + width, top + height].map(value => Math.round(value)),
+    rect: bounds.map(value => Math.round(value)),
+    buildingRect: bounds.map(value => Math.round(value)),
+    points: points.map(point => point.map(value => Math.round(value))),
     color: '#35a7ff',
     custom: true
   };
@@ -2878,6 +3116,11 @@ function createNewBox() {
   properties.push(property);
   propertyMarkers.push(marker);
   propertiesById.set(id, property);
+  shapeDraft = null;
+  elements.addBox.textContent = 'Add Shape';
+  elements.addBox.setAttribute('aria-pressed', 'false');
+  elements.markers.classList.remove('drawing');
+  setPublishStatus('Live save ready');
   saveCustomProperties();
   renderOptions();
   renderMarkers();
@@ -2891,7 +3134,7 @@ async function exportBoxes() {
   const link = document.createElement('a');
 
   link.href = URL.createObjectURL(blob);
-  link.download = 'erlc-property-boxes-export.json';
+  link.download = 'erlc-property-shapes-export.json';
   link.click();
   URL.revokeObjectURL(link.href);
 
@@ -2901,12 +3144,17 @@ async function exportBoxes() {
 
   elements.exportBoxes.textContent = 'Exported';
   window.setTimeout(() => {
-    elements.exportBoxes.textContent = 'Export Boxes';
+    elements.exportBoxes.textContent = 'Export Shapes';
   }, 1600);
 }
 
 function renderMarkers() {
   elements.markers.textContent = '';
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.classList.add('marker-svg');
+  svg.setAttribute('viewBox', `0 0 ${MAP_SIZE} ${MAP_SIZE}`);
+  svg.setAttribute('aria-label', 'Property shapes');
+  elements.markers.append(svg);
 
   for (const region of propertyMarkers) {
     if (isPostalOnlyMarker(region)) {
@@ -2923,37 +3171,74 @@ function renderMarkers() {
       continue;
     }
 
-    const [left, top, right, bottom] = getMarkerRect(region, property);
-    const marker = document.createElement('button');
-    marker.type = 'button';
-    marker.className = 'marker';
+    const points = getMarkerPoints(region, property);
+    region.points = points.map(point => point.map(value => Math.round(value)));
+    region.buildingRect = pointsBounds(region.points).map(value => Math.round(value));
+    region.rotation = 0;
+    const marker = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+    const outlineState = propertyOutlineStateFor(property);
+    marker.classList.add('marker', 'marker-polygon', `marker-${outlineState}`);
     marker.dataset.id = region.id;
+    marker.dataset.outlineState = outlineState;
     property.buildingType = inferBuildingType(property);
     marker.style.setProperty('--marker-color', markerColorFor(property));
     marker.style.setProperty('--outline-color', markerOutlineColorFor(property));
-    applyMarkerElementStyle(marker, [left, top, right, bottom], getMarkerRotation(region));
+    marker.setAttribute('points', region.points.map(point => point.join(',')).join(' '));
     marker.setAttribute('aria-label', labelFor(property));
     marker.addEventListener('pointerdown', event => startMarkerEdit(event, region, property));
     marker.addEventListener('click', event => {
       if (editMode) {
         event.preventDefault();
+        selectedMarkerId = region.id;
+        renderMarkers();
         selectProperty(region.id);
         return;
       }
 
       selectProperty(region.id);
     });
-    for (const handleName of ['nw', 'ne', 'sw', 'se']) {
-      const handle = document.createElement('span');
-      handle.className = `resize-handle ${handleName}`;
-      handle.dataset.handle = handleName;
-      marker.append(handle);
+    svg.append(marker);
+
+    if (editMode && selectedMarkerId === region.id) {
+      region.points.forEach((point, index) => {
+        const handle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        handle.classList.add('marker-vertex');
+        handle.dataset.id = region.id;
+        handle.dataset.vertex = String(index);
+        handle.style.setProperty('--marker-color', markerColorFor(property));
+        handle.setAttribute('cx', point[0]);
+        handle.setAttribute('cy', point[1]);
+        handle.setAttribute('r', '13');
+        handle.addEventListener('pointerdown', event => startMarkerEdit(event, region, property));
+        svg.append(handle);
+      });
     }
-    const rotateHandle = document.createElement('span');
-    rotateHandle.className = 'rotate-handle';
-    rotateHandle.dataset.handle = 'rotate';
-    marker.append(rotateHandle);
-    elements.markers.append(marker);
+  }
+
+  if (shapeDraft) {
+    if (shapeDraft.points.length >= 2) {
+      const draft = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+      draft.classList.add('draft-polygon');
+      draft.setAttribute('points', shapeDraft.points.map(point => point.join(',')).join(' '));
+      svg.append(draft);
+    }
+
+    shapeDraft.points.forEach((point, index) => {
+      const handle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      handle.classList.add('draft-vertex');
+      handle.setAttribute('cx', point[0]);
+      handle.setAttribute('cy', point[1]);
+      handle.setAttribute('r', index === 0 ? '16' : '12');
+      handle.addEventListener('pointerdown', event => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (index === 0 && shapeDraft.points.length >= 3) {
+          finishNewShape();
+        }
+      });
+      svg.append(handle);
+    });
   }
 }
 
@@ -2964,22 +3249,16 @@ function startMarkerEdit(event, region, property) {
 
   event.preventDefault();
   event.stopPropagation();
-  const handle = event.target.dataset.handle || 'move';
-  const rect = getMarkerRect(region, property);
+  const vertex = event.target.dataset.vertex;
+  const points = getMarkerPoints(region, property);
   const scale = getMarkerScale();
-  const [left, top, right, bottom] = rect;
-  const centerX = elements.markers.getBoundingClientRect().left + ((left + right) / 2) * scale;
-  const centerY = elements.markers.getBoundingClientRect().top + ((top + bottom) / 2) * scale;
   selectProperty(region.id);
   dragState = {
-    handle,
+    handle: vertex === undefined ? 'move' : 'vertex',
+    vertex: vertex === undefined ? null : Number(vertex),
     id: region.id,
-    rect: [...rect],
+    points: points.map(point => [...point]),
     before: markerSnapshot(region),
-    centerX,
-    centerY,
-    startAngle: Math.atan2(event.clientY - centerY, event.clientX - centerX) * 180 / Math.PI,
-    startRotation: getMarkerRotation(region),
     moved: false,
     startX: event.clientX,
     startY: event.clientY,
@@ -3010,63 +3289,28 @@ function moveMarkerEdit(event) {
     dragState.moved = true;
   }
 
-  let [left, top, right, bottom] = dragState.rect;
-
-  if (dragState.handle === 'rotate') {
-    const angle = Math.atan2(event.clientY - dragState.centerY, event.clientX - dragState.centerX) * 180 / Math.PI;
-    updateMarkerRotation(dragState.id, dragState.startRotation + angle - dragState.startAngle);
-    return;
-  }
-
+  let points = dragState.points.map(point => [...point]);
   if (dragState.handle === 'move') {
-    left += dx;
-    right += dx;
-    top += dy;
-    bottom += dy;
+    const bounds = pointsBounds(points);
+    const boundedDx = clamp(dx, -bounds[0], MAP_SIZE - bounds[2]);
+    const boundedDy = clamp(dy, -bounds[1], MAP_SIZE - bounds[3]);
+    points = points.map(([x, y]) => [x + boundedDx, y + boundedDy]);
   } else {
-    if (dragState.handle.includes('w')) {
-      left += dx;
-    }
-    if (dragState.handle.includes('e')) {
-      right += dx;
-    }
-    if (dragState.handle.includes('n')) {
-      top += dy;
-    }
-    if (dragState.handle.includes('s')) {
-      bottom += dy;
-    }
+    points[dragState.vertex] = [
+      clamp(points[dragState.vertex][0] + dx, 0, MAP_SIZE),
+      clamp(points[dragState.vertex][1] + dy, 0, MAP_SIZE)
+    ];
   }
 
-  if (right - left < MIN_MARKER_SIZE) {
-    if (dragState.handle.includes('w')) {
-      left = right - MIN_MARKER_SIZE;
-    } else {
-      right = left + MIN_MARKER_SIZE;
-    }
-  }
-
-  if (bottom - top < MIN_MARKER_SIZE) {
-    if (dragState.handle.includes('n')) {
-      top = bottom - MIN_MARKER_SIZE;
-    } else {
-      bottom = top + MIN_MARKER_SIZE;
-    }
-  }
-
-  const width = right - left;
-  const height = bottom - top;
-  left = clamp(left, 0, MAP_SIZE - width);
-  top = clamp(top, 0, MAP_SIZE - height);
-  right = left + width;
-  bottom = top + height;
-
-  updateMarkerRect(dragState.id, [left, top, right, bottom]);
+  updateMarkerPoints(dragState.id, points);
 }
 
 function stopMarkerEdit() {
   if (dragState?.moved) {
+    const id = dragState.id;
     saveMarkerEdits();
+    renderMarkers();
+    selectProperty(id);
   }
 
   dragState = null;
@@ -3126,6 +3370,18 @@ function handleKeyboardEdit(event) {
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') {
     event.preventDefault();
     undoLastEdit();
+    return;
+  }
+
+  if (shapeDraft && event.key === 'Enter') {
+    event.preventDefault();
+    finishNewShape();
+    return;
+  }
+
+  if (shapeDraft && event.key === 'Escape') {
+    event.preventDefault();
+    cancelNewShape();
     return;
   }
 
@@ -3235,11 +3491,15 @@ async function init() {
   elements.alignTurfs.disabled = true;
   elements.turfScaleDown.disabled = true;
   elements.turfScaleUp.disabled = true;
-  elements.resetTurfAlignment.disabled = true;
+  if (elements.resetTurfAlignment) {
+    elements.resetTurfAlignment.disabled = true;
+  }
   elements.editBlacklistRegions.disabled = true;
   elements.blacklistScaleDown.disabled = true;
   elements.blacklistScaleUp.disabled = true;
-  elements.resetBlacklistRegions.disabled = true;
+  if (elements.resetBlacklistRegions) {
+    elements.resetBlacklistRegions.disabled = true;
+  }
   for (const button of elements.directoryAddButtons) {
     button.disabled = true;
     button.addEventListener('click', () => addDirectoryRecord(button.dataset.directoryAdd));
@@ -3273,7 +3533,7 @@ async function init() {
   });
   elements.turfScaleDown.addEventListener('click', () => scaleTurfAlignment(-0.02));
   elements.turfScaleUp.addEventListener('click', () => scaleTurfAlignment(0.02));
-  elements.resetTurfAlignment.addEventListener('click', resetTurfAlignment);
+  elements.resetTurfAlignment?.addEventListener('click', resetTurfAlignment);
   elements.editBlacklistRegions.addEventListener('click', () => {
     if (!editMode) {
       openPasswordDialog();
@@ -3284,7 +3544,7 @@ async function init() {
   });
   elements.blacklistScaleDown.addEventListener('click', () => scaleSelectedBlacklistRegion(-0.04));
   elements.blacklistScaleUp.addEventListener('click', () => scaleSelectedBlacklistRegion(0.04));
-  elements.resetBlacklistRegions.addEventListener('click', resetBlacklistRegions);
+  elements.resetBlacklistRegions?.addEventListener('click', resetBlacklistRegions);
   elements.turfShapeCanvas.addEventListener('pointerdown', startBlacklistRegionDrag);
   elements.turfShapeCanvas.addEventListener('pointerdown', startTurfAlignmentDrag);
   window.addEventListener('pointermove', moveBlacklistRegionDrag);
@@ -3345,7 +3605,14 @@ async function init() {
     elements.editPassword.focus();
   });
   elements.undoEdit.addEventListener('click', undoLastEdit);
-  elements.addBox.addEventListener('click', createNewBox);
+  elements.addBox.addEventListener('click', startNewShape);
+  elements.markers.addEventListener('pointerdown', addDraftPoint);
+  elements.markers.addEventListener('dblclick', event => {
+    if (shapeDraft) {
+      event.preventDefault();
+      finishNewShape();
+    }
+  });
   elements.undoTurfEdit.addEventListener('click', undoLastTurfEdit);
   elements.addTurf.addEventListener('click', createNewTurf);
   elements.toggleTurfKey.addEventListener('click', () => {
@@ -3369,7 +3636,7 @@ async function init() {
     exportBoxes().catch(() => {
       elements.exportBoxes.textContent = 'Download Ready';
       window.setTimeout(() => {
-        elements.exportBoxes.textContent = 'Export Boxes';
+        elements.exportBoxes.textContent = 'Export Shapes';
       }, 1600);
     });
   });
